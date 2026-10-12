@@ -7,6 +7,9 @@
 <title>Registro de Jornada</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<!-- Mapa de la pestaña Listado: Leaflet + teselas de OpenStreetMap (sin clave) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
 <style>
 [hidden]{display:none!important}
 img{max-width:100%}
@@ -121,6 +124,19 @@ label.item{cursor:pointer}
 .sugerencia>strong{color:var(--olive);font-size:1.05rem}
 .sugerencia p{margin:0;font-size:.95rem}
 .sugerencia .mini{align-self:flex-start}
+/* Selector Listado / Mapa y mapa de registros */
+.vista{display:flex;gap:4px;padding:3px;background:var(--bg);border:1px solid var(--line);border-radius:10px}
+.vista button{flex:1;padding:8px;font-size:.92rem;font-weight:700;background:transparent;color:var(--muted);border-radius:8px}
+.vista button[aria-pressed=true]{background:var(--olive);color:var(--olive-ink)}
+#mapa{height:340px;border:1px solid var(--line);border-radius:10px;z-index:0}
+/* Icono por actividad: Inicio cuadrado rojo, Fin cuadrado negro, el resto círculos de colores */
+.pin{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#6b7280;color:#fff;font:700 .78rem var(--display);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)}
+.pin.cuad{border-radius:3px}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0;padding:0;list-style:none;font-size:.82rem;color:var(--muted)}
+.leyenda li{display:flex;align-items:center;gap:6px}
+.leyenda .pin{width:14px;height:14px;border-width:1px;box-shadow:none}
+.popreg{font:500 .85rem var(--display);line-height:1.4}
+.popreg b{display:block;font-size:.95rem}
 .filtro{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.88rem;color:var(--muted);min-height:32px}
 :root[data-theme="dark"]{
   --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
@@ -224,7 +240,14 @@ label.item{cursor:pointer}
         <button type="button" id="btnTodos" class="mini">Seleccionar todos</button>
       </div>
       <div class="filtro" id="filtro"></div>
+      <div class="vista" role="group" aria-label="Modo de vista">
+        <button type="button" id="vistaLista" aria-pressed="true">Listado</button>
+        <button type="button" id="vistaMapa" aria-pressed="false">Mapa</button>
+      </div>
       <ol id="lista"></ol>
+      <div id="mapa" hidden></div>
+      <ul class="leyenda" id="leyenda" hidden></ul>
+      <p class="hint" id="mapaNota" hidden></p>
       <p class="empty" id="vacioLista">No hay registros.</p>
       <div class="acciones" id="acciones">
         <div class="row">
@@ -585,8 +608,11 @@ label.item{cursor:pointer}
     actualizarVivo();
     $('contador').textContent=lista.length;
     $('vacioLista').hidden=lista.length>0;
-    $('acciones').hidden=lista.length===0;
-    $('btnTodos').hidden=lista.length<2;
+    // En modo Mapa no hay casillas, así que se ocultan la selección múltiple, Eliminar y Compartir
+    $('acciones').hidden=lista.length===0||vistaMapa;
+    $('btnTodos').hidden=lista.length<2||vistaMapa;
+    ol.hidden=vistaMapa;$('mapa').hidden=$('leyenda').hidden=!vistaMapa||lista.length===0;$('mapaNota').hidden=!vistaMapa;
+    if(vistaMapa&&lista.length)pintarMapa(lista);
 
     const f=$('filtro');f.textContent='';
     if(filtroDia){
@@ -597,6 +623,61 @@ label.item{cursor:pointer}
       f.appendChild(s);f.appendChild(b);
     }else f.textContent='Todos los registros · toca un día marcado para filtrar';
     pintarSeleccion();
+  }
+
+  /* ---------- Vista Mapa ---------- */
+  // Muestra en el mapa los registros visibles (todos o los del día filtrado) que tienen coordenadas,
+  // numerados por orden cronológico; con un día filtrado se unen con una línea en ese orden.
+  let vistaMapa=false, mapa=null, capaMapa=null;
+  // Forma y color de cada actividad en el mapa (y en su leyenda)
+  const ICONOS={'Inicio Jornada':{color:'#d62828',cuad:true},'Fin Jornada':{color:'#111111',cuad:true},
+    'Poda':{color:'#2a9d3f'},'Riego':{color:'#1f6fd1'},'Otros':{color:'#e08a00'}};
+  const ICONO_OTRO={color:'#6b7280'};
+  const iconoDe=r=>ICONOS[r.actividad]||ICONO_OTRO;
+  function crearPin(ic,texto){
+    const p=document.createElement('div');p.className='pin'+(ic.cuad?' cuad':'');
+    p.style.background=ic.color;p.textContent=texto;return p;
+  }
+  Object.entries(ICONOS).forEach(([nom,ic])=>{
+    const li=document.createElement('li');li.appendChild(crearPin(ic,''));li.appendChild(document.createTextNode(nom));
+    $('leyenda').appendChild(li);
+  });
+  function ponerVista(enMapa){
+    vistaMapa=enMapa;
+    $('vistaLista').setAttribute('aria-pressed',!enMapa);$('vistaMapa').setAttribute('aria-pressed',enMapa);
+    pintarListado();
+  }
+  $('vistaLista').addEventListener('click',()=>ponerVista(false));
+  $('vistaMapa').addEventListener('click',()=>ponerVista(true));
+
+  function pintarMapa(lista){
+    const conPos=lista.filter(r=>r.lat!=null), sin=lista.length-conPos.length, nota=$('mapaNota');
+    nota.textContent=sin?`${sin} registro${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
+    if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';$('mapa').hidden=true;return}
+    if(!mapa){
+      mapa=L.map('mapa');
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(mapa);
+      capaMapa=L.layerGroup().addTo(mapa);
+    }
+    capaMapa.clearLayers();
+    const puntos=conPos.map(r=>[r.lat,r.lon]);
+    if(filtroDia&&puntos.length>1)L.polyline(puntos,{color:'#9a5b2e',weight:3,opacity:.7,dashArray:'6 6'}).addTo(capaMapa);
+    conPos.forEach((r,i)=>{
+      L.circle([r.lat,r.lon],{radius:r.precision||0,color:'#3f5a2a',weight:1,fillOpacity:.08}).addTo(capaMapa);
+      const icono=L.divIcon({className:'',html:crearPin(iconoDe(r),String(i+1)).outerHTML,iconSize:[26,26],iconAnchor:[13,13]});
+      // Contenido del globo con textContent: nombre y actividad vienen de lo que escribe el usuario
+      const pop=document.createElement('div');pop.className='popreg';
+      const b=document.createElement('b');b.textContent=`${i+1}. ${r.actividad||'Registro'}`;
+      pop.appendChild(b);
+      [r.nombre,r.fechaHora.slice(0,16),`Precisión ±${Math.round(r.precision)} m`].forEach(t=>{pop.appendChild(document.createTextNode(t));pop.appendChild(document.createElement('br'))});
+      L.marker([r.lat,r.lon],{icon:icono}).bindPopup(pop).addTo(capaMapa);
+    });
+    // El contenedor acaba de mostrarse: recalcular tamaño antes de encuadrar
+    setTimeout(()=>{
+      mapa.invalidateSize();
+      if(puntos.length)mapa.fitBounds(L.latLngBounds(puntos).pad(0.3),{maxZoom:18});
+      else mapa.setView([40.2,-3.7],5);
+    },0);
   }
 
   function pintarSeleccion(){
