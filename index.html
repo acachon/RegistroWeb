@@ -11,25 +11,32 @@
 /* Una sola columna para móvil al sol: contraste alto, botón grande, registros como cuaderno de campo */
 :root{
   --bg:#f3f1e8; --card:#fffdf6; --fg:#1f2617; --muted:#5d6650; --line:#d8d4c2;
-  --olive:#3f5a2a; --olive-ink:#ffffff; --earth:#9a5b2e; --ok:#2f6b2f; --err:#a3341f;
+  --olive:#3f5a2a; --olive-ink:#ffffff; --olive-soft:#e3e9d6; --earth:#9a5b2e; --ok:#2f6b2f; --err:#a3341f;
+  --wa:#1f8f4e; --mail:#2d5a8a;
   --display:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root{
   --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
-  --olive:#8fb064; --olive-ink:#142008; --earth:#d49a66; --ok:#7fc27a; --err:#ef8a74;
+  --olive:#8fb064; --olive-ink:#142008; --olive-soft:#2a331f; --earth:#d49a66; --ok:#7fc27a; --err:#ef8a74;
+  --wa:#2a9d5c; --mail:#3f74ad;
   color-scheme:dark}}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--fg)}
 body{font:16px/1.45 var(--display);padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px);padding-inline:16px}
-main{max-width:480px;margin:0 auto;padding-block:20px 40px;display:flex;flex-direction:column;gap:20px}
+main{max-width:480px;margin:0 auto;padding-block:16px 40px;display:flex;flex-direction:column;gap:20px}
 header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
 .clock{font-family:var(--mono);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
-label{display:block;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-input{width:100%;font:500 1.1rem var(--display);padding:14px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
+.tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.tabs button{flex:1;padding:12px;font-size:1rem;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
+.tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
+.panel{display:flex;flex-direction:column;gap:20px}
+.lbl{display:block;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+input[type=text],input[type=tel],input[type=email]{width:100%;font:500 1.1rem var(--display);padding:14px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
 input:focus{outline:none;border-color:var(--olive)}
+input.bad{border-color:var(--err)}
 button{font-family:var(--display);cursor:pointer;border:0;border-radius:12px}
 button:focus-visible,input:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
 #btnRegistro{width:100%;aspect-ratio:1.6;max-width:100%;background:var(--olive);color:var(--olive-ink);font-size:2.2rem;font-weight:800;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:0 6px 0 rgba(0,0,0,.25);transition:transform .08s}
@@ -41,19 +48,34 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--earth);outline-
 section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
 h2{font-size:1rem;margin:0;display:flex;justify-content:space-between;align-items:center}
 h2 span{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.85rem}
+.selbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.selbar span{font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.selbar button{padding:8px 12px;font-size:.9rem;font-weight:700;background:transparent;color:var(--olive);border:2px solid var(--olive);border-radius:8px}
 ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-li{font-family:var(--mono);font-size:.82rem;padding:10px;border-left:3px solid var(--olive);background:var(--bg);border-radius:4px;overflow-wrap:anywhere}
+li label{display:flex;gap:12px;align-items:flex-start;font-family:var(--mono);font-size:.82rem;padding:10px;border:2px solid transparent;border-left:3px solid var(--line);background:var(--bg);border-radius:6px;cursor:pointer}
+li label.sel{border-color:var(--olive);background:var(--olive-soft)}
+li input[type=checkbox]{width:24px;height:24px;flex:0 0 auto;margin:0;accent-color:var(--olive)}
+li .txt{min-width:0;overflow-wrap:anywhere}
 li b{font-family:var(--display);font-size:.95rem;display:block}
 li a{color:var(--earth)}
+.tag{font-family:var(--display);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--olive);margin-left:6px}
 .empty{color:var(--muted);font-size:.9rem;margin:0}
 .row{display:flex;gap:8px;flex-wrap:wrap}
-.row input{flex:1 1 200px;min-width:0}
+.send{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sendbtn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:14px;color:#fff;text-align:left;min-width:0}
+.sendbtn strong{font-size:1.05rem}
+.sendbtn small{font-family:var(--mono);font-size:.74rem;opacity:.9;overflow-wrap:anywhere;max-width:100%}
+.sendbtn.wa{background:var(--wa)} .sendbtn.mail{background:var(--mail)}
 .btn{padding:14px 16px;font-size:1rem;font-weight:700;background:var(--fg);color:var(--bg);flex:1 1 auto}
-.btn.wa{background:#1f8f4e;color:#fff}
 .btn.sec{background:transparent;color:var(--fg);border:2px solid var(--line)}
 .btn.danger{background:transparent;color:var(--err);border:2px solid var(--err)}
+.btn[disabled],.sendbtn[disabled]{opacity:.45;cursor:not-allowed}
 .hint{font-size:.82rem;color:var(--muted);margin:0}
-#confirmBox{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:4px}
+.field .hint.err{color:var(--err)}
+#confirmBox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;border:2px solid var(--err);border-radius:10px}
+#confirmBox span{flex:1 1 100%}
+@media (max-width:360px){.send{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -64,103 +86,206 @@ li a{color:var(--earth)}
     <span class="clock" id="clock">--:--:--</span>
   </header>
 
-  <div>
-    <label for="nombre">Empleado</label>
-    <input id="nombre" autocomplete="name" placeholder="Nombre y apellidos">
+  <nav class="tabs" role="tablist">
+    <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Registro</button>
+    <button type="button" role="tab" id="tabCfg" aria-selected="false" aria-controls="panelCfg">Configuración</button>
+  </nav>
+
+  <!-- PESTAÑA PRINCIPAL -->
+  <div class="panel" id="panelReg" role="tabpanel">
+    <div>
+      <label class="lbl" for="nombre">Empleado</label>
+      <input id="nombre" type="text" autocomplete="name" placeholder="Nombre y apellidos">
+    </div>
+
+    <button id="btnRegistro" type="button">REGISTRO<small>Inicio de trabajo · fecha, hora y posición</small></button>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+
+    <section>
+      <h2>Registros guardados <span id="contador">0</span></h2>
+      <div class="selbar" id="selbar">
+        <span id="selInfo">0 seleccionados</span>
+        <button type="button" id="btnTodos">Seleccionar todos</button>
+      </div>
+      <ol id="lista"></ol>
+      <p class="empty" id="vacio">Aún no hay registros. Pulsa REGISTRO al empezar a trabajar.</p>
+    </section>
+
+    <section>
+      <h2>Enviar seleccionados</h2>
+      <div class="send">
+        <button class="sendbtn wa" id="btnWhatsapp" type="button"><strong>WhatsApp</strong><small id="destTel">Sin teléfono</small></button>
+        <button class="sendbtn mail" id="btnEmail" type="button"><strong>Email</strong><small id="destMail">Sin email</small></button>
+      </div>
+      <p class="hint">Se abre WhatsApp o el correo con los registros marcados ya escritos; solo falta pulsar enviar. Los destinatarios se cambian en Configuración.</p>
+      <div class="row">
+        <button class="btn sec" id="btnCompartir" type="button">Compartir .txt</button>
+        <button class="btn sec" id="btnDescargar" type="button">Descargar .txt</button>
+      </div>
+      <button class="btn danger" id="btnBorrar" type="button">Eliminar seleccionados</button>
+      <div id="confirmBox" hidden>
+        <span id="confirmTxt"></span>
+        <button class="btn danger" id="btnSiBorrar" type="button">Sí, eliminar</button>
+        <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
+      </div>
+    </section>
   </div>
 
-  <button id="btnRegistro" type="button">REGISTRO<small>Inicio de trabajo · fecha, hora y posición</small></button>
-  <p class="status" id="status" role="status" aria-live="polite"></p>
-
-  <section>
-    <h2>Registros guardados <span id="contador">0</span></h2>
-    <ol id="lista"></ol>
-    <p class="empty" id="vacio">Aún no hay registros. Pulsa REGISTRO al empezar a trabajar.</p>
-  </section>
-
-  <section>
-    <h2>Enviar por WhatsApp</h2>
-    <div>
-      <label for="telefono">Teléfono del destinatario</label>
-      <div class="row">
+  <!-- PESTAÑA CONFIGURACIÓN -->
+  <div class="panel" id="panelCfg" role="tabpanel" hidden>
+    <section>
+      <h2>Destinatarios</h2>
+      <div class="field">
+        <label class="lbl" for="telefono">Teléfono para WhatsApp</label>
         <input id="telefono" type="tel" inputmode="tel" placeholder="+34 600 000 000">
+        <p class="hint" id="telHint">Con prefijo internacional. Si escribes 9 cifras se añade +34.</p>
       </div>
-    </div>
-    <button class="btn wa" id="btnWhatsapp" type="button">Enviar a este teléfono</button>
-    <button class="btn sec" id="btnCompartir" type="button">Compartir fichero .txt (elegir WhatsApp)</button>
-    <p class="hint">«Enviar a este teléfono» abre el chat con ese número y el contenido del fichero ya escrito. «Compartir fichero» adjunta el .txt; en ese caso el contacto se elige dentro de WhatsApp.</p>
-    <div class="row">
-      <button class="btn sec" id="btnDescargar" type="button">Descargar .txt</button>
-      <button class="btn danger" id="btnBorrar" type="button">Borrar registros</button>
-    </div>
-    <div id="confirmBox" hidden>
-      <span>¿Borrar todos los registros del móvil?</span>
-      <button class="btn danger" id="btnSiBorrar" type="button">Sí, borrar</button>
-      <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
-    </div>
-  </section>
+      <div class="field">
+        <label class="lbl" for="email">Email para correo electrónico</label>
+        <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="gestor@ejemplo.com">
+        <p class="hint" id="mailHint">Puedes poner varios separados por coma.</p>
+      </div>
+      <button class="btn" id="btnGuardarCfg" type="button">Guardar configuración</button>
+      <p class="status" id="cfgStatus" role="status" aria-live="polite"></p>
+    </section>
+  </div>
 </main>
 
 <script>
 (function(){
-  const KEY_REG='gea_registros', KEY_NOM='gea_nombre', KEY_TEL='gea_telefono';
+  const KEY_REG='gea_registros', KEY_NOM='gea_nombre', KEY_TEL='gea_telefono', KEY_MAIL='gea_email';
   const $=id=>document.getElementById(id);
   const store={
     get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
     set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
   };
-  let registros=store.get(KEY_REG,[]);
-  $('nombre').value=store.get(KEY_NOM,'');
-  $('telefono').value=store.get(KEY_TEL,'');
-  $('nombre').addEventListener('input',e=>store.set(KEY_NOM,e.target.value.trim()));
-  $('telefono').addEventListener('input',e=>store.set(KEY_TEL,e.target.value.trim()));
-
+  const nuevoId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
   const pad=n=>String(n).padStart(2,'0');
   function fechaHora(d){
     const off=-d.getTimezoneOffset(), s=off>=0?'+':'-', a=Math.abs(off);
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} (UTC${s}${pad(Math.floor(a/60))}:${pad(a%60)})`;
   }
+
+  let registros=store.get(KEY_REG,[]);
+  let cambiado=false;
+  registros.forEach(r=>{if(!r.id){r.id=nuevoId();cambiado=true}});
+  if(cambiado)store.set(KEY_REG,registros);
+
+  // Por defecto solo está marcado el registro más reciente
+  let seleccion=new Set();
+  function soloUltimo(){seleccion=new Set(registros.length?[registros[registros.length-1].id]:[])}
+  soloUltimo();
+
+  let cfg={tel:store.get(KEY_TEL,''),mail:store.get(KEY_MAIL,'')};
+
+  /* ---------- Pestañas ---------- */
+  function abrir(tab){
+    const reg=tab==='reg';
+    $('tabReg').setAttribute('aria-selected',reg);$('tabCfg').setAttribute('aria-selected',!reg);
+    $('panelReg').hidden=!reg;$('panelCfg').hidden=reg;
+    if(!reg){$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
+      $('telefono').classList.remove('bad');$('email').classList.remove('bad')}
+    window.scrollTo(0,0);
+  }
+  $('tabReg').addEventListener('click',()=>abrir('reg'));
+  $('tabCfg').addEventListener('click',()=>abrir('cfg'));
+
+  /* ---------- Configuración ---------- */
+  function telefonoLimpio(v){
+    let t=(v||'').replace(/[^\d+]/g,'');
+    if(t.startsWith('+'))t=t.slice(1);else if(t.startsWith('00'))t=t.slice(2);else if(t.length===9)t='34'+t;
+    return t;
+  }
+  const emailsValidos=v=>v.split(',').map(x=>x.trim()).filter(Boolean).every(x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));
+
+  $('btnGuardarCfg').addEventListener('click',()=>{
+    const tel=$('telefono').value.trim(), mail=$('email').value.trim();
+    const telOk=!tel||telefonoLimpio(tel).length>=10, mailOk=!mail||emailsValidos(mail);
+    $('telefono').classList.toggle('bad',!telOk);$('email').classList.toggle('bad',!mailOk);
+    const s=$('cfgStatus');
+    if(!telOk||!mailOk){s.className='status err';s.textContent=!telOk?'El teléfono no es válido.':'Revisa el email: debe tener la forma nombre@dominio.com.';return}
+    cfg={tel,mail};store.set(KEY_TEL,tel);store.set(KEY_MAIL,mail);
+    pintarDestinos();
+    s.className='status ok';s.textContent='Configuración guardada.';
+  });
+
+  function pintarDestinos(){
+    $('destTel').textContent=cfg.tel?('+'+telefonoLimpio(cfg.tel)):'Sin teléfono · configurar';
+    $('destMail').textContent=cfg.mail||'Sin email · configurar';
+  }
+
+  /* ---------- Registros ---------- */
+  $('nombre').value=store.get(KEY_NOM,'');
+  $('nombre').addEventListener('input',e=>store.set(KEY_NOM,e.target.value.trim()));
   setInterval(()=>{const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`},1000);
 
   function status(msg,cls){const s=$('status');s.textContent=msg;s.className='status '+(cls||'')}
+  const seleccionados=()=>registros.filter(r=>seleccion.has(r.id));
 
   function linea(r){
     const pos=r.lat!=null?`${r.lat.toFixed(6)};${r.lon.toFixed(6)};${Math.round(r.precision)}`:'SIN POSICIÓN;;';
     return `${r.nombre};${r.fechaHora};${pos}`;
   }
-  function textoFichero(){
-    return 'EMPLEADO;FECHA_HORA;LATITUD;LONGITUD;PRECISION_M\n'+registros.map(linea).join('\n')+'\n';
+  function textoFichero(lista){
+    return 'EMPLEADO;FECHA_HORA;LATITUD;LONGITUD;PRECISION_M\n'+lista.map(linea).join('\n')+'\n';
   }
   function nombreFichero(){
     const d=new Date();
     return `registros_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.txt`;
   }
+  function textoMapas(lista){
+    return lista.map(r=>`${r.nombre} · ${r.fechaHora}\n`+(r.lat!=null?`https://maps.google.com/?q=${r.lat.toFixed(6)},${r.lon.toFixed(6)} (±${Math.round(r.precision)} m)`:'Sin posición')).join('\n\n');
+  }
+
+  function pintarSeleccion(){
+    const n=seleccion.size, total=registros.length;
+    $('selInfo').textContent=`${n} de ${total} seleccionado${n===1?'':'s'}`;
+    $('btnTodos').textContent=(n===total&&total>0)?'Quitar selección':'Seleccionar todos';
+    ['btnWhatsapp','btnEmail','btnCompartir','btnDescargar','btnBorrar'].forEach(id=>$(id).disabled=n===0);
+    document.querySelectorAll('#lista label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
+    $('confirmBox').hidden=true;
+  }
 
   function pintar(){
     const ol=$('lista');ol.textContent='';
+    const ultimoId=registros.length?registros[registros.length-1].id:null;
     registros.slice().reverse().forEach(r=>{
       const li=document.createElement('li');
-      const b=document.createElement('b');b.textContent=r.nombre;li.appendChild(b);
-      li.appendChild(document.createTextNode(r.fechaHora));
-      li.appendChild(document.createElement('br'));
+      const lab=document.createElement('label');
+      const cb=document.createElement('input');
+      cb.type='checkbox';cb.id='chk_'+r.id;cb.checked=seleccion.has(r.id);
+      cb.addEventListener('change',()=>{cb.checked?seleccion.add(r.id):seleccion.delete(r.id);pintarSeleccion()});
+      const txt=document.createElement('div');txt.className='txt';
+      const b=document.createElement('b');b.textContent=r.nombre;
+      if(r.id===ultimoId){const t=document.createElement('span');t.className='tag';t.textContent='Último';b.appendChild(t)}
+      txt.appendChild(b);
+      txt.appendChild(document.createTextNode(r.fechaHora));
+      txt.appendChild(document.createElement('br'));
       if(r.lat!=null){
         const a=document.createElement('a');
         a.href=`https://maps.google.com/?q=${r.lat},${r.lon}`;a.target='_blank';a.rel='noopener';
-        a.textContent=`${r.lat.toFixed(6)}, ${r.lon.toFixed(6)}`;li.appendChild(a);
-        li.appendChild(document.createTextNode(` · ±${Math.round(r.precision)} m`));
-      }else li.appendChild(document.createTextNode('Sin posición ('+(r.error||'no disponible')+')'));
-      ol.appendChild(li);
+        a.textContent=`${r.lat.toFixed(6)}, ${r.lon.toFixed(6)}`;txt.appendChild(a);
+        txt.appendChild(document.createTextNode(` · ±${Math.round(r.precision)} m`));
+      }else txt.appendChild(document.createTextNode('Sin posición ('+(r.error||'no disponible')+')'));
+      lab.appendChild(cb);lab.appendChild(txt);li.appendChild(lab);ol.appendChild(li);
     });
     $('contador').textContent=registros.length;
     $('vacio').hidden=registros.length>0;
+    $('selbar').hidden=registros.length===0;
+    pintarSeleccion();
   }
+
+  $('btnTodos').addEventListener('click',()=>{
+    seleccion=seleccion.size===registros.length?new Set():new Set(registros.map(r=>r.id));
+    pintar();
+  });
 
   $('btnRegistro').addEventListener('click',()=>{
     const nombre=$('nombre').value.trim();
     if(!nombre){status('Escribe tu nombre antes de registrar.','err');$('nombre').focus();return}
     const ahora=new Date();
-    const r={nombre,fechaHora:fechaHora(ahora),iso:ahora.toISOString(),lat:null,lon:null,precision:null};
-    const guardar=()=>{registros.push(r);store.set(KEY_REG,registros);pintar();$('btnRegistro').disabled=false};
+    const r={id:nuevoId(),nombre,fechaHora:fechaHora(ahora),iso:ahora.toISOString(),lat:null,lon:null,precision:null};
+    const guardar=()=>{registros.push(r);store.set(KEY_REG,registros);soloUltimo();pintar();$('btnRegistro').disabled=false};
     if(!('geolocation' in navigator)){r.error='GPS no disponible';guardar();status('Registrado sin posición: este navegador no da GPS.','err');return}
     $('btnRegistro').disabled=true;status('Obteniendo posición GPS…');
     navigator.geolocation.getCurrentPosition(p=>{
@@ -173,43 +298,62 @@ li a{color:var(--earth)}
     },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
   });
 
-  function telefonoLimpio(){
-    let t=$('telefono').value.replace(/[^\d+]/g,'');
-    if(t.startsWith('+'))t=t.slice(1);else if(t.startsWith('00'))t=t.slice(2);else if(t.length===9)t='34'+t;
-    return t;
+  function haySeleccion(){
+    if(!seleccion.size){status('Marca al menos un registro.','err');return false}
+    return true;
   }
 
+  /* ---------- Envíos ---------- */
   $('btnWhatsapp').addEventListener('click',()=>{
-    if(!registros.length){status('No hay registros que enviar.','err');return}
-    const tel=telefonoLimpio();
-    if(tel.length<10){status('Escribe un teléfono válido, con prefijo si no es español.','err');$('telefono').focus();return}
-    const txt=`*${nombreFichero()}*\n`+textoFichero();
-    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(txt)}`,'_blank');
+    if(!haySeleccion())return;
+    if(!cfg.tel){abrir('cfg');$('telefono').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el teléfono de WhatsApp y guarda.';return}
+    const txt=`*${nombreFichero()}*\n`+textoFichero(seleccionados());
+    window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(txt)}`,'_blank');
+  });
+
+  $('btnEmail').addEventListener('click',()=>{
+    if(!haySeleccion())return;
+    if(!cfg.mail){abrir('cfg');$('email').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el email del destinatario y guarda.';return}
+    const lista=seleccionados();
+    const nombres=[...new Set(lista.map(r=>r.nombre))].join(', ');
+    const asunto=`Registro de jornada · ${nombres} · ${lista.length} registro${lista.length===1?'':'s'}`;
+    const cuerpo=`Registros de inicio de jornada:\n\n${textoMapas(lista)}\n\n--- ${nombreFichero()} ---\n${textoFichero(lista)}`;
+    const dest=cfg.mail.split(',').map(x=>x.trim()).filter(Boolean).join(',');
+    location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
   });
 
   $('btnCompartir').addEventListener('click',async()=>{
-    if(!registros.length){status('No hay registros que enviar.','err');return}
-    const file=new File([textoFichero()],nombreFichero(),{type:'text/plain'});
+    if(!haySeleccion())return;
+    const file=new File([textoFichero(seleccionados())],nombreFichero(),{type:'text/plain'});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       try{await navigator.share({files:[file],title:'Registros de jornada'})}
       catch(e){if(e.name!=='AbortError')status('No se pudo compartir el fichero.','err')}
-    }else status('Este navegador no permite adjuntar ficheros. Usa «Enviar a este teléfono» o «Descargar .txt».','err');
+    }else status('Este navegador no permite adjuntar ficheros. Usa WhatsApp, Email o Descargar.','err');
   });
 
   $('btnDescargar').addEventListener('click',()=>{
-    if(!registros.length){status('No hay registros.','err');return}
+    if(!haySeleccion())return;
     const a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([textoFichero()],{type:'text/plain'}));
+    a.href=URL.createObjectURL(new Blob([textoFichero(seleccionados())],{type:'text/plain'}));
     a.download=nombreFichero();document.body.appendChild(a);a.click();
     setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
   });
 
-  $('btnBorrar').addEventListener('click',()=>{$('confirmBox').hidden=false});
+  $('btnBorrar').addEventListener('click',()=>{
+    if(!haySeleccion())return;
+    const n=seleccion.size;
+    $('confirmTxt').textContent=`¿Eliminar ${n} registro${n===1?'':'s'} del móvil? No se puede deshacer.`;
+    $('confirmBox').hidden=false;
+  });
   $('btnNoBorrar').addEventListener('click',()=>{$('confirmBox').hidden=true});
   $('btnSiBorrar').addEventListener('click',()=>{
-    registros=[];store.set(KEY_REG,registros);pintar();$('confirmBox').hidden=true;status('Registros borrados.','ok');
+    const n=seleccion.size;
+    registros=registros.filter(r=>!seleccion.has(r.id));
+    store.set(KEY_REG,registros);soloUltimo();pintar();
+    status(`${n} registro${n===1?'':'s'} eliminado${n===1?'':'s'}.`,'ok');
   });
 
+  pintarDestinos();
   pintar();
 })();
 </script>
