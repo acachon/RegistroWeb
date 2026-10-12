@@ -50,9 +50,11 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--earth);outline-
 section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
 h2{font-size:1rem;margin:0;display:flex;justify-content:space-between;align-items:center}
 h2 span{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.85rem}
-.selbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.selbar span{font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.selbar button{padding:8px 12px;font-size:.9rem;font-weight:700;background:transparent;color:var(--olive);border:2px solid var(--olive);border-radius:8px}
+.sechead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sechead h2{justify-content:flex-start;gap:8px;white-space:nowrap}
+.mini{white-space:nowrap;flex:none;padding:6px 10px;font-size:.85rem;font-weight:700;background:transparent;color:var(--olive);border:2px solid var(--olive);border-radius:8px}
+.btn.ico{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.ico svg{width:20px;height:20px;flex:none}
 ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 li label{display:flex;gap:12px;align-items:flex-start;font-family:var(--mono);font-size:.82rem;padding:10px;border:2px solid transparent;border-left:3px solid var(--line);background:var(--bg);border-radius:6px;cursor:pointer}
 li label.sel{border-color:var(--olive);background:var(--olive-soft)}
@@ -61,6 +63,9 @@ li .txt{min-width:0;overflow-wrap:anywhere}
 li b{font-family:var(--display);font-size:.95rem;display:block}
 li a{color:var(--earth)}
 .tag{font-family:var(--display);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--olive);margin-left:6px}
+.acciones{display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
+.acciones .row .btn{flex:1 1 0;min-width:0}
+.toggle{width:100%;padding:10px;font-size:.92rem;font-weight:700;background:transparent;color:var(--olive);border:2px dashed var(--line);border-radius:8px}
 .empty{color:var(--muted);font-size:.9rem;margin:0}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .send{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -109,12 +114,23 @@ li a{color:var(--earth)}
     <p class="status" id="status" role="status" aria-live="polite"></p>
 
     <section>
-      <h2>Registros guardados <span id="contador">0</span></h2>
-      <div class="selbar" id="selbar">
-        <span id="selInfo">0 seleccionados</span>
-        <button type="button" id="btnTodos">Seleccionar todos</button>
+      <div class="sechead">
+        <h2>Registros guardados <span id="contador">0</span></h2>
+        <button type="button" id="btnTodos" class="mini" hidden>Seleccionar todos</button>
       </div>
       <ol id="lista"></ol>
+      <button type="button" id="btnVerMas" class="toggle" aria-expanded="false" aria-controls="lista" hidden></button>
+      <div class="acciones" id="acciones" hidden>
+        <div class="row">
+          <button class="btn danger ico" id="btnBorrar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
+          <button class="btn sec ico" id="btnCompartir" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
+        </div>
+        <div id="confirmBox" hidden>
+          <span id="confirmTxt"></span>
+          <button class="btn danger" id="btnSiBorrar" type="button">Sí, eliminar</button>
+          <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
+        </div>
+      </div>
       <p class="empty" id="vacio">Aún no hay registros. Pulsa REGISTRO al empezar a trabajar.</p>
     </section>
 
@@ -123,16 +139,6 @@ li a{color:var(--earth)}
       <div class="send">
         <button class="sendbtn wa" id="btnWhatsapp" type="button"><strong>WhatsApp</strong><small id="destTel">Sin teléfono</small></button>
         <button class="sendbtn mail" id="btnEmail" type="button"><strong>Email</strong><small id="destMail">Sin email</small></button>
-      </div>
-      <div class="row">
-        <button class="btn sec" id="btnCompartir" type="button">Compartir .txt</button>
-        <button class="btn sec" id="btnDescargar" type="button">Descargar .txt</button>
-      </div>
-      <button class="btn danger" id="btnBorrar" type="button">Eliminar seleccionados</button>
-      <div id="confirmBox" hidden>
-        <span id="confirmTxt"></span>
-        <button class="btn danger" id="btnSiBorrar" type="button">Sí, eliminar</button>
-        <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
       </div>
     </section>
   </div>
@@ -228,7 +234,8 @@ li a{color:var(--earth)}
 
   /* ---------- Registros ---------- */
   $('nombre').value=store.get(KEY_NOM,'');
-  $('nombre').addEventListener('input',e=>store.set(KEY_NOM,e.target.value.trim()));  setInterval(()=>{const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`},1000);
+  $('nombre').addEventListener('input',e=>store.set(KEY_NOM,e.target.value.trim()));
+  setInterval(()=>{const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`},1000);
 
   function status(msg,cls){const s=$('status');s.textContent=msg;s.className='status '+(cls||'')}
   const seleccionados=()=>registros.filter(r=>seleccion.has(r.id));
@@ -252,24 +259,26 @@ li a{color:var(--earth)}
     return lista.map(r=>{
       const d=new Date(r.iso);
       const ubic=r.lat!=null?`https://maps.google.com/?q=${r.lat.toFixed(6)},${r.lon.toFixed(6)}`:'sin posición';
-      return `Empleado: ${r.nombre}\nFecha: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\nUbicación: ${ubic}`;
+      return `Empleado: ${r.nombre}\nFecha: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\nUbicación: ${ubic}\nPrecisión GPS: ${r.lat!=null?'±'+Math.round(r.precision)+' m':'sin dato'}`;
     }).join('\n\n');
   }
 
   function pintarSeleccion(){
     const n=seleccion.size, total=registros.length;
-    $('selInfo').textContent=`${n} de ${total} seleccionado${n===1?'':'s'}`;
     $('btnTodos').textContent=(n===total&&total>0)?'Quitar selección':'Seleccionar todos';
-    ['btnWhatsapp','btnEmail','btnCompartir','btnDescargar','btnBorrar'].forEach(id=>$(id).disabled=n===0);
+    ['btnWhatsapp','btnEmail','btnCompartir','btnBorrar'].forEach(id=>$(id).disabled=n===0);
     document.querySelectorAll('#lista label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
     $('confirmBox').hidden=true;
   }
 
+  // Solo se ve el último registro; los anteriores quedan plegados tras btnVerMas
+  let expandido=false;
   function pintar(){
     const ol=$('lista');ol.textContent='';
     const ultimoId=registros.length?registros[registros.length-1].id:null;
-    registros.slice().reverse().forEach(r=>{
+    registros.slice().reverse().forEach((r,i)=>{
       const li=document.createElement('li');
+      li.hidden=!expandido&&i>0;
       const lab=document.createElement('label');
       const cb=document.createElement('input');
       cb.type='checkbox';cb.id='chk_'+r.id;cb.checked=seleccion.has(r.id);
@@ -290,9 +299,20 @@ li a{color:var(--earth)}
     });
     $('contador').textContent=registros.length;
     $('vacio').hidden=registros.length>0;
-    $('selbar').hidden=registros.length===0;
+    // La selección múltiple, compartir y eliminar solo se ofrecen con el listado desplegado
+    // (con un único registro no hay nada que plegar, así que se ofrecen directamente)
+    const abierto=registros.length>0&&(expandido||registros.length===1);
+    $('acciones').hidden=!abierto;
+    $('btnTodos').hidden=registros.length<2||!expandido;
+    const anteriores=registros.length-1, ver=$('btnVerMas');
+    ver.hidden=anteriores<1;
+    ver.setAttribute('aria-expanded',expandido);
+    ver.textContent=expandido?'▴ Ocultar anteriores':`▾ Ver ${anteriores} anterior${anteriores===1?'':'es'}`;
     pintarSeleccion();
   }
+
+  // Al plegar se vuelve a marcar solo el último, para no enviar registros que no se ven
+  $('btnVerMas').addEventListener('click',()=>{expandido=!expandido;if(!expandido)soloUltimo();pintar()});
 
   $('btnTodos').addEventListener('click',()=>{
     seleccion=seleccion.size===registros.length?new Set():new Set(registros.map(r=>r.id));
@@ -335,8 +355,10 @@ li a{color:var(--earth)}
     if(!cfg.mail){abrir('cfg');$('email').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el email del destinatario y guarda.';return}
     const lista=seleccionados();
     const nombres=[...new Set(lista.map(r=>r.nombre))].join(', ');
-    const asunto=`Registro de jornada · ${nombres} · ${lista.length} registro${lista.length===1?'':'s'}`;
-    const cuerpo=`Registros de inicio de jornada:\n\n${textoMapas(lista)}\n\n--- ${nombreFichero()} ---\n${textoFichero(lista)}`;
+    const fh=r=>{const d=new Date(r.iso);return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+    const cuando=lista.length===1?fh(lista[0]):`${fh(lista[0])} – ${fh(lista[lista.length-1])}`;
+    const asunto=`Registro ${nombres} ${cuando}`;
+    const cuerpo=textoWhatsapp(lista);
     const dest=cfg.mail.split(',').map(x=>x.trim()).filter(Boolean).join(',');
     location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
   });
@@ -347,15 +369,7 @@ li a{color:var(--earth)}
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       try{await navigator.share({files:[file],title:'Registros de jornada'})}
       catch(e){if(e.name!=='AbortError')status('No se pudo compartir el fichero.','err')}
-    }else status('Este navegador no permite adjuntar ficheros. Usa WhatsApp, Email o Descargar.','err');
-  });
-
-  $('btnDescargar').addEventListener('click',()=>{
-    if(!haySeleccion())return;
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([textoFichero(seleccionados())],{type:'text/plain'}));
-    a.download=nombreFichero();document.body.appendChild(a);a.click();
-    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);
+    }else status('Este navegador no permite adjuntar ficheros. Usa WhatsApp o Email.','err');
   });
 
   $('btnBorrar').addEventListener('click',()=>{
