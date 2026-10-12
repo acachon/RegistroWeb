@@ -103,6 +103,10 @@ label.item{cursor:pointer}
 .cal .dia.hoy{border-color:var(--earth)}
 .cal .dia.act{background:var(--olive);color:var(--olive-ink)}
 .cal .dia.act::after{background:var(--olive-ink)}
+/* Ayuda cuando no hay ubicación: pasos según dispositivo y tipo de fallo */
+.ayuda{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px 14px;border:2px solid var(--err);border-radius:10px;background:var(--card)}
+.ayuda strong{color:var(--err)}
+.ayuda ol{list-style:decimal;padding-left:22px;gap:6px;font-size:.92rem}
 .filtro{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.88rem;color:var(--muted);min-height:32px}
 :root[data-theme="dark"]{
   --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
@@ -135,6 +139,11 @@ label.item{cursor:pointer}
 
     <button id="btnRegistro" type="button">REGISTRO<small>Inicio de trabajo · fecha, hora y posición</small></button>
     <p class="status" id="status" role="status" aria-live="polite"></p>
+    <div class="ayuda" id="ayudaGps" hidden>
+      <strong id="ayudaTitulo"></strong>
+      <ol id="ayudaPasos"></ol>
+      <button type="button" class="mini" id="ayudaCerrar">Entendido</button>
+    </div>
 
     <section>
       <h2>Último registro</h2>
@@ -243,26 +252,32 @@ label.item{cursor:pointer}
   registros.forEach(r=>{if(!r.id){r.id=nuevoId();cambiado=true}});
   if(cambiado)store.set(KEY_REG,registros);
 
-  // Ejemplos solo para ver la web con algo; desaparecen con el primer registro real y nunca se guardan
-  if(!registros.length){
-    const base=Date.now(), hace=h=>new Date(base-h*3600000), oct=(dia,h,m)=>new Date(2026,9,dia,h,m);
-    // Hoy: varias horas fijas (solo las ya pasadas) para ver las duraciones entre registros
-    const hoyEj=new Date(), aHoy=(h,m)=>new Date(hoyEj.getFullYear(),hoyEj.getMonth(),hoyEj.getDate(),h,m);
-    const deHoy=[["Ejemplo · Juan Pérez",37.884530,-4.779300,6,aHoy(8,2)],["Ejemplo · María López",37.886090,-4.781850,8,aHoy(10,31)],["Ejemplo · Juan Pérez",37.884501,-4.779355,5,aHoy(13,47)]]
-      .filter(x=>x[4]<hace(1));
-    registros=[
-      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,oct(6,7,58)],
-      ["Ejemplo · María López",37.886104,-4.781877,9,oct(6,8,12)],
-      ["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,oct(7,8,3)],
-      ["Ejemplo · Juan Pérez",37.884498,-4.779410,7,oct(10,7,55)],
-      ["Ejemplo · María López",37.886120,-4.781790,11,oct(10,8,6)],
-      ["Ejemplo · Antonio Ruiz",37.882940,-4.776601,8,oct(10,8,21)],
-      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,hace(74)],
-      ["Ejemplo · María López",37.886104,-4.781877,9,hace(26)],
-      ["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,hace(1)],
-      ...deHoy
-    ].sort((a,b)=>a[4]-b[4])
+  // Registros de prueba para comprobar la web. Se muestran siempre junto a los reales, pero nunca
+  // se guardan. Poner MOSTRAR_EJEMPLOS=false cuando la web vaya a usarse de verdad.
+  const MOSTRAR_EJEMPLOS=true;
+  if(MOSTRAR_EJEMPLOS){
+    const base=new Date(), dia=(n,h,m)=>new Date(base.getFullYear(),base.getMonth(),base.getDate()+n,h,m);
+    // Semana anterior: siempre. Hoy: solo si aún no hay registros reales hoy, para no mezclar duraciones.
+    const semana=[
+      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,dia(-6,7,58)],
+      ["Ejemplo · María López",37.886104,-4.781877,9,dia(-6,8,12)],
+      ["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,dia(-5,8,3)],
+      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,dia(-3,8,10)],
+      ["Ejemplo · Juan Pérez",37.884498,-4.779410,7,dia(-2,7,55)],
+      ["Ejemplo · María López",37.886120,-4.781790,11,dia(-2,8,6)],
+      ["Ejemplo · Antonio Ruiz",37.882940,-4.776601,8,dia(-2,8,21)],
+      ["Ejemplo · María López",37.886104,-4.781877,9,dia(-1,7,50)]
+    ];
+    const hayRealHoy=registros.some(r=>diaDe(r)===diaKey(base));
+    const deHoy=hayRealHoy?[]:[
+      ["Ejemplo · Juan Pérez",37.884530,-4.779300,6,dia(0,8,2)],
+      ["Ejemplo · María López",37.886090,-4.781850,8,dia(0,10,31)],
+      ["Ejemplo · Juan Pérez",37.884501,-4.779355,5,dia(0,13,47)],
+      ["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,dia(0,16,20)]
+    ].filter(x=>x[4]<base);
+    const ejemplos=[...semana,...deHoy]
       .map(([n,la,lo,p,d])=>({id:nuevoId(),nombre:n,fechaHora:fechaHora(d),iso:d.toISOString(),lat:la,lon:lo,precision:p,ejemplo:true}));
+    registros=[...registros,...ejemplos].sort((a,b)=>new Date(a.iso)-new Date(b.iso));
   }
   const guardarRegistros=()=>store.set(KEY_REG,registros.filter(r=>!r.ejemplo));
   const ultimo=()=>registros.length?registros[registros.length-1]:null;
@@ -473,6 +488,46 @@ label.item{cursor:pointer}
     pintarListado();
   });
 
+  /* ---------- Ayuda de ubicación ---------- */
+  // Una web no puede abrir los ajustes del navegador ni del móvil, así que se explican los pasos
+  // según el dispositivo. codigo: 0 sin GPS, 1 permiso denegado, 2 ubicación apagada, 3 tiempo agotado.
+  function ayudaUbicacion(codigo){
+    const ua=navigator.userAgent;
+    const ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1), android=/Android/.test(ua);
+    let titulo, pasos;
+    if(!window.isSecureContext){
+      titulo='La ubicación solo funciona con una dirección segura';
+      pasos=['Abre la web desde su dirección https://… y no como archivo guardado en el móvil u ordenador.'];
+    }else if(codigo===1){
+      titulo='Permite la ubicación para esta web';
+      pasos=ios?['Abre Ajustes → Privacidad y seguridad → Localización y comprueba que está activada.',
+                 'Safari: en Ajustes → Apps → Safari → Ubicación, elige «Preguntar» o «Permitir». Chrome: en Ajustes → Apps → Chrome → Ubicación, elige «Al usar la app».',
+                 'Vuelve aquí, recarga la página y pulsa REGISTRO.']
+        :android?['Toca el icono que hay a la izquierda de la dirección web (candado o ajustes).',
+                  'Entra en Permisos → Ubicación y elige «Permitir».',
+                  'Recarga la página y pulsa REGISTRO.']
+        :['Haz clic en el icono que hay a la izquierda de la dirección web (candado o ajustes).',
+          'En Ubicación elige «Permitir».',
+          'Recarga la página y pulsa REGISTRO.'];
+    }else if(codigo===2){
+      titulo='La ubicación del dispositivo está apagada';
+      pasos=ios?['Abre Ajustes → Privacidad y seguridad → Localización y actívala.','Vuelve aquí y pulsa REGISTRO.']
+        :android?['Desliza desde arriba de la pantalla y activa «Ubicación».','Vuelve aquí y pulsa REGISTRO.']
+        :['Activa la ubicación en la configuración del sistema.','Vuelve aquí y pulsa REGISTRO.'];
+    }else if(codigo===3){
+      titulo='La posición ha tardado demasiado';
+      pasos=['Sal al exterior o acércate a una ventana.','Pulsa REGISTRO otra vez.'];
+    }else{
+      titulo='Este navegador no puede dar la posición';
+      pasos=['Abre la web con Chrome o Safari.'];
+    }
+    $('ayudaTitulo').textContent=titulo;
+    const ol=$('ayudaPasos');ol.textContent='';
+    pasos.forEach(p=>{const li=document.createElement('li');li.textContent=p;ol.appendChild(li)});
+    $('ayudaGps').hidden=false;
+  }
+  $('ayudaCerrar').addEventListener('click',()=>{$('ayudaGps').hidden=true});
+
   /* ---------- Registro ---------- */
   $('btnRegistro').addEventListener('click',()=>{
     const nombre=$('nombre').value.trim();
@@ -480,11 +535,13 @@ label.item{cursor:pointer}
     const ahora=new Date();
     const r={id:nuevoId(),nombre,fechaHora:fechaHora(ahora),iso:ahora.toISOString(),lat:null,lon:null,precision:null};
     const guardar=()=>{
-      registros=registros.filter(x=>!x.ejemplo);registros.push(r);guardarRegistros();
+      // Los ejemplos de hoy se quitan al registrar de verdad, para no mezclar sus duraciones con las reales
+      registros=registros.filter(x=>!(x.ejemplo&&diaDe(x)===diaDe(r)));registros.push(r);guardarRegistros();
       seleccion.clear();filtroDia=null;mesVista=new Date(ahora.getFullYear(),ahora.getMonth(),1);
       pintarTodo();$('btnRegistro').disabled=false;
     };
-    if(!('geolocation' in navigator)){r.error='GPS no disponible';guardar();status('Registrado sin posición: este navegador no da GPS.','err');return}
+    $('ayudaGps').hidden=true;
+    if(!('geolocation' in navigator)){r.error='GPS no disponible';guardar();status('Registrado sin posición: este navegador no da GPS.','err');ayudaUbicacion(0);return}
     $('btnRegistro').disabled=true;status('Obteniendo posición GPS…');
     navigator.geolocation.getCurrentPosition(p=>{
       r.lat=p.coords.latitude;r.lon=p.coords.longitude;r.precision=p.coords.accuracy;
@@ -492,7 +549,7 @@ label.item{cursor:pointer}
       if(navigator.vibrate)navigator.vibrate(120);
     },e=>{
       r.error=e.code===1?'permiso denegado':e.code===3?'tiempo agotado':'posición no disponible';
-      guardar();status('Registrado sin posición: '+r.error+'. Activa la ubicación y vuelve a registrar.','err');
+      guardar();status('Registrado sin posición: '+r.error+'.','err');ayudaUbicacion(e.code);
     },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
   });
 
