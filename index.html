@@ -656,7 +656,7 @@ label.item{cursor:pointer}
     $('sugFin').hidden=false;
   }
   $('sugWa').addEventListener('click',()=>{if(resumenDia)enviarWhatsapp(resumenDia.lista,resumenDia.cabecera)});
-  $('sugMail').addEventListener('click',()=>{if(resumenDia)enviarEmail(resumenDia.lista,resumenDia.cabecera)});
+  $('sugMail').addEventListener('click',()=>{if(resumenDia)enviarEmail(resumenDia.lista,resumenDia.cabecera,true)});
   $('sugCerrar').addEventListener('click',()=>{$('sugFin').hidden=true});
 
   /* ---------- Envíos ---------- */
@@ -664,12 +664,18 @@ label.item{cursor:pointer}
     if(!cfg.tel){abrir('cfg');$('telefono').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el teléfono de WhatsApp y guarda.';return}
     window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(cabecera+textoWhatsapp(lista))}`,'_blank');
   }
-  function enviarEmail(lista,cabecera=''){
+  function enviarEmail(lista,cabecera='',resumen=false){
     if(!cfg.mail){abrir('cfg');$('email').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el email del destinatario y guarda.';return}
     const nombres=[...new Set(lista.map(r=>r.nombre))].join(', ');
-    const fh=r=>{const d=new Date(r.iso);return `${fechaCorta(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
-    const cuando=lista.length===1?fh(lista[0]):`${fh(lista[0])} – ${fh(lista[lista.length-1])}`;
-    const asunto=`Registro ${nombres} ${cuando}`;
+    const hm=r=>{const d=new Date(r.iso);return `${pad(d.getHours())}:${pad(d.getMinutes())}`};
+    const fh=r=>`${fechaCorta(new Date(r.iso))} ${hm(r)}`;
+    const primero=lista[0], ultimoL=lista[lista.length-1];
+    // En el resumen de fin de jornada (un mismo día) la fecha no se repite: 12/10/26 08:02 – 16:20
+    const cuando=lista.length===1?fh(primero):`${fh(primero)} – ${resumen?hm(ultimoL):fh(ultimoL)}`;
+    // Asunto: Registro [Actividad] [Empleado] [Fecha y hora]; con varios registros, actividades sin repetir y rango de fechas.
+    // El resumen de fin de jornada usa «Jornada completa» en lugar de la lista de actividades.
+    const actividades=resumen?'Jornada completa':[...new Set(lista.map(r=>r.actividad).filter(Boolean))].join(', ');
+    const asunto=['Registro',actividades,nombres,cuando].filter(Boolean).join(' ');
     const dest=cfg.mail.split(',').map(x=>x.trim()).filter(Boolean).join(',');
     location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cabecera+textoWhatsapp(lista))}`;
   }
