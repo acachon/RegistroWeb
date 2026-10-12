@@ -137,6 +137,7 @@ label.item{cursor:pointer}
 /* El selector de capas usa un <section> interno: anular el estilo de tarjeta de la web */
 .leaflet-container section{background:transparent;border:0;border-radius:0;padding:0;display:block}
 .leaflet-container .leaflet-bar a:hover{background:#f0f0f0}
+.leaflet-container .ubic a{display:flex;align-items:center;justify-content:center}
 .leaflet-container .leaflet-control-attribution{background:rgba(255,255,255,.85);color:#333}
 .leaflet-container .leaflet-control-attribution a{color:#0b5394}
 /* Icono por actividad: Inicio cuadrado rojo, Fin cuadrado negro, el resto círculos de colores */
@@ -693,16 +694,54 @@ label.item{cursor:pointer}
   // Mapa reutilizable (Listado y pestaña Registro). pintar(lista,conLinea,avisoVacio) dibuja los registros
   // de lista que tienen coordenadas, numerados por orden; si no hay ninguno, se centra en la finca.
   // fondoInicial: «Mapa» o «Satélite» la primera vez; después cada mapa recuerda su propia elección.
-  function crearMapa(idMapa,idNota,fondoInicial){
+  // conUbicacion: añade los botones «Ir a mi ubicación» e «Ir al último registro».
+  const SVG_YO='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></svg>';
+  const SVG_ULT='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+  function crearMapa(idMapa,idNota,fondoInicial,conUbicacion=false){
     const claveFondo=`${KEY_CAPA}_${idMapa}`;
-    let mapa=null, capaMapa=null;
+    let mapa=null, capaMapa=null, capaYo=null;
+    const marcadores=new Map(); // id de registro → marcador, para abrir su globo
+
+    // Centra el mapa en la posición actual del móvil y la marca con un punto azul y su margen de error
+    function irAMiUbicacion(){
+      const nota=$(idNota);
+      if(!('geolocation' in navigator)){nota.textContent='Este navegador no puede dar tu ubicación.';return}
+      nota.textContent='Buscando tu ubicación…';
+      navigator.geolocation.getCurrentPosition(p=>{
+        const pos=[p.coords.latitude,p.coords.longitude];
+        capaYo.clearLayers();
+        L.circle(pos,{radius:p.coords.accuracy,color:'#1a73e8',weight:1,fillOpacity:.12}).addTo(capaYo);
+        L.circleMarker(pos,{radius:8,color:'#fff',weight:2,fillColor:'#1a73e8',fillOpacity:1})
+          .bindTooltip(`Estás aquí (±${Math.round(p.coords.accuracy)} m)`).addTo(capaYo);
+        mapa.setView(pos,Math.max(mapa.getZoom(),17));
+        nota.textContent='';
+      },e=>{
+        nota.textContent='No se ha podido obtener tu ubicación.';
+        ayudaUbicacion(e.code);
+      },{enableHighAccuracy:true,timeout:15000,maximumAge:30000});
+    }
+    // Centra el mapa en el último registro con coordenadas y abre su globo
+    function irAlUltimo(){
+      const r=registros.slice().reverse().find(x=>x.lat!=null);
+      if(!r){$(idNota).textContent='Todavía no hay registros con ubicación.';return}
+      mapa.setView([r.lat,r.lon],18);
+      const mk=marcadores.get(r.id);
+      if(mk)mk.openPopup();
+      else{ // de otro día: no está dibujado en este mapa, se marca aparte
+        capaYo.clearLayers();
+        const icono=L.divIcon({className:'',html:crearPin(iconoDe(r),'•').outerHTML,iconSize:[26,26],iconAnchor:[13,13]});
+        L.marker([r.lat,r.lon],{icon:icono}).bindPopup(`Último registro: ${r.fechaHora.slice(0,16)}`).addTo(capaYo).openPopup();
+      }
+    }
+
     return {pintar(lista,conLinea,avisoVacio){
     const conPos=lista.filter(r=>r.lat!=null), sin=lista.length-conPos.length, nota=$(idNota);
     nota.textContent=!lista.length?avisoVacio
       :sin?`${sin} registro${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
     if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';$(idMapa).hidden=true;return}
     if(!mapa){
-      mapa=L.map(idMapa);
+      // Sin botones + / −: el zoom se hace con los dedos (o la rueda del ratón en el ordenador)
+      mapa=L.map(idMapa,{zoomControl:false});
       // Dos fondos a elegir con el control de capas; se recuerda el último usado en este móvil.
       // Satélite: Esri World Imagery (sin clave); en zonas rurales solo hay imagen hasta el zoom 18, más allá se amplía.
       const fondos={
@@ -714,8 +753,22 @@ label.item{cursor:pointer}
       L.control.layers(fondos,null,{collapsed:true}).addTo(mapa);
       mapa.on('baselayerchange',e=>store.set(claveFondo,e.name));
       capaMapa=L.layerGroup().addTo(mapa);
+      capaYo=L.layerGroup().addTo(mapa);
+      if(conUbicacion){
+        const Botones=L.Control.extend({options:{position:'topleft'},onAdd(){
+          const caja=L.DomUtil.create('div','leaflet-bar ubic');
+          [[SVG_YO,'Ir a mi ubicación actual',irAMiUbicacion],[SVG_ULT,'Ir al último registro',irAlUltimo]].forEach(([svg,titulo,accion])=>{
+            const a=L.DomUtil.create('a','',caja);a.href='#';a.setAttribute('role','button');
+            a.title=titulo;a.setAttribute('aria-label',titulo);a.innerHTML=svg;
+            L.DomEvent.on(a,'click',e=>{L.DomEvent.preventDefault(e);accion()});
+          });
+          L.DomEvent.disableClickPropagation(caja);
+          return caja;
+        }});
+        new Botones().addTo(mapa);
+      }
     }
-    capaMapa.clearLayers();
+    capaMapa.clearLayers();marcadores.clear();
     const puntos=conPos.map(r=>[r.lat,r.lon]);
     if(conLinea&&puntos.length>1)L.polyline(puntos,{color:'#9a5b2e',weight:3,opacity:.7,dashArray:'6 6'}).addTo(capaMapa);
     conPos.forEach((r,i)=>{
@@ -735,7 +788,7 @@ label.item{cursor:pointer}
           .forEach(t=>{pop.appendChild(document.createTextNode(t));pop.appendChild(document.createElement('br'))});
         return pop;
       };
-      L.marker([r.lat,r.lon],{icon:icono}).bindPopup(crearGlobo).addTo(capaMapa);
+      marcadores.set(r.id,L.marker([r.lat,r.lon],{icon:icono}).bindPopup(crearGlobo).addTo(capaMapa));
     });
     // El contenedor acaba de mostrarse: recalcular tamaño antes de encuadrar
     setTimeout(()=>{
@@ -745,7 +798,7 @@ label.item{cursor:pointer}
     },0);
     }};
   }
-  const mapaListado=crearMapa('mapa','mapaNota','Mapa'), mapaHoy=crearMapa('mapaHoy','mapaHoyNota','Satélite');
+  const mapaListado=crearMapa('mapa','mapaNota','Mapa'), mapaHoy=crearMapa('mapaHoy','mapaHoyNota','Satélite',true);
   // Listado: solo los registros marcados; con un día filtrado se unen con una línea
   function pintarMapa(lista){
     mapaListado.pintar(lista.filter(r=>seleccion.has(r.id)),!!filtroDia,'No hay registros marcados. Márcalos en Listado para verlos en el mapa.');
