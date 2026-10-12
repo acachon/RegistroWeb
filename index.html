@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+[hidden]{display:none!important}
+img{max-width:100%}
 /* Una sola columna para móvil al sol: contraste alto, botón grande, registros como cuaderno de campo */
 :root{
   --bg:#f3f1e8; --card:#fffdf6; --fg:#1f2617; --muted:#5d6650; --line:#d8d4c2;
@@ -17,7 +19,7 @@
   --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;
 }
-@media (prefers-color-scheme:dark){:root{
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
   --olive:#8fb064; --olive-ink:#142008; --olive-soft:#2a331f; --earth:#d49a66; --ok:#7fc27a; --err:#ef8a74;
   --wa:#2a9d5c; --mail:#3f74ad;
@@ -75,6 +77,11 @@ li a{color:var(--earth)}
 .field .hint.err{color:var(--err)}
 #confirmBox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;border:2px solid var(--err);border-radius:10px}
 #confirmBox span{flex:1 1 100%}
+:root[data-theme="dark"]{
+  --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
+  --olive:#8fb064; --olive-ink:#142008; --olive-soft:#2a331f; --earth:#d49a66; --ok:#7fc27a; --err:#ef8a74;
+  --wa:#2a9d5c; --mail:#3f74ad;
+  color-scheme:dark}
 @media (max-width:360px){.send{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -117,7 +124,6 @@ li a{color:var(--earth)}
         <button class="sendbtn wa" id="btnWhatsapp" type="button"><strong>WhatsApp</strong><small id="destTel">Sin teléfono</small></button>
         <button class="sendbtn mail" id="btnEmail" type="button"><strong>Email</strong><small id="destMail">Sin email</small></button>
       </div>
-      <p class="hint">Se abre WhatsApp o el correo con los registros marcados ya escritos; solo falta pulsar enviar. Los destinatarios se cambian en Configuración.</p>
       <div class="row">
         <button class="btn sec" id="btnCompartir" type="button">Compartir .txt</button>
         <button class="btn sec" id="btnDescargar" type="button">Descargar .txt</button>
@@ -171,12 +177,18 @@ li a{color:var(--earth)}
   registros.forEach(r=>{if(!r.id){r.id=nuevoId();cambiado=true}});
   if(cambiado)store.set(KEY_REG,registros);
 
+  if(!registros.length){
+    const base=Date.now();
+    registros=[["Ejemplo · Juan Pérez",37.884512,-4.779321,6,3],["Ejemplo · María López",37.886104,-4.781877,9,2],["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,1]]
+      .map(([n,la,lo,p,h])=>{const d=new Date(base-h*3600000);return {id:nuevoId(),nombre:n,fechaHora:fechaHora(d),iso:d.toISOString(),lat:la,lon:lo,precision:p}});
+  }
   // Por defecto solo está marcado el registro más reciente
   let seleccion=new Set();
   function soloUltimo(){seleccion=new Set(registros.length?[registros[registros.length-1].id]:[])}
   soloUltimo();
 
-  let cfg={tel:store.get(KEY_TEL,''),mail:store.get(KEY_MAIL,'')};
+  // Destinatarios por defecto hasta que se guarde otra configuración
+  let cfg={tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
 
   /* ---------- Pestañas ---------- */
   function abrir(tab){
@@ -216,8 +228,7 @@ li a{color:var(--earth)}
 
   /* ---------- Registros ---------- */
   $('nombre').value=store.get(KEY_NOM,'');
-  $('nombre').addEventListener('input',e=>store.set(KEY_NOM,e.target.value.trim()));
-  setInterval(()=>{const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`},1000);
+  $('nombre').addEventListener('input',e=>store.set(KEY_NOM,e.target.value.trim()));  setInterval(()=>{const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`},1000);
 
   function status(msg,cls){const s=$('status');s.textContent=msg;s.className='status '+(cls||'')}
   const seleccionados=()=>registros.filter(r=>seleccion.has(r.id));
@@ -235,6 +246,14 @@ li a{color:var(--earth)}
   }
   function textoMapas(lista){
     return lista.map(r=>`${r.nombre} · ${r.fechaHora}\n`+(r.lat!=null?`https://maps.google.com/?q=${r.lat.toFixed(6)},${r.lon.toFixed(6)} (±${Math.round(r.precision)} m)`:'Sin posición')).join('\n\n');
+  }
+
+  function textoWhatsapp(lista){
+    return lista.map(r=>{
+      const d=new Date(r.iso);
+      const ubic=r.lat!=null?`https://maps.google.com/?q=${r.lat.toFixed(6)},${r.lon.toFixed(6)}`:'sin posición';
+      return `Empleado: ${r.nombre}\nFecha: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\nUbicación: ${ubic}`;
+    }).join('\n\n');
   }
 
   function pintarSeleccion(){
@@ -307,7 +326,7 @@ li a{color:var(--earth)}
   $('btnWhatsapp').addEventListener('click',()=>{
     if(!haySeleccion())return;
     if(!cfg.tel){abrir('cfg');$('telefono').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el teléfono de WhatsApp y guarda.';return}
-    const txt=`*${nombreFichero()}*\n`+textoFichero(seleccionados());
+    const txt=textoWhatsapp(seleccionados());
     window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(txt)}`,'_blank');
   });
 
