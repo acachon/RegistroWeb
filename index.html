@@ -53,9 +53,9 @@ select:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
 input.bad{border-color:var(--err)}
 button{font-family:var(--display);cursor:pointer;border:0;border-radius:12px}
 button:focus-visible,input:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
-#btnRegistro{width:100%;aspect-ratio:1.6;max-width:100%;background:var(--olive);color:var(--olive-ink);font-size:2.2rem;font-weight:800;letter-spacing:.02em;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;box-shadow:0 6px 0 rgba(0,0,0,.25);transition:transform .08s}
-#btnRegistro small{font-size:.9rem;font-weight:500;opacity:.85}
-#btnRegistro:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+/* Botón REGISTRO: barra a todo el ancho, de la misma altura que los campos Empleado / Actividad */
+#btnRegistro{width:100%;min-height:52px;padding:10px 16px;background:var(--olive);color:var(--olive-ink);font-size:1.25rem;font-weight:800;letter-spacing:.08em;border-radius:10px;box-shadow:0 4px 0 rgba(0,0,0,.25);transition:transform .08s}
+#btnRegistro:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
 #btnRegistro[disabled]{opacity:.6;cursor:wait}
 .status{min-height:1.4em;font-size:.95rem;margin:0}
 .status:empty{min-height:0}
@@ -128,7 +128,7 @@ label.item{cursor:pointer}
 .vista{display:flex;gap:4px;padding:3px;background:var(--bg);border:1px solid var(--line);border-radius:10px}
 .vista button{flex:1;padding:8px;font-size:.92rem;font-weight:700;background:transparent;color:var(--muted);border-radius:8px}
 .vista button[aria-pressed=true]{background:var(--olive);color:var(--olive-ink)}
-#mapa{height:340px;border:1px solid var(--line);border-radius:10px;z-index:0}
+#mapa,#mapaHoy{height:340px;border:1px solid var(--line);border-radius:10px;z-index:0}
 /* Icono por actividad: Inicio cuadrado rojo, Fin cuadrado negro, el resto círculos de colores */
 .pin{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#6b7280;color:#fff;font:700 .78rem var(--display);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)}
 .pin.cuad{border-radius:3px}
@@ -179,7 +179,7 @@ label.item{cursor:pointer}
       </div>
     </div>
 
-    <button id="btnRegistro" type="button">REGISTRO<small>Actividad · fecha, hora y posición</small></button>
+    <button id="btnRegistro" type="button">REGISTRO</button>
     <p class="status" id="status" role="status" aria-live="polite"></p>
     <div class="ayuda" id="ayudaGps" hidden>
       <strong id="ayudaTitulo"></strong>
@@ -195,6 +195,13 @@ label.item{cursor:pointer}
       </div>
       <button type="button" class="mini" id="sugCerrar">Ahora no</button>
     </div>
+
+    <section>
+      <h2>Mapa de hoy</h2>
+      <div id="mapaHoy"></div>
+      <ul class="leyenda" id="leyendaHoy"></ul>
+      <p class="hint" id="mapaHoyNota"></p>
+    </section>
 
     <section>
       <h2>Último registro</h2>
@@ -300,7 +307,7 @@ label.item{cursor:pointer}
 
 <script>
 (function(){
-  const KEY_REG='gea_registros', KEY_NOM='gea_nombre', KEY_ACT='gea_actividad', KEY_TEL='gea_telefono', KEY_MAIL='gea_email';
+  const KEY_REG='gea_registros', KEY_NOM='gea_nombre', KEY_ACT='gea_actividad', KEY_TEL='gea_telefono', KEY_MAIL='gea_email', KEY_CAPA='gea_capa_mapa';
   const $=id=>document.getElementById(id);
   const store={
     get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
@@ -325,28 +332,42 @@ label.item{cursor:pointer}
   // Registros de prueba para comprobar la web. Se muestran siempre junto a los reales, pero nunca
   // se guardan. Poner MOSTRAR_EJEMPLOS=false cuando la web vaya a usarse de verdad.
   const MOSTRAR_EJEMPLOS=true;
+  // Ubicación de referencia de los datos de prueba: la finca del Cádimo
+  const FINCA={lat:37.852699,lon:-3.730443};
   if(MOSTRAR_EJEMPLOS){
     const base=new Date(), dia=(n,h,m)=>new Date(base.getFullYear(),base.getMonth(),base.getDate()+n,h,m);
-    // Semana anterior: siempre. Hoy: solo si aún no hay registros reales hoy, para no mezclar duraciones.
-    const semana=[
-      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,dia(-6,7,58),"Inicio Jornada"],
-      ["Ejemplo · María López",37.886104,-4.781877,9,dia(-6,8,12),"Inicio Jornada"],
-      ["Ejemplo · Juan Pérez",37.884530,-4.779290,7,dia(-6,15,40),"Fin Jornada"],
-      ["Ejemplo · María López",37.886099,-4.781860,8,dia(-6,16,5),"Fin Jornada"],
-      ["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,dia(-5,8,3),"Riego"],
-      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,dia(-3,8,10),"Poda"],
-      ["Ejemplo · Juan Pérez",37.884498,-4.779410,7,dia(-2,7,55),"Inicio Jornada"],
-      ["Ejemplo · María López",37.886120,-4.781790,11,dia(-2,8,6),"Poda"],
-      ["Ejemplo · Antonio Ruiz",37.882940,-4.776601,8,dia(-2,8,21),"Riego"],
-      ["Ejemplo · Juan Pérez",37.884520,-4.779380,6,dia(-2,15,58),"Fin Jornada"],
-      ["Ejemplo · María López",37.886104,-4.781877,9,dia(-1,7,50),"Otros"]
-    ];
+    // A nombre del empleado configurado (cfg aún no existe aquí, se lee directamente)
+    const empleado=store.get(KEY_NOM,'')||'Angel';
+    // Aleatorio con semilla por día: cada día tiene siempre los mismos datos aunque se recargue la página
+    const azarDe=semilla=>()=>{semilla|=0;semilla=semilla+0x6D2B79F5|0;let t=Math.imul(semilla^semilla>>>15,1|semilla);
+      t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+    // Una jornada completa: Inicio Jornada, entre 2 y 5 tareas (Poda, Riego, Otros) y Fin Jornada.
+    // Posiciones en ±0,0006° lat y ±0,0008° lon de un centro (≈ ±67 × ±70 m): todas a menos de 200 m entre sí.
+    function jornadaEjemplo(n){
+      const d0=dia(n,0,0), azar=azarDe(d0.getFullYear()*1000+d0.getMonth()*40+d0.getDate());
+      const entre=(a,b)=>a+azar()*(b-a);
+      // Centro del día: junto a la finca (±0,0005° ≈ ±55 m), para que cada jornada caiga en una zona algo distinta
+      const cLat=FINCA.lat+entre(-0.0005,0.0005), cLon=FINCA.lon+entre(-0.0005,0.0005);
+      const inicio=Math.round(entre(7*60+40,8*60+20)), fin=Math.round(entre(15*60,16*60+30));
+      const nTareas=2+Math.floor(azar()*4);
+      // Horas de las tareas: huecos al azar entre registros, de al menos 15 min cada uno
+      const pesos=Array.from({length:nTareas+1},()=>0.3+azar()), sumaP=pesos.reduce((s,p)=>s+p,0);
+      const libre=fin-inicio-15*(nTareas+1);
+      let tAc=inicio;
+      const horas=pesos.slice(0,-1).map(p=>(tAc+=15+Math.round(p/sumaP*libre)));
+      const acts=[INICIO_EJ,...horas.map(()=>['Poda','Riego','Otros'][Math.floor(azar()*3)]),FIN_EJ];
+      return [inicio,...horas,fin].map((min,i)=>[empleado,cLat+entre(-0.0006,0.0006),cLon+entre(-0.0008,0.0008),
+        Math.round(entre(4,12)),dia(n,Math.floor(min/60),min%60),acts[i]]);
+    }
+    const INICIO_EJ='Inicio Jornada', FIN_EJ='Fin Jornada';
+    // Días anteriores: siempre. Hoy: solo si aún no hay registros reales hoy, para no mezclar duraciones.
+    const semana=[-6,-5,-3,-2,-1].flatMap(jornadaEjemplo);
     const hayRealHoy=registros.some(r=>diaDe(r)===diaKey(base));
     const deHoy=hayRealHoy?[]:[
-      ["Ejemplo · Juan Pérez",37.884530,-4.779300,6,dia(0,8,2),"Inicio Jornada"],
-      ["Ejemplo · Juan Pérez",37.886090,-4.781850,8,dia(0,10,31),"Poda"],
-      ["Ejemplo · Juan Pérez",37.884501,-4.779355,5,dia(0,13,47),"Riego"],
-      ["Ejemplo · Juan Pérez",37.882951,-4.776540,5,dia(0,16,20),"Fin Jornada"]
+      [empleado,FINCA.lat+0.000018,FINCA.lon+0.000021,6,dia(0,8,2),"Inicio Jornada"],
+      [empleado,FINCA.lat+0.000378,FINCA.lon-0.000529,8,dia(0,10,31),"Poda"],
+      [empleado,FINCA.lat-0.000011,FINCA.lon-0.000034,5,dia(0,13,47),"Riego"],
+      [empleado,FINCA.lat-0.000302,FINCA.lon+0.000381,5,dia(0,16,20),"Fin Jornada"]
     ].filter(x=>x[4]<base);
     const ejemplos=[...semana,...deHoy]
       .map(([n,la,lo,p,d,act])=>({id:nuevoId(),nombre:n,actividad:act,fechaHora:fechaHora(d),iso:d.toISOString(),lat:la,lon:lo,precision:p,ejemplo:true}));
@@ -370,6 +391,9 @@ label.item{cursor:pointer}
     Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute('aria-selected',k===tab);$(p).hidden=k!==tab});
     if(tab==='cfg'){$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
+    // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
+    if(tab==='reg')pintarMapaHoy();
+    if(tab==='list'&&vistaMapa)pintarListado();
     window.scrollTo(0,0);
   }
   Object.entries(PESTANAS).forEach(([k,[t]])=>$(t).addEventListener('click',()=>abrir(k)));
@@ -389,7 +413,9 @@ label.item{cursor:pointer}
     const s=$('cfgStatus');
     if(!nomOk||!telOk||!mailOk){s.className='status err';s.textContent=!nomOk?'Escribe el nombre del empleado.':!telOk?'El teléfono no es válido.':'Revisa el email: debe tener la forma nombre@dominio.com.';return}
     cfg={nombre,tel,mail};store.set(KEY_NOM,nombre);store.set(KEY_TEL,tel);store.set(KEY_MAIL,mail);
-    pintarDestinos();pintarEmpleado();actualizarActividades();
+    // Los registros de ejemplo van siempre a nombre del empleado configurado
+    registros.forEach(r=>{if(r.ejemplo)r.nombre=nombre});
+    pintarDestinos();pintarEmpleado();pintarTodo();
     s.className='status ok';s.textContent='Configuración guardada.';
   });
 
@@ -555,6 +581,7 @@ label.item{cursor:pointer}
     $('contadorHoy').textContent=anteriores.length;
     $('vacioHoy').hidden=anteriores.length>0;
     actualizarVivo();
+    pintarMapaHoy();
   }
 
   // Pestaña Listado: calendario del mes en vista
@@ -577,7 +604,8 @@ label.item{cursor:pointer}
         b.setAttribute('aria-label',`${d} de ${MESES[m]}: ${n} registro${n===1?'':'s'}`);
         b.setAttribute('aria-pressed',k===filtroDia);
         if(k===filtroDia)b.classList.add('act');
-        b.addEventListener('click',()=>{filtroDia=filtroDia===k?null:k;seleccion.clear();pintarListado();pintarCalendario()});
+        // Al elegir un día quedan marcados todos sus registros; al quitar el filtro se desmarca todo
+        b.addEventListener('click',()=>{filtroDia=filtroDia===k?null:k;marcarDia(filtroDia);pintarListado();pintarCalendario()});
       }else b.disabled=true;
       cal.appendChild(b);
     }
@@ -588,6 +616,8 @@ label.item{cursor:pointer}
   // Pestaña Listado: registros (todos o los del día marcado), del más reciente al más antiguo
   const visibles=()=>filtroDia?registros.filter(r=>diaDe(r)===filtroDia):registros;
   const seleccionados=()=>visibles().filter(r=>seleccion.has(r.id));
+  // Marca todos los registros de un día (o ninguno si dia es null)
+  function marcarDia(dia){seleccion=new Set(dia?registros.filter(r=>diaDe(r)===dia).map(r=>r.id):[])}
 
   function pintarListado(){
     const lista=visibles(), ol=$('lista');ol.textContent='';
@@ -628,7 +658,7 @@ label.item{cursor:pointer}
   /* ---------- Vista Mapa ---------- */
   // Muestra en el mapa los registros visibles (todos o los del día filtrado) que tienen coordenadas,
   // numerados por orden cronológico; con un día filtrado se unen con una línea en ese orden.
-  let vistaMapa=false, mapa=null, capaMapa=null;
+  let vistaMapa=false;
   // Forma y color de cada actividad en el mapa (y en su leyenda)
   const ICONOS={'Inicio Jornada':{color:'#d62828',cuad:true},'Fin Jornada':{color:'#111111',cuad:true},
     'Poda':{color:'#2a9d3f'},'Riego':{color:'#1f6fd1'},'Otros':{color:'#e08a00'}};
@@ -638,10 +668,10 @@ label.item{cursor:pointer}
     const p=document.createElement('div');p.className='pin'+(ic.cuad?' cuad':'');
     p.style.background=ic.color;p.textContent=texto;return p;
   }
-  Object.entries(ICONOS).forEach(([nom,ic])=>{
+  ['leyenda','leyendaHoy'].forEach(id=>Object.entries(ICONOS).forEach(([nom,ic])=>{
     const li=document.createElement('li');li.appendChild(crearPin(ic,''));li.appendChild(document.createTextNode(nom));
-    $('leyenda').appendChild(li);
-  });
+    $(id).appendChild(li);
+  }));
   function ponerVista(enMapa){
     vistaMapa=enMapa;
     $('vistaLista').setAttribute('aria-pressed',!enMapa);$('vistaMapa').setAttribute('aria-pressed',enMapa);
@@ -650,35 +680,77 @@ label.item{cursor:pointer}
   $('vistaLista').addEventListener('click',()=>ponerVista(false));
   $('vistaMapa').addEventListener('click',()=>ponerVista(true));
 
-  function pintarMapa(lista){
-    const conPos=lista.filter(r=>r.lat!=null), sin=lista.length-conPos.length, nota=$('mapaNota');
-    nota.textContent=sin?`${sin} registro${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
-    if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';$('mapa').hidden=true;return}
+  // Mapa reutilizable (Listado y pestaña Registro). pintar(lista,conLinea,avisoVacio) dibuja los registros
+  // de lista que tienen coordenadas, numerados por orden; si no hay ninguno, se centra en la finca.
+  // fondoInicial: «Mapa» o «Satélite» la primera vez; después cada mapa recuerda su propia elección.
+  function crearMapa(idMapa,idNota,fondoInicial){
+    const claveFondo=`${KEY_CAPA}_${idMapa}`;
+    let mapa=null, capaMapa=null;
+    return {pintar(lista,conLinea,avisoVacio){
+    const conPos=lista.filter(r=>r.lat!=null), sin=lista.length-conPos.length, nota=$(idNota);
+    nota.textContent=!lista.length?avisoVacio
+      :sin?`${sin} registro${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
+    if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';$(idMapa).hidden=true;return}
     if(!mapa){
-      mapa=L.map('mapa');
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(mapa);
+      mapa=L.map(idMapa);
+      // Dos fondos a elegir con el control de capas; se recuerda el último usado en este móvil.
+      // Satélite: Esri World Imagery (sin clave); en zonas rurales solo hay imagen hasta el zoom 18, más allá se amplía.
+      const fondos={
+        'Mapa':L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}),
+        'Satélite':L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          {maxZoom:19,maxNativeZoom:18,attribution:'Imágenes &copy; Esri, Maxar, Earthstar Geographics'})
+      };
+      (fondos[store.get(claveFondo,fondoInicial)]||fondos[fondoInicial]).addTo(mapa);
+      L.control.layers(fondos,null,{collapsed:true}).addTo(mapa);
+      mapa.on('baselayerchange',e=>store.set(claveFondo,e.name));
       capaMapa=L.layerGroup().addTo(mapa);
     }
     capaMapa.clearLayers();
     const puntos=conPos.map(r=>[r.lat,r.lon]);
-    if(filtroDia&&puntos.length>1)L.polyline(puntos,{color:'#9a5b2e',weight:3,opacity:.7,dashArray:'6 6'}).addTo(capaMapa);
+    if(conLinea&&puntos.length>1)L.polyline(puntos,{color:'#9a5b2e',weight:3,opacity:.7,dashArray:'6 6'}).addTo(capaMapa);
     conPos.forEach((r,i)=>{
       L.circle([r.lat,r.lon],{radius:r.precision||0,color:'#3f5a2a',weight:1,fillOpacity:.08}).addTo(capaMapa);
       const icono=L.divIcon({className:'',html:crearPin(iconoDe(r),String(i+1)).outerHTML,iconSize:[26,26],iconAnchor:[13,13]});
-      // Contenido del globo con textContent: nombre y actividad vienen de lo que escribe el usuario
-      const pop=document.createElement('div');pop.className='popreg';
-      const b=document.createElement('b');b.textContent=`${i+1}. ${r.actividad||'Registro'}`;
-      pop.appendChild(b);
-      [r.nombre,r.fechaHora.slice(0,16),`Precisión ±${Math.round(r.precision)} m`].forEach(t=>{pop.appendChild(document.createTextNode(t));pop.appendChild(document.createElement('br'))});
-      L.marker([r.lat,r.lon],{icon:icono}).bindPopup(pop).addTo(capaMapa);
+      // Contenido del globo con textContent: nombre y actividad vienen de lo que escribe el usuario.
+      // Se genera al abrirlo para que una duración «en curso» salga actualizada.
+      const crearGlobo=()=>{
+        const pop=document.createElement('div');pop.className='popreg';
+        const b=document.createElement('b');b.textContent=`${i+1}. ${r.actividad||'Registro'}`;
+        pop.appendChild(b);
+        // Duración con las mismas reglas que en el Listado
+        const sigG=registros[registros.indexOf(r)+1], dia=diaDe(r);
+        const info=durRegistro(r,sigG&&diaDe(sigG)===dia?sigG:null,dia===diaKey(new Date()));
+        const dur=info?`Duración: ${info.desde?durHHMM(Date.now()-new Date(info.desde)):info.texto}${info.nota?` (${info.nota})`:''}`:null;
+        [r.nombre,r.fechaHora.slice(0,16),dur,`Precisión ±${Math.round(r.precision)} m`].filter(Boolean)
+          .forEach(t=>{pop.appendChild(document.createTextNode(t));pop.appendChild(document.createElement('br'))});
+        return pop;
+      };
+      L.marker([r.lat,r.lon],{icon:icono}).bindPopup(crearGlobo).addTo(capaMapa);
     });
     // El contenedor acaba de mostrarse: recalcular tamaño antes de encuadrar
     setTimeout(()=>{
       mapa.invalidateSize();
       if(puntos.length)mapa.fitBounds(L.latLngBounds(puntos).pad(0.3),{maxZoom:18});
-      else mapa.setView([40.2,-3.7],5);
+      else mapa.setView([FINCA.lat,FINCA.lon],16);
     },0);
+    }};
   }
+  const mapaListado=crearMapa('mapa','mapaNota','Mapa'), mapaHoy=crearMapa('mapaHoy','mapaHoyNota','Satélite');
+  // Listado: solo los registros marcados; con un día filtrado se unen con una línea
+  function pintarMapa(lista){
+    mapaListado.pintar(lista.filter(r=>seleccion.has(r.id)),!!filtroDia,'No hay registros marcados. Márcalos en Listado para verlos en el mapa.');
+  }
+  // Pestaña Registro: todos los registros de hoy unidos por orden. Solo se pinta con la pestaña visible
+  // (Leaflet necesita el tamaño real); al abrir la pestaña se vuelve a llamar.
+  function pintarMapaHoy(){
+    if($('panelReg').hidden)return;
+    // Mientras la página carga, Leaflet aún no está: lo pintará el evento «load»
+    if(typeof L==='undefined'&&document.readyState!=='complete')return;
+    const k=diaKey(new Date());
+    mapaHoy.pintar(registros.filter(r=>diaDe(r)===k),true,'Hoy aún no hay registros. Pulsa REGISTRO para empezar.');
+  }
+  // Leaflet se carga con «defer», después de este código: pintar el mapa de hoy en cuanto esté
+  window.addEventListener('load',pintarMapaHoy);
 
   function pintarSeleccion(){
     const n=seleccionados().length, total=visibles().length;
@@ -794,7 +866,7 @@ label.item{cursor:pointer}
     const nuevos=pasos.map(([actividad,min])=>{
       t+=min*60000;const d=new Date(t);
       return {id:nuevoId(),nombre:cfg.nombre,actividad,fechaHora:fechaHora(d),iso:d.toISOString(),
-        lat:37.884512+azar(),lon:-4.779321+azar(),precision:5+Math.round(Math.random()*7),prueba:true};
+        lat:FINCA.lat+azar(),lon:FINCA.lon+azar(),precision:5+Math.round(Math.random()*7),prueba:true};
     });
     // Se borran todos los registros guardados y quedan solo estos de prueba (más los ejemplos de la
     // semana anterior, que nunca se guardan). Si había registros reales se pide confirmación.
@@ -804,7 +876,7 @@ label.item{cursor:pointer}
     registros=registros.filter(r=>r.ejemplo&&diaDe(r)!==hoyK)
       .concat(nuevos).sort((a,b)=>new Date(a.iso)-new Date(b.iso));
     // El Listado queda filtrado en el día de hoy, donde solo están los registros de prueba recién cargados
-    guardarRegistros();seleccion.clear();filtroDia=hoyK;
+    guardarRegistros();filtroDia=hoyK;marcarDia(hoyK);
     const hoyD=new Date();mesVista=new Date(hoyD.getFullYear(),hoyD.getMonth(),1);
     pintarTodo();
     status(`Cargados ${nuevos.length} registros de prueba de ${cfg.nombre} (jornada sin terminar).`,'ok');
