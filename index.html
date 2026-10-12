@@ -32,7 +32,7 @@ header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
 .clock{font-family:var(--mono);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
-.tabs button{flex:1;padding:12px;font-size:1rem;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
+.tabs button{flex:1;padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
 .tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
 .panel{display:flex;flex-direction:column;gap:20px}
 .lbl{display:block;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -46,6 +46,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--earth);outline-
 #btnRegistro:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
 #btnRegistro[disabled]{opacity:.6;cursor:wait}
 .status{min-height:1.4em;font-size:.95rem;margin:0}
+.status:empty{min-height:0}
 .status.ok{color:var(--ok)} .status.err{color:var(--err)}
 section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
 h2{font-size:1rem;margin:0;display:flex;justify-content:space-between;align-items:center}
@@ -56,16 +57,22 @@ h2 span{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.85
 .btn.ico{display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .btn.ico svg{width:20px;height:20px;flex:none}
 ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-li label{display:flex;gap:12px;align-items:flex-start;font-family:var(--mono);font-size:.82rem;padding:10px;border:2px solid transparent;border-left:3px solid var(--line);background:var(--bg);border-radius:6px;cursor:pointer}
-li label.sel{border-color:var(--olive);background:var(--olive-soft)}
-li input[type=checkbox]{width:24px;height:24px;flex:0 0 auto;margin:0;accent-color:var(--olive)}
-li .txt{min-width:0;overflow-wrap:anywhere}
-li b{font-family:var(--display);font-size:.95rem;display:block}
-li a{color:var(--earth)}
+.item{display:flex;gap:12px;align-items:flex-start;font-family:var(--mono);font-size:.82rem;padding:10px;border:2px solid transparent;border-left:3px solid var(--line);background:var(--bg);border-radius:6px}
+label.item{cursor:pointer}
+.item.sel{border-color:var(--olive);background:var(--olive-soft)}
+.item input[type=checkbox]{width:24px;height:24px;flex:0 0 auto;margin:0;accent-color:var(--olive)}
+.item .txt{min-width:0;overflow-wrap:anywhere}
+.item b{font-family:var(--display);font-size:.95rem;display:block}
+.item a{color:var(--earth)}
+/* Registros de hoy: datos a la izquierda, duración hh:mm hasta el siguiente a la derecha */
+.item.hoyitem{align-items:center}
+.dur{margin-left:auto;flex:none;text-align:right;font-family:var(--mono);font-size:1.2rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--fg)}
+.dur small{display:block;font-family:var(--display);font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dur.vivo{color:var(--olive)}
+.dur.vivo small{color:var(--olive)}
 .tag{font-family:var(--display);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--olive);margin-left:6px}
 .acciones{display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
 .acciones .row .btn{flex:1 1 0;min-width:0}
-.toggle{width:100%;padding:10px;font-size:.92rem;font-weight:700;background:transparent;color:var(--olive);border:2px dashed var(--line);border-radius:8px}
 .empty{color:var(--muted);font-size:.9rem;margin:0}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .send{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -82,6 +89,21 @@ li a{color:var(--earth)}
 .field .hint.err{color:var(--err)}
 #confirmBox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;border:2px solid var(--err);border-radius:10px}
 #confirmBox span{flex:1 1 100%}
+/* Calendario: los días con registros llevan fondo y punto; el día filtrado va en oliva */
+.calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.calhead h2{font-size:1.05rem}
+.calnav{width:40px;height:40px;flex:none;background:transparent;border:2px solid var(--line);color:var(--fg);font-size:1.3rem;line-height:1;border-radius:8px}
+.calnav[disabled]{opacity:.35;cursor:default}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .dow{font-size:.72rem;font-weight:700;letter-spacing:.06em;color:var(--muted);padding:2px 0}
+.cal .dia{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:0;font:500 .95rem var(--display);font-variant-numeric:tabular-nums;background:transparent;color:var(--muted);border:2px solid transparent;border-radius:8px}
+.cal .dia[disabled]{cursor:default}
+.cal .dia.con{background:var(--olive-soft);color:var(--fg);font-weight:800}
+.cal .dia.con::after{content:"";position:absolute;bottom:4px;width:6px;height:6px;border-radius:50%;background:var(--olive)}
+.cal .dia.hoy{border-color:var(--earth)}
+.cal .dia.act{background:var(--olive);color:var(--olive-ink)}
+.cal .dia.act::after{background:var(--olive-ink)}
+.filtro{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.88rem;color:var(--muted);min-height:32px}
 :root[data-theme="dark"]{
   --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
   --olive:#8fb064; --olive-ink:#142008; --olive-soft:#2a331f; --earth:#d49a66; --ok:#7fc27a; --err:#ef8a74;
@@ -100,6 +122,7 @@ li a{color:var(--earth)}
 
   <nav class="tabs" role="tablist">
     <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Registro</button>
+    <button type="button" role="tab" id="tabList" aria-selected="false" aria-controls="panelList">Listado Registros</button>
     <button type="button" role="tab" id="tabCfg" aria-selected="false" aria-controls="panelCfg">Configuración</button>
   </nav>
 
@@ -114,13 +137,46 @@ li a{color:var(--earth)}
     <p class="status" id="status" role="status" aria-live="polite"></p>
 
     <section>
-      <div class="sechead">
-        <h2>Registros guardados <span id="contador">0</span></h2>
-        <button type="button" id="btnTodos" class="mini" hidden>Seleccionar todos</button>
+      <h2>Último registro</h2>
+      <div id="ultimo"></div>
+      <p class="empty" id="vacio">Aún no hay registros. Pulsa REGISTRO al empezar a trabajar.</p>
+    </section>
+
+    <section>
+      <h2>Registros de hoy y duración <span id="contadorHoy">0</span></h2>
+      <ol id="listaHoy"></ol>
+      <p class="empty" id="vacioHoy">Hoy no hay registros anteriores al último.</p>
+    </section>
+
+    <section>
+      <h2>Enviar último registro</h2>
+      <div class="send">
+        <button class="sendbtn wa" id="btnWhatsapp" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
+        <button class="sendbtn mail" id="btnEmail" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
       </div>
+    </section>
+  </div>
+
+  <!-- PESTAÑA LISTADO -->
+  <div class="panel" id="panelList" role="tabpanel" hidden>
+    <section>
+      <div class="calhead">
+        <button type="button" class="calnav" id="mesAnt" aria-label="Mes anterior">‹</button>
+        <h2 id="mesLbl" aria-live="polite"></h2>
+        <button type="button" class="calnav" id="mesSig" aria-label="Mes siguiente">›</button>
+      </div>
+      <div class="cal" id="cal"></div>
+    </section>
+
+    <section>
+      <div class="sechead">
+        <h2>Registros <span id="contador">0</span></h2>
+        <button type="button" id="btnTodos" class="mini">Seleccionar todos</button>
+      </div>
+      <div class="filtro" id="filtro"></div>
       <ol id="lista"></ol>
-      <button type="button" id="btnVerMas" class="toggle" aria-expanded="false" aria-controls="lista" hidden></button>
-      <div class="acciones" id="acciones" hidden>
+      <p class="empty" id="vacioLista">No hay registros.</p>
+      <div class="acciones" id="acciones">
         <div class="row">
           <button class="btn danger ico" id="btnBorrar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
           <button class="btn sec ico" id="btnCompartir" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
@@ -131,14 +187,14 @@ li a{color:var(--earth)}
           <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
         </div>
       </div>
-      <p class="empty" id="vacio">Aún no hay registros. Pulsa REGISTRO al empezar a trabajar.</p>
+      <p class="status" id="statusList" role="status" aria-live="polite"></p>
     </section>
 
     <section>
       <h2>Enviar seleccionados</h2>
       <div class="send">
-        <button class="sendbtn wa" id="btnWhatsapp" type="button"><strong>WhatsApp</strong><small id="destTel">Sin teléfono</small></button>
-        <button class="sendbtn mail" id="btnEmail" type="button"><strong>Email</strong><small id="destMail">Sin email</small></button>
+        <button class="sendbtn wa" id="btnWhatsappSel" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
+        <button class="sendbtn mail" id="btnEmailSel" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
       </div>
     </section>
   </div>
@@ -177,36 +233,58 @@ li a{color:var(--earth)}
     const off=-d.getTimezoneOffset(), s=off>=0?'+':'-', a=Math.abs(off);
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} (UTC${s}${pad(Math.floor(a/60))}:${pad(a%60)})`;
   }
+  // Clave de día local (AAAA-MM-DD) para agrupar registros en el calendario
+  const diaKey=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const diaDe=r=>diaKey(new Date(r.iso));
+  const fechaCorta=d=>`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)}`;
 
   let registros=store.get(KEY_REG,[]);
   let cambiado=false;
   registros.forEach(r=>{if(!r.id){r.id=nuevoId();cambiado=true}});
   if(cambiado)store.set(KEY_REG,registros);
 
+  // Ejemplos solo para ver la web con algo; desaparecen con el primer registro real y nunca se guardan
   if(!registros.length){
-    const base=Date.now();
-    registros=[["Ejemplo · Juan Pérez",37.884512,-4.779321,6,3],["Ejemplo · María López",37.886104,-4.781877,9,2],["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,1]]
-      .map(([n,la,lo,p,h])=>{const d=new Date(base-h*3600000);return {id:nuevoId(),nombre:n,fechaHora:fechaHora(d),iso:d.toISOString(),lat:la,lon:lo,precision:p}});
+    const base=Date.now(), hace=h=>new Date(base-h*3600000), oct=(dia,h,m)=>new Date(2026,9,dia,h,m);
+    // Hoy: varias horas fijas (solo las ya pasadas) para ver las duraciones entre registros
+    const hoyEj=new Date(), aHoy=(h,m)=>new Date(hoyEj.getFullYear(),hoyEj.getMonth(),hoyEj.getDate(),h,m);
+    const deHoy=[["Ejemplo · Juan Pérez",37.884530,-4.779300,6,aHoy(8,2)],["Ejemplo · María López",37.886090,-4.781850,8,aHoy(10,31)],["Ejemplo · Juan Pérez",37.884501,-4.779355,5,aHoy(13,47)]]
+      .filter(x=>x[4]<hace(1));
+    registros=[
+      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,oct(6,7,58)],
+      ["Ejemplo · María López",37.886104,-4.781877,9,oct(6,8,12)],
+      ["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,oct(7,8,3)],
+      ["Ejemplo · Juan Pérez",37.884498,-4.779410,7,oct(10,7,55)],
+      ["Ejemplo · María López",37.886120,-4.781790,11,oct(10,8,6)],
+      ["Ejemplo · Antonio Ruiz",37.882940,-4.776601,8,oct(10,8,21)],
+      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,hace(74)],
+      ["Ejemplo · María López",37.886104,-4.781877,9,hace(26)],
+      ["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,hace(1)],
+      ...deHoy
+    ].sort((a,b)=>a[4]-b[4])
+      .map(([n,la,lo,p,d])=>({id:nuevoId(),nombre:n,fechaHora:fechaHora(d),iso:d.toISOString(),lat:la,lon:lo,precision:p,ejemplo:true}));
   }
-  // Por defecto solo está marcado el registro más reciente
+  const guardarRegistros=()=>store.set(KEY_REG,registros.filter(r=>!r.ejemplo));
+  const ultimo=()=>registros.length?registros[registros.length-1]:null;
+
+  // Estado del listado: selección, día filtrado y mes mostrado en el calendario
   let seleccion=new Set();
-  function soloUltimo(){seleccion=new Set(registros.length?[registros[registros.length-1].id]:[])}
-  soloUltimo();
+  let filtroDia=null;
+  const hoy=new Date();
+  let mesVista=new Date(hoy.getFullYear(),hoy.getMonth(),1);
 
   // Destinatarios por defecto hasta que se guarde otra configuración
   let cfg={tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
 
   /* ---------- Pestañas ---------- */
+  const PESTANAS={reg:['tabReg','panelReg'],list:['tabList','panelList'],cfg:['tabCfg','panelCfg']};
   function abrir(tab){
-    const reg=tab==='reg';
-    $('tabReg').setAttribute('aria-selected',reg);$('tabCfg').setAttribute('aria-selected',!reg);
-    $('panelReg').hidden=!reg;$('panelCfg').hidden=reg;
-    if(!reg){$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
+    Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute('aria-selected',k===tab);$(p).hidden=k!==tab});
+    if(tab==='cfg'){$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       $('telefono').classList.remove('bad');$('email').classList.remove('bad')}
     window.scrollTo(0,0);
   }
-  $('tabReg').addEventListener('click',()=>abrir('reg'));
-  $('tabCfg').addEventListener('click',()=>abrir('cfg'));
+  Object.entries(PESTANAS).forEach(([k,[t]])=>$(t).addEventListener('click',()=>abrir(k)));
 
   /* ---------- Configuración ---------- */
   function telefonoLimpio(v){
@@ -228,17 +306,21 @@ li a{color:var(--earth)}
   });
 
   function pintarDestinos(){
-    $('destTel').textContent=cfg.tel?('+'+telefonoLimpio(cfg.tel)):'Sin teléfono · configurar';
-    $('destMail').textContent=cfg.mail||'Sin email · configurar';
+    document.querySelectorAll('.destTel').forEach(e=>e.textContent=cfg.tel?('+'+telefonoLimpio(cfg.tel)):'Sin teléfono · configurar');
+    document.querySelectorAll('.destMail').forEach(e=>e.textContent=cfg.mail||'Sin email · configurar');
   }
 
-  /* ---------- Registros ---------- */
+  /* ---------- Textos ---------- */
   $('nombre').value=store.get(KEY_NOM,'');
   $('nombre').addEventListener('input',e=>store.set(KEY_NOM,e.target.value.trim()));
-  setInterval(()=>{const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`},1000);
+  setInterval(()=>{
+    const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    if(diaKey(d)!==diaPintado)pintarHoy();else actualizarVivo();
+  },1000);
 
-  function status(msg,cls){const s=$('status');s.textContent=msg;s.className='status '+(cls||'')}
-  const seleccionados=()=>registros.filter(r=>seleccion.has(r.id));
+  function avisar(id,msg,cls){const s=$(id);s.textContent=msg;s.className='status '+(cls||'')}
+  const status=(msg,cls)=>avisar('status',msg,cls);
+  const statusList=(msg,cls)=>avisar('statusList',msg,cls);
 
   function linea(r){
     const pos=r.lat!=null?`${r.lat.toFixed(6)};${r.lon.toFixed(6)};${Math.round(r.precision)}`:'SIN POSICIÓN;;';
@@ -251,80 +333,157 @@ li a{color:var(--earth)}
     const d=new Date();
     return `registros_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.txt`;
   }
-  function textoMapas(lista){
-    return lista.map(r=>`${r.nombre} · ${r.fechaHora}\n`+(r.lat!=null?`https://maps.google.com/?q=${r.lat.toFixed(6)},${r.lon.toFixed(6)} (±${Math.round(r.precision)} m)`:'Sin posición')).join('\n\n');
-  }
 
   function textoWhatsapp(lista){
     return lista.map(r=>{
       const d=new Date(r.iso);
       const ubic=r.lat!=null?`https://maps.google.com/?q=${r.lat.toFixed(6)},${r.lon.toFixed(6)}`:'sin posición';
-      return `Empleado: ${r.nombre}\nFecha: ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\nUbicación: ${ubic}\nPrecisión GPS: ${r.lat!=null?'±'+Math.round(r.precision)+' m':'sin dato'}`;
+      return `Empleado: ${r.nombre}\nFecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\nUbicación: ${ubic}\nPrecisión GPS: ${r.lat!=null?'±'+Math.round(r.precision)+' m':'sin dato'}`;
     }).join('\n\n');
   }
 
+  /* ---------- Pintado de registros ---------- */
+  function contenidoRegistro(r){
+    const txt=document.createElement('div');txt.className='txt';
+    const b=document.createElement('b');b.textContent=r.nombre;
+    if(r===ultimo()){const t=document.createElement('span');t.className='tag';t.textContent='Último';b.appendChild(t)}
+    txt.appendChild(b);
+    txt.appendChild(document.createTextNode(r.fechaHora));
+    txt.appendChild(document.createElement('br'));
+    if(r.lat!=null){
+      const a=document.createElement('a');
+      a.href=`https://maps.google.com/?q=${r.lat},${r.lon}`;a.target='_blank';a.rel='noopener';
+      a.textContent=`${r.lat.toFixed(6)}, ${r.lon.toFixed(6)}`;txt.appendChild(a);
+      txt.appendChild(document.createTextNode(` · ±${Math.round(r.precision)} m`));
+    }else txt.appendChild(document.createTextNode('Sin posición ('+(r.error||'no disponible')+')'));
+    return txt;
+  }
+
+  // Pestaña Registro: solo el último
+  function pintarUltimo(){
+    const u=ultimo(), box=$('ultimo');box.textContent='';
+    if(u){
+      const d=document.createElement('div');d.className='item hoyitem';d.appendChild(contenidoRegistro(u));
+      // Contador en vivo desde el último registro hasta ahora (lo refresca el reloj cada segundo)
+      const dur=document.createElement('div');dur.className='dur vivo';
+      const t=document.createElement('span');t.className='t';t.dataset.desde=u.iso;
+      const nota=document.createElement('small');nota.textContent='en curso';
+      dur.appendChild(t);dur.appendChild(nota);d.appendChild(dur);box.appendChild(d);
+    }
+    $('vacio').hidden=!!u;
+    $('btnWhatsapp').disabled=$('btnEmail').disabled=!u;
+    actualizarVivo();
+  }
+
+  // Pestaña Registro: los registros anteriores de hoy (sin el último, que va en su propia sección),
+  // en orden, con el tiempo hasta el siguiente.
+  const durHHMM=ms=>{const min=Math.max(0,Math.floor(ms/60000));return `${pad(Math.floor(min/60))}h:${pad(min%60)}m`};
+  let diaPintado=null;
+  function pintarHoy(){
+    diaPintado=diaKey(new Date());
+    const lista=registros.filter(r=>diaDe(r)===diaPintado), ol=$('listaHoy');ol.textContent='';
+    const anteriores=lista.filter(r=>r!==ultimo());
+    anteriores.forEach((r,i)=>{
+      const li=document.createElement('li');
+      const it=document.createElement('div');it.className='item hoyitem';
+      it.appendChild(contenidoRegistro(r));
+      const dur=document.createElement('div');dur.className='dur';
+      dur.textContent=durHHMM(new Date(lista[i+1].iso)-new Date(r.iso));
+      it.appendChild(dur);li.appendChild(it);ol.appendChild(li);
+    });
+    $('contadorHoy').textContent=anteriores.length;
+    $('vacioHoy').hidden=anteriores.length>0;
+  }
+  function actualizarVivo(){
+    const t=document.querySelector('#ultimo .vivo .t');
+    if(t)t.textContent=durHHMM(Date.now()-new Date(t.dataset.desde));
+  }
+
+  // Pestaña Listado: calendario del mes en vista
+  const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  function pintarCalendario(){
+    const y=mesVista.getFullYear(), m=mesVista.getMonth();
+    $('mesLbl').textContent=`${MESES[m]} ${y}`;
+    $('mesSig').disabled=y>hoy.getFullYear()||(y===hoy.getFullYear()&&m>=hoy.getMonth());
+    const porDia={};registros.forEach(r=>{const k=diaDe(r);porDia[k]=(porDia[k]||0)+1});
+    const cal=$('cal');cal.textContent='';
+    ['L','M','X','J','V','S','D'].forEach(d=>{const e=document.createElement('div');e.className='dow';e.textContent=d;cal.appendChild(e)});
+    const hueco=(new Date(y,m,1).getDay()+6)%7, total=new Date(y,m+1,0).getDate(), kHoy=diaKey(hoy);
+    for(let i=0;i<hueco;i++)cal.appendChild(document.createElement('div'));
+    for(let d=1;d<=total;d++){
+      const k=diaKey(new Date(y,m,d)), n=porDia[k]||0;
+      const b=document.createElement('button');b.type='button';b.className='dia';b.textContent=d;
+      if(k===kHoy)b.classList.add('hoy');
+      if(n){
+        b.classList.add('con');
+        b.setAttribute('aria-label',`${d} de ${MESES[m]}: ${n} registro${n===1?'':'s'}`);
+        b.setAttribute('aria-pressed',k===filtroDia);
+        if(k===filtroDia)b.classList.add('act');
+        b.addEventListener('click',()=>{filtroDia=filtroDia===k?null:k;seleccion.clear();pintarListado();pintarCalendario()});
+      }else b.disabled=true;
+      cal.appendChild(b);
+    }
+  }
+  $('mesAnt').addEventListener('click',()=>{mesVista=new Date(mesVista.getFullYear(),mesVista.getMonth()-1,1);pintarCalendario()});
+  $('mesSig').addEventListener('click',()=>{mesVista=new Date(mesVista.getFullYear(),mesVista.getMonth()+1,1);pintarCalendario()});
+
+  // Pestaña Listado: registros (todos o los del día marcado), del más reciente al más antiguo
+  const visibles=()=>filtroDia?registros.filter(r=>diaDe(r)===filtroDia):registros;
+  const seleccionados=()=>visibles().filter(r=>seleccion.has(r.id));
+
+  function pintarListado(){
+    const lista=visibles(), ol=$('lista');ol.textContent='';
+    lista.slice().reverse().forEach(r=>{
+      const li=document.createElement('li');
+      const lab=document.createElement('label');lab.className='item';
+      const cb=document.createElement('input');
+      cb.type='checkbox';cb.id='chk_'+r.id;cb.checked=seleccion.has(r.id);
+      cb.addEventListener('change',()=>{cb.checked?seleccion.add(r.id):seleccion.delete(r.id);pintarSeleccion()});
+      lab.appendChild(cb);lab.appendChild(contenidoRegistro(r));li.appendChild(lab);ol.appendChild(li);
+    });
+    $('contador').textContent=lista.length;
+    $('vacioLista').hidden=lista.length>0;
+    $('acciones').hidden=lista.length===0;
+    $('btnTodos').hidden=lista.length<2;
+
+    const f=$('filtro');f.textContent='';
+    if(filtroDia){
+      const [y,m,d]=filtroDia.split('-').map(Number);
+      const s=document.createElement('span');s.textContent=`Día ${fechaCorta(new Date(y,m-1,d))}`;
+      const b=document.createElement('button');b.type='button';b.className='mini';b.textContent='Ver todos';
+      b.addEventListener('click',()=>{filtroDia=null;seleccion.clear();pintarListado();pintarCalendario()});
+      f.appendChild(s);f.appendChild(b);
+    }else f.textContent='Todos los registros · toca un día marcado para filtrar';
+    pintarSeleccion();
+  }
+
   function pintarSeleccion(){
-    const n=seleccion.size, total=registros.length;
+    const n=seleccionados().length, total=visibles().length;
     $('btnTodos').textContent=(n===total&&total>0)?'Quitar selección':'Seleccionar todos';
-    ['btnWhatsapp','btnEmail','btnCompartir','btnBorrar'].forEach(id=>$(id).disabled=n===0);
+    ['btnWhatsappSel','btnEmailSel','btnCompartir','btnBorrar'].forEach(id=>$(id).disabled=n===0);
     document.querySelectorAll('#lista label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
     $('confirmBox').hidden=true;
   }
 
-  // Solo se ve el último registro; los anteriores quedan plegados tras btnVerMas
-  let expandido=false;
-  function pintar(){
-    const ol=$('lista');ol.textContent='';
-    const ultimoId=registros.length?registros[registros.length-1].id:null;
-    registros.slice().reverse().forEach((r,i)=>{
-      const li=document.createElement('li');
-      li.hidden=!expandido&&i>0;
-      const lab=document.createElement('label');
-      const cb=document.createElement('input');
-      cb.type='checkbox';cb.id='chk_'+r.id;cb.checked=seleccion.has(r.id);
-      cb.addEventListener('change',()=>{cb.checked?seleccion.add(r.id):seleccion.delete(r.id);pintarSeleccion()});
-      const txt=document.createElement('div');txt.className='txt';
-      const b=document.createElement('b');b.textContent=r.nombre;
-      if(r.id===ultimoId){const t=document.createElement('span');t.className='tag';t.textContent='Último';b.appendChild(t)}
-      txt.appendChild(b);
-      txt.appendChild(document.createTextNode(r.fechaHora));
-      txt.appendChild(document.createElement('br'));
-      if(r.lat!=null){
-        const a=document.createElement('a');
-        a.href=`https://maps.google.com/?q=${r.lat},${r.lon}`;a.target='_blank';a.rel='noopener';
-        a.textContent=`${r.lat.toFixed(6)}, ${r.lon.toFixed(6)}`;txt.appendChild(a);
-        txt.appendChild(document.createTextNode(` · ±${Math.round(r.precision)} m`));
-      }else txt.appendChild(document.createTextNode('Sin posición ('+(r.error||'no disponible')+')'));
-      lab.appendChild(cb);lab.appendChild(txt);li.appendChild(lab);ol.appendChild(li);
-    });
-    $('contador').textContent=registros.length;
-    $('vacio').hidden=registros.length>0;
-    // La selección múltiple, compartir y eliminar solo se ofrecen con el listado desplegado
-    // (con un único registro no hay nada que plegar, así que se ofrecen directamente)
-    const abierto=registros.length>0&&(expandido||registros.length===1);
-    $('acciones').hidden=!abierto;
-    $('btnTodos').hidden=registros.length<2||!expandido;
-    const anteriores=registros.length-1, ver=$('btnVerMas');
-    ver.hidden=anteriores<1;
-    ver.setAttribute('aria-expanded',expandido);
-    ver.textContent=expandido?'▴ Ocultar anteriores':`▾ Ver ${anteriores} anterior${anteriores===1?'':'es'}`;
-    pintarSeleccion();
-  }
-
-  // Al plegar se vuelve a marcar solo el último, para no enviar registros que no se ven
-  $('btnVerMas').addEventListener('click',()=>{expandido=!expandido;if(!expandido)soloUltimo();pintar()});
+  function pintarTodo(){pintarUltimo();pintarHoy();pintarCalendario();pintarListado()}
 
   $('btnTodos').addEventListener('click',()=>{
-    seleccion=seleccion.size===registros.length?new Set():new Set(registros.map(r=>r.id));
-    pintar();
+    const lista=visibles();
+    seleccion=seleccionados().length===lista.length?new Set():new Set(lista.map(r=>r.id));
+    pintarListado();
   });
 
+  /* ---------- Registro ---------- */
   $('btnRegistro').addEventListener('click',()=>{
     const nombre=$('nombre').value.trim();
     if(!nombre){status('Escribe tu nombre antes de registrar.','err');$('nombre').focus();return}
     const ahora=new Date();
     const r={id:nuevoId(),nombre,fechaHora:fechaHora(ahora),iso:ahora.toISOString(),lat:null,lon:null,precision:null};
-    const guardar=()=>{registros.push(r);store.set(KEY_REG,registros);soloUltimo();pintar();$('btnRegistro').disabled=false};
+    const guardar=()=>{
+      registros=registros.filter(x=>!x.ejemplo);registros.push(r);guardarRegistros();
+      seleccion.clear();filtroDia=null;mesVista=new Date(ahora.getFullYear(),ahora.getMonth(),1);
+      pintarTodo();$('btnRegistro').disabled=false;
+    };
     if(!('geolocation' in navigator)){r.error='GPS no disponible';guardar();status('Registrado sin posición: este navegador no da GPS.','err');return}
     $('btnRegistro').disabled=true;status('Obteniendo posición GPS…');
     navigator.geolocation.getCurrentPosition(p=>{
@@ -337,57 +496,57 @@ li a{color:var(--earth)}
     },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
   });
 
+  /* ---------- Envíos ---------- */
+  function enviarWhatsapp(lista){
+    if(!cfg.tel){abrir('cfg');$('telefono').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el teléfono de WhatsApp y guarda.';return}
+    window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(textoWhatsapp(lista))}`,'_blank');
+  }
+  function enviarEmail(lista){
+    if(!cfg.mail){abrir('cfg');$('email').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el email del destinatario y guarda.';return}
+    const nombres=[...new Set(lista.map(r=>r.nombre))].join(', ');
+    const fh=r=>{const d=new Date(r.iso);return `${fechaCorta(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+    const cuando=lista.length===1?fh(lista[0]):`${fh(lista[0])} – ${fh(lista[lista.length-1])}`;
+    const asunto=`Registro ${nombres} ${cuando}`;
+    const dest=cfg.mail.split(',').map(x=>x.trim()).filter(Boolean).join(',');
+    location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(textoWhatsapp(lista))}`;
+  }
   function haySeleccion(){
-    if(!seleccion.size){status('Marca al menos un registro.','err');return false}
+    if(!seleccionados().length){statusList('Marca al menos un registro.','err');return false}
     return true;
   }
 
-  /* ---------- Envíos ---------- */
-  $('btnWhatsapp').addEventListener('click',()=>{
-    if(!haySeleccion())return;
-    if(!cfg.tel){abrir('cfg');$('telefono').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el teléfono de WhatsApp y guarda.';return}
-    const txt=textoWhatsapp(seleccionados());
-    window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(txt)}`,'_blank');
-  });
-
-  $('btnEmail').addEventListener('click',()=>{
-    if(!haySeleccion())return;
-    if(!cfg.mail){abrir('cfg');$('email').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el email del destinatario y guarda.';return}
-    const lista=seleccionados();
-    const nombres=[...new Set(lista.map(r=>r.nombre))].join(', ');
-    const fh=r=>{const d=new Date(r.iso);return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${String(d.getFullYear()).slice(-2)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
-    const cuando=lista.length===1?fh(lista[0]):`${fh(lista[0])} – ${fh(lista[lista.length-1])}`;
-    const asunto=`Registro ${nombres} ${cuando}`;
-    const cuerpo=textoWhatsapp(lista);
-    const dest=cfg.mail.split(',').map(x=>x.trim()).filter(Boolean).join(',');
-    location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
-  });
+  $('btnWhatsapp').addEventListener('click',()=>{const u=ultimo();if(u)enviarWhatsapp([u])});
+  $('btnEmail').addEventListener('click',()=>{const u=ultimo();if(u)enviarEmail([u])});
+  $('btnWhatsappSel').addEventListener('click',()=>{if(haySeleccion())enviarWhatsapp(seleccionados())});
+  $('btnEmailSel').addEventListener('click',()=>{if(haySeleccion())enviarEmail(seleccionados())});
 
   $('btnCompartir').addEventListener('click',async()=>{
     if(!haySeleccion())return;
     const file=new File([textoFichero(seleccionados())],nombreFichero(),{type:'text/plain'});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       try{await navigator.share({files:[file],title:'Registros de jornada'})}
-      catch(e){if(e.name!=='AbortError')status('No se pudo compartir el fichero.','err')}
-    }else status('Este navegador no permite adjuntar ficheros. Usa WhatsApp o Email.','err');
+      catch(e){if(e.name!=='AbortError')statusList('No se pudo compartir el fichero.','err')}
+    }else statusList('Este navegador no permite adjuntar ficheros. Usa WhatsApp o Email.','err');
   });
 
   $('btnBorrar').addEventListener('click',()=>{
     if(!haySeleccion())return;
-    const n=seleccion.size;
+    const n=seleccionados().length;
     $('confirmTxt').textContent=`¿Eliminar ${n} registro${n===1?'':'s'} del móvil? No se puede deshacer.`;
     $('confirmBox').hidden=false;
   });
   $('btnNoBorrar').addEventListener('click',()=>{$('confirmBox').hidden=true});
   $('btnSiBorrar').addEventListener('click',()=>{
-    const n=seleccion.size;
-    registros=registros.filter(r=>!seleccion.has(r.id));
-    store.set(KEY_REG,registros);soloUltimo();pintar();
-    status(`${n} registro${n===1?'':'s'} eliminado${n===1?'':'s'}.`,'ok');
+    const borrar=new Set(seleccionados().map(r=>r.id)), n=borrar.size;
+    registros=registros.filter(r=>!borrar.has(r.id));
+    guardarRegistros();seleccion.clear();
+    if(filtroDia&&!visibles().length)filtroDia=null;
+    pintarTodo();
+    statusList(`${n} registro${n===1?'':'s'} eliminado${n===1?'':'s'}.`,'ok');
   });
 
   pintarDestinos();
-  pintar();
+  pintarTodo();
 })();
 </script>
 </body>
