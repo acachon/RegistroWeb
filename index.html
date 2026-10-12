@@ -129,6 +129,16 @@ label.item{cursor:pointer}
 .vista button{flex:1;padding:8px;font-size:.92rem;font-weight:700;background:transparent;color:var(--muted);border-radius:8px}
 .vista button[aria-pressed=true]{background:var(--olive);color:var(--olive-ink)}
 #mapa,#mapaHoy{height:340px;border:1px solid var(--line);border-radius:10px;z-index:0}
+/* Controles del mapa siempre claros con texto oscuro: en modo oscuro heredarían el texto claro de la web
+   y no se leerían (selector Mapa/Satélite, zoom, globos y créditos) */
+.leaflet-container .leaflet-control-layers,.leaflet-container .leaflet-bar a,
+.leaflet-container .leaflet-popup-content-wrapper,.leaflet-container .leaflet-popup-tip{background:#fff;color:#1f2617;color-scheme:light}
+.leaflet-container .leaflet-control-layers label{color:#1f2617;font:600 .9rem var(--display)}
+/* El selector de capas usa un <section> interno: anular el estilo de tarjeta de la web */
+.leaflet-container section{background:transparent;border:0;border-radius:0;padding:0;display:block}
+.leaflet-container .leaflet-bar a:hover{background:#f0f0f0}
+.leaflet-container .leaflet-control-attribution{background:rgba(255,255,255,.85);color:#333}
+.leaflet-container .leaflet-control-attribution a{color:#0b5394}
 /* Icono por actividad: Inicio cuadrado rojo, Fin cuadrado negro, el resto círculos de colores */
 .pin{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#6b7280;color:#fff;font:700 .78rem var(--display);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)}
 .pin.cuad{border-radius:3px}
