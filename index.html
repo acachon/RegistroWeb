@@ -37,7 +37,13 @@ h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
 .panel{display:flex;flex-direction:column;gap:20px}
 .lbl{display:block;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 input[type=text],input[type=tel],input[type=email]{width:100%;font:500 1.1rem var(--display);padding:14px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
-input:focus{outline:none;border-color:var(--olive)}
+select{width:100%;font:500 .95rem var(--display);padding:15px 4px 15px 8px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
+.fila2{display:flex;gap:8px}
+.campo-nombre{flex:1.15 1 0;min-width:0}
+.campo-act{flex:1 1 0;min-width:0}
+input:focus,select:focus{outline:none;border-color:var(--olive)}
+select:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
+.act{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--olive-soft);color:var(--olive);font-family:var(--display);font-size:.72rem;font-weight:700;letter-spacing:.03em;vertical-align:1px}
 input.bad{border-color:var(--err)}
 button{font-family:var(--display);cursor:pointer;border:0;border-radius:12px}
 button:focus-visible,input:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
@@ -107,6 +113,11 @@ label.item{cursor:pointer}
 .ayuda{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px 14px;border:2px solid var(--err);border-radius:10px;background:var(--card)}
 .ayuda strong{color:var(--err)}
 .ayuda ol{list-style:decimal;padding-left:22px;gap:6px;font-size:.92rem}
+/* Sugerencia de envío del día completo tras Fin Jornada */
+.sugerencia{display:flex;flex-direction:column;gap:10px;padding:14px;border:2px solid var(--olive);border-radius:12px;background:var(--olive-soft)}
+.sugerencia>strong{color:var(--olive);font-size:1.05rem}
+.sugerencia p{margin:0;font-size:.95rem}
+.sugerencia .mini{align-self:flex-start}
 .filtro{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.88rem;color:var(--muted);min-height:32px}
 :root[data-theme="dark"]{
   --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
@@ -132,17 +143,38 @@ label.item{cursor:pointer}
 
   <!-- PESTAÑA PRINCIPAL -->
   <div class="panel" id="panelReg" role="tabpanel">
-    <div>
-      <label class="lbl" for="nombre">Empleado</label>
-      <input id="nombre" type="text" autocomplete="name" placeholder="Nombre y apellidos">
+    <div class="fila2">
+      <div class="campo-nombre">
+        <label class="lbl" for="nombre">Empleado</label>
+        <input id="nombre" type="text" autocomplete="name" placeholder="Nombre y apellidos">
+      </div>
+      <div class="campo-act">
+        <label class="lbl" for="actividad">Actividad</label>
+        <select id="actividad">
+          <option>Inicio Jornada</option>
+          <option>Fin Jornada</option>
+          <option>Poda</option>
+          <option>Riego</option>
+          <option>Otros</option>
+        </select>
+      </div>
     </div>
 
-    <button id="btnRegistro" type="button">REGISTRO<small>Inicio de trabajo · fecha, hora y posición</small></button>
+    <button id="btnRegistro" type="button">REGISTRO<small>Actividad · fecha, hora y posición</small></button>
     <p class="status" id="status" role="status" aria-live="polite"></p>
     <div class="ayuda" id="ayudaGps" hidden>
       <strong id="ayudaTitulo"></strong>
       <ol id="ayudaPasos"></ol>
       <button type="button" class="mini" id="ayudaCerrar">Entendido</button>
+    </div>
+    <div class="sugerencia" id="sugFin" hidden>
+      <strong>Jornada terminada</strong>
+      <p id="sugTxt"></p>
+      <div class="send">
+        <button class="sendbtn wa" id="sugWa" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
+        <button class="sendbtn mail" id="sugMail" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
+      </div>
+      <button type="button" class="mini" id="sugCerrar">Ahora no</button>
     </div>
 
     <section>
@@ -230,7 +262,7 @@ label.item{cursor:pointer}
 
 <script>
 (function(){
-  const KEY_REG='gea_registros', KEY_NOM='gea_nombre', KEY_TEL='gea_telefono', KEY_MAIL='gea_email';
+  const KEY_REG='gea_registros', KEY_NOM='gea_nombre', KEY_ACT='gea_actividad', KEY_TEL='gea_telefono', KEY_MAIL='gea_email';
   const $=id=>document.getElementById(id);
   const store={
     get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
@@ -259,24 +291,24 @@ label.item{cursor:pointer}
     const base=new Date(), dia=(n,h,m)=>new Date(base.getFullYear(),base.getMonth(),base.getDate()+n,h,m);
     // Semana anterior: siempre. Hoy: solo si aún no hay registros reales hoy, para no mezclar duraciones.
     const semana=[
-      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,dia(-6,7,58)],
-      ["Ejemplo · María López",37.886104,-4.781877,9,dia(-6,8,12)],
-      ["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,dia(-5,8,3)],
-      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,dia(-3,8,10)],
-      ["Ejemplo · Juan Pérez",37.884498,-4.779410,7,dia(-2,7,55)],
-      ["Ejemplo · María López",37.886120,-4.781790,11,dia(-2,8,6)],
-      ["Ejemplo · Antonio Ruiz",37.882940,-4.776601,8,dia(-2,8,21)],
-      ["Ejemplo · María López",37.886104,-4.781877,9,dia(-1,7,50)]
+      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,dia(-6,7,58),"Inicio Jornada"],
+      ["Ejemplo · María López",37.886104,-4.781877,9,dia(-6,8,12),"Inicio Jornada"],
+      ["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,dia(-5,8,3),"Riego"],
+      ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,dia(-3,8,10),"Poda"],
+      ["Ejemplo · Juan Pérez",37.884498,-4.779410,7,dia(-2,7,55),"Inicio Jornada"],
+      ["Ejemplo · María López",37.886120,-4.781790,11,dia(-2,8,6),"Poda"],
+      ["Ejemplo · Antonio Ruiz",37.882940,-4.776601,8,dia(-2,8,21),"Riego"],
+      ["Ejemplo · María López",37.886104,-4.781877,9,dia(-1,7,50),"Otros"]
     ];
     const hayRealHoy=registros.some(r=>diaDe(r)===diaKey(base));
     const deHoy=hayRealHoy?[]:[
-      ["Ejemplo · Juan Pérez",37.884530,-4.779300,6,dia(0,8,2)],
-      ["Ejemplo · María López",37.886090,-4.781850,8,dia(0,10,31)],
-      ["Ejemplo · Juan Pérez",37.884501,-4.779355,5,dia(0,13,47)],
-      ["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,dia(0,16,20)]
+      ["Ejemplo · Juan Pérez",37.884530,-4.779300,6,dia(0,8,2),"Inicio Jornada"],
+      ["Ejemplo · Juan Pérez",37.886090,-4.781850,8,dia(0,10,31),"Poda"],
+      ["Ejemplo · Juan Pérez",37.884501,-4.779355,5,dia(0,13,47),"Riego"],
+      ["Ejemplo · Juan Pérez",37.882951,-4.776540,5,dia(0,16,20),"Fin Jornada"]
     ].filter(x=>x[4]<base);
     const ejemplos=[...semana,...deHoy]
-      .map(([n,la,lo,p,d])=>({id:nuevoId(),nombre:n,fechaHora:fechaHora(d),iso:d.toISOString(),lat:la,lon:lo,precision:p,ejemplo:true}));
+      .map(([n,la,lo,p,d,act])=>({id:nuevoId(),nombre:n,actividad:act,fechaHora:fechaHora(d),iso:d.toISOString(),lat:la,lon:lo,precision:p,ejemplo:true}));
     registros=[...registros,...ejemplos].sort((a,b)=>new Date(a.iso)-new Date(b.iso));
   }
   const guardarRegistros=()=>store.set(KEY_REG,registros.filter(r=>!r.ejemplo));
@@ -327,10 +359,27 @@ label.item{cursor:pointer}
 
   /* ---------- Textos ---------- */
   $('nombre').value=store.get(KEY_NOM,'');
-  $('nombre').addEventListener('input',e=>store.set(KEY_NOM,e.target.value.trim()));
+  $('nombre').addEventListener('input',e=>{store.set(KEY_NOM,e.target.value.trim());actualizarActividades()});
+  $('actividad').addEventListener('change',e=>store.set(KEY_ACT,e.target.value));
+
+  // El primer registro del día de cada empleado tiene que ser Inicio Jornada: hasta que lo haga,
+  // el desplegable solo ofrece esa opción. Después se recupera la última actividad elegida.
+  const ACTIVIDADES=[...$('actividad').options].map(o=>o.value);
+  let actCargada=false;
+  function actualizarActividades(){
+    const sel=$('actividad'), nombre=$('nombre').value.trim(), hoyK=diaKey(new Date());
+    const empezado=!!nombre&&registros.some(r=>!r.ejemplo&&r.nombre===nombre&&diaDe(r)===hoyK);
+    const opciones=empezado?ACTIVIDADES:[ACTIVIDADES[0]];
+    const actual=(actCargada&&sel.options.length>1)?sel.value:store.get(KEY_ACT,ACTIVIDADES[0]);
+    actCargada=true;
+    sel.textContent='';
+    opciones.forEach(v=>{const o=document.createElement('option');o.textContent=v;sel.appendChild(o)});
+    sel.value=opciones.includes(actual)?actual:opciones[0];
+  }
+
   setInterval(()=>{
     const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-    if(diaKey(d)!==diaPintado)pintarHoy();else actualizarVivo();
+    if(diaKey(d)!==diaPintado){pintarHoy();actualizarActividades()}else actualizarVivo();
   },1000);
 
   function avisar(id,msg,cls){const s=$(id);s.textContent=msg;s.className='status '+(cls||'')}
@@ -339,10 +388,10 @@ label.item{cursor:pointer}
 
   function linea(r){
     const pos=r.lat!=null?`${r.lat.toFixed(6)};${r.lon.toFixed(6)};${Math.round(r.precision)}`:'SIN POSICIÓN;;';
-    return `${r.nombre};${r.fechaHora};${pos}`;
+    return `${r.nombre};${r.actividad||''};${r.fechaHora};${pos}`;
   }
   function textoFichero(lista){
-    return 'EMPLEADO;FECHA_HORA;LATITUD;LONGITUD;PRECISION_M\n'+lista.map(linea).join('\n')+'\n';
+    return 'EMPLEADO;ACTIVIDAD;FECHA_HORA;LATITUD;LONGITUD;PRECISION_M\n'+lista.map(linea).join('\n')+'\n';
   }
   function nombreFichero(){
     const d=new Date();
@@ -353,14 +402,16 @@ label.item{cursor:pointer}
     return lista.map(r=>{
       const d=new Date(r.iso);
       const ubic=r.lat!=null?`https://maps.google.com/?q=${r.lat.toFixed(6)},${r.lon.toFixed(6)}`:'sin posición';
-      return `Empleado: ${r.nombre}\nFecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\nUbicación: ${ubic}\nPrecisión GPS: ${r.lat!=null?'±'+Math.round(r.precision)+' m':'sin dato'}`;
+      return `Empleado: ${r.nombre}\n${r.actividad?`Actividad: ${r.actividad}\n`:''}Fecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\nUbicación: ${ubic}\nPrecisión GPS: ${r.lat!=null?'±'+Math.round(r.precision)+' m':'sin dato'}`;
     }).join('\n\n');
   }
 
   /* ---------- Pintado de registros ---------- */
   function contenidoRegistro(r){
     const txt=document.createElement('div');txt.className='txt';
-    const b=document.createElement('b');b.textContent=r.nombre;
+    // Título en negrita: la actividad; el empleado va en la etiqueta verde (los registros antiguos sin actividad muestran solo el nombre)
+    const b=document.createElement('b');b.textContent=r.actividad||r.nombre;
+    if(r.actividad){const a=document.createElement('span');a.className='act';a.textContent=r.nombre;b.appendChild(a)}
     if(r===ultimo()){const t=document.createElement('span');t.className='tag';t.textContent='Último';b.appendChild(t)}
     txt.appendChild(b);
     txt.appendChild(document.createTextNode(r.fechaHora));
@@ -374,25 +425,68 @@ label.item{cursor:pointer}
     return txt;
   }
 
+  /* ---------- Duraciones ---------- */
+  const durHHMM=ms=>{const min=Math.max(0,Math.floor(ms/60000));return `${pad(Math.floor(min/60))}h:${pad(min%60)}m`};
+  const INICIO='Inicio Jornada', FIN='Fin Jornada';
+  // Emparejan inicio y fin de jornada del mismo empleado (registros en orden cronológico)
+  function finDe(ini){
+    for(let i=registros.indexOf(ini)+1;i<registros.length;i++){
+      const r=registros[i];if(r.nombre!==ini.nombre)continue;
+      if(r.actividad===FIN)return r;
+      if(r.actividad===INICIO)return null;
+    }
+    return null;
+  }
+  function inicioDe(fin){
+    for(let i=registros.indexOf(fin)-1;i>=0;i--){
+      const r=registros[i];if(r.nombre!==fin.nombre)continue;
+      if(r.actividad===INICIO)return r;
+      if(r.actividad===FIN)return null;
+    }
+    return null;
+  }
+  // Qué duración mostrar a la derecha de cada registro:
+  //  · Inicio Jornada: en vivo hasta ahora mientras la jornada siga abierta; cerrada, la duración total.
+  //  · Fin Jornada: desde su inicio de jornada hasta este fin.
+  //  · Resto: hasta el registro siguiente (sig), o en vivo si no hay siguiente.
+  function durRegistro(r,sig){
+    const t=x=>new Date(x.iso);
+    if(r.actividad===INICIO){
+      const fin=finDe(r);
+      return fin?{texto:durHHMM(t(fin)-t(r)),nota:'jornada'}:{desde:r.iso,nota:'en curso'};
+    }
+    if(r.actividad===FIN){
+      const ini=inicioDe(r);
+      return ini?{texto:durHHMM(t(r)-t(ini)),nota:'jornada'}:{texto:'--h:--m',nota:'sin inicio'};
+    }
+    return sig?{texto:durHHMM(t(sig)-t(r))}:{desde:r.iso,nota:'en curso'};
+  }
+  function crearDur(info){
+    const dur=document.createElement('div');dur.className='dur';
+    const t=document.createElement('span');t.className='t';
+    if(info.desde){dur.classList.add('vivo');t.dataset.desde=info.desde}else t.textContent=info.texto;
+    dur.appendChild(t);
+    if(info.nota){const n=document.createElement('small');n.textContent=info.nota;dur.appendChild(n)}
+    return dur;
+  }
+  // Refresca todos los contadores en vivo (lo llama el reloj cada segundo)
+  function actualizarVivo(){
+    document.querySelectorAll('.vivo .t').forEach(t=>{t.textContent=durHHMM(Date.now()-new Date(t.dataset.desde))});
+  }
+
   // Pestaña Registro: solo el último
   function pintarUltimo(){
     const u=ultimo(), box=$('ultimo');box.textContent='';
     if(u){
       const d=document.createElement('div');d.className='item hoyitem';d.appendChild(contenidoRegistro(u));
-      // Contador en vivo desde el último registro hasta ahora (lo refresca el reloj cada segundo)
-      const dur=document.createElement('div');dur.className='dur vivo';
-      const t=document.createElement('span');t.className='t';t.dataset.desde=u.iso;
-      const nota=document.createElement('small');nota.textContent='en curso';
-      dur.appendChild(t);dur.appendChild(nota);d.appendChild(dur);box.appendChild(d);
+      d.appendChild(crearDur(durRegistro(u,null)));box.appendChild(d);
     }
     $('vacio').hidden=!!u;
     $('btnWhatsapp').disabled=$('btnEmail').disabled=!u;
     actualizarVivo();
   }
 
-  // Pestaña Registro: los registros anteriores de hoy (sin el último, que va en su propia sección),
-  // en orden, con el tiempo hasta el siguiente.
-  const durHHMM=ms=>{const min=Math.max(0,Math.floor(ms/60000));return `${pad(Math.floor(min/60))}h:${pad(min%60)}m`};
+  // Pestaña Registro: los registros anteriores de hoy (sin el último, que va en su propia sección), en orden
   let diaPintado=null;
   function pintarHoy(){
     diaPintado=diaKey(new Date());
@@ -402,16 +496,12 @@ label.item{cursor:pointer}
       const li=document.createElement('li');
       const it=document.createElement('div');it.className='item hoyitem';
       it.appendChild(contenidoRegistro(r));
-      const dur=document.createElement('div');dur.className='dur';
-      dur.textContent=durHHMM(new Date(lista[i+1].iso)-new Date(r.iso));
-      it.appendChild(dur);li.appendChild(it);ol.appendChild(li);
+      it.appendChild(crearDur(durRegistro(r,lista[i+1])));
+      li.appendChild(it);ol.appendChild(li);
     });
     $('contadorHoy').textContent=anteriores.length;
     $('vacioHoy').hidden=anteriores.length>0;
-  }
-  function actualizarVivo(){
-    const t=document.querySelector('#ultimo .vivo .t');
-    if(t)t.textContent=durHHMM(Date.now()-new Date(t.dataset.desde));
+    actualizarVivo();
   }
 
   // Pestaña Listado: calendario del mes en vista
@@ -480,7 +570,7 @@ label.item{cursor:pointer}
     $('confirmBox').hidden=true;
   }
 
-  function pintarTodo(){pintarUltimo();pintarHoy();pintarCalendario();pintarListado()}
+  function pintarTodo(){pintarUltimo();pintarHoy();pintarCalendario();pintarListado();actualizarActividades()}
 
   $('btnTodos').addEventListener('click',()=>{
     const lista=visibles();
@@ -533,14 +623,15 @@ label.item{cursor:pointer}
     const nombre=$('nombre').value.trim();
     if(!nombre){status('Escribe tu nombre antes de registrar.','err');$('nombre').focus();return}
     const ahora=new Date();
-    const r={id:nuevoId(),nombre,fechaHora:fechaHora(ahora),iso:ahora.toISOString(),lat:null,lon:null,precision:null};
+    const r={id:nuevoId(),nombre,actividad:$('actividad').value,fechaHora:fechaHora(ahora),iso:ahora.toISOString(),lat:null,lon:null,precision:null};
     const guardar=()=>{
       // Los ejemplos de hoy se quitan al registrar de verdad, para no mezclar sus duraciones con las reales
       registros=registros.filter(x=>!(x.ejemplo&&diaDe(x)===diaDe(r)));registros.push(r);guardarRegistros();
       seleccion.clear();filtroDia=null;mesVista=new Date(ahora.getFullYear(),ahora.getMonth(),1);
       pintarTodo();$('btnRegistro').disabled=false;
+      if(r.actividad===FIN)sugerirEnvioDia(r);
     };
-    $('ayudaGps').hidden=true;
+    $('ayudaGps').hidden=true;$('sugFin').hidden=true;
     if(!('geolocation' in navigator)){r.error='GPS no disponible';guardar();status('Registrado sin posición: este navegador no da GPS.','err');ayudaUbicacion(0);return}
     $('btnRegistro').disabled=true;status('Obteniendo posición GPS…');
     navigator.geolocation.getCurrentPosition(p=>{
@@ -553,19 +644,34 @@ label.item{cursor:pointer}
     },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
   });
 
-  /* ---------- Envíos ---------- */
-  function enviarWhatsapp(lista){
-    if(!cfg.tel){abrir('cfg');$('telefono').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el teléfono de WhatsApp y guarda.';return}
-    window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(textoWhatsapp(lista))}`,'_blank');
+  /* ---------- Fin de jornada: proponer enviar el día completo ---------- */
+  // Deja marcados en el Listado todos los registros del día de ese empleado y ofrece enviarlos en un solo mensaje
+  let resumenDia=null;
+  function sugerirEnvioDia(fin){
+    const k=diaDe(fin), lista=registros.filter(x=>diaDe(x)===k&&x.nombre===fin.nombre), ini=inicioDe(fin);
+    filtroDia=k;seleccion=new Set(lista.map(x=>x.id));pintarCalendario();pintarListado();
+    resumenDia={lista,cabecera:`Resumen de la jornada · ${fin.nombre} · ${fechaCorta(new Date(fin.iso))}\n`+
+      (ini?`Duración jornada: ${durHHMM(new Date(fin.iso)-new Date(ini.iso))}\n`:'')+'\n'};
+    $('sugTxt').textContent=`Se han seleccionado los ${lista.length} registros de hoy de ${fin.nombre}. ¿Enviarlos todos en un mensaje?`;
+    $('sugFin').hidden=false;
   }
-  function enviarEmail(lista){
+  $('sugWa').addEventListener('click',()=>{if(resumenDia)enviarWhatsapp(resumenDia.lista,resumenDia.cabecera)});
+  $('sugMail').addEventListener('click',()=>{if(resumenDia)enviarEmail(resumenDia.lista,resumenDia.cabecera)});
+  $('sugCerrar').addEventListener('click',()=>{$('sugFin').hidden=true});
+
+  /* ---------- Envíos ---------- */
+  function enviarWhatsapp(lista,cabecera=''){
+    if(!cfg.tel){abrir('cfg');$('telefono').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el teléfono de WhatsApp y guarda.';return}
+    window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(cabecera+textoWhatsapp(lista))}`,'_blank');
+  }
+  function enviarEmail(lista,cabecera=''){
     if(!cfg.mail){abrir('cfg');$('email').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el email del destinatario y guarda.';return}
     const nombres=[...new Set(lista.map(r=>r.nombre))].join(', ');
     const fh=r=>{const d=new Date(r.iso);return `${fechaCorta(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
     const cuando=lista.length===1?fh(lista[0]):`${fh(lista[0])} – ${fh(lista[lista.length-1])}`;
     const asunto=`Registro ${nombres} ${cuando}`;
     const dest=cfg.mail.split(',').map(x=>x.trim()).filter(Boolean).join(',');
-    location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(textoWhatsapp(lista))}`;
+    location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cabecera+textoWhatsapp(lista))}`;
   }
   function haySeleccion(){
     if(!seleccionados().length){statusList('Marca al menos un registro.','err');return false}
