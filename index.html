@@ -41,6 +41,9 @@ select{width:100%;font:500 .95rem var(--display);padding:15px 4px 15px 8px;borde
 .fila2{display:flex;gap:8px}
 .campo-nombre{flex:1.15 1 0;min-width:0}
 .campo-act{flex:1 1 0;min-width:0}
+/* Empleado fijo (viene de Configuración): sin borde de edición y con fondo apagado */
+input[readonly]{background:var(--bg);border-style:dashed;color:var(--muted);cursor:default}
+input[readonly]:focus{border-color:var(--line)}
 input:focus,select:focus{outline:none;border-color:var(--olive)}
 select:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
 .act{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--olive-soft);color:var(--olive);font-family:var(--display);font-size:.72rem;font-weight:700;letter-spacing:.03em;vertical-align:1px}
@@ -145,8 +148,8 @@ label.item{cursor:pointer}
   <div class="panel" id="panelReg" role="tabpanel">
     <div class="fila2">
       <div class="campo-nombre">
-        <label class="lbl" for="nombre">Empleado</label>
-        <input id="nombre" type="text" autocomplete="name" placeholder="Nombre y apellidos">
+        <label class="lbl" for="empleadoActual">Empleado</label>
+        <input id="empleadoActual" type="text" readonly tabindex="-1" title="Se cambia en Configuración">
       </div>
       <div class="campo-act">
         <label class="lbl" for="actividad">Actividad</label>
@@ -190,11 +193,17 @@ label.item{cursor:pointer}
     </section>
 
     <section>
-      <h2>Enviar último registro</h2>
+      <h2 id="tituloEnvio">Enviar último registro</h2>
       <div class="send">
         <button class="sendbtn wa" id="btnWhatsapp" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
         <button class="sendbtn mail" id="btnEmail" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
       </div>
+    </section>
+
+    <section id="secPrueba">
+      <h2>Datos de prueba</h2>
+      <p class="hint">Borra todos los registros guardados y crea una jornada sin terminar del empleado configurado: Inicio Jornada y, 10, 15 y 20 minutos después, Poda, Riego y Otros, todo a menos de 100 m.</p>
+      <button class="btn sec" id="btnPrueba" type="button">Cargar datos de prueba</button>
     </section>
   </div>
 
@@ -243,6 +252,12 @@ label.item{cursor:pointer}
   <!-- PESTAÑA CONFIGURACIÓN -->
   <div class="panel" id="panelCfg" role="tabpanel" hidden>
     <section>
+      <h2>Empleado</h2>
+      <div class="field">
+        <label class="lbl" for="nombre">Nombre del empleado de este móvil</label>
+        <input id="nombre" type="text" autocomplete="name" placeholder="Nombre y apellidos">
+        <p class="hint">Se usa en todos los registros que se hagan desde este móvil.</p>
+      </div>
       <h2>Destinatarios</h2>
       <div class="field">
         <label class="lbl" for="telefono">Teléfono para WhatsApp</label>
@@ -293,11 +308,14 @@ label.item{cursor:pointer}
     const semana=[
       ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,dia(-6,7,58),"Inicio Jornada"],
       ["Ejemplo · María López",37.886104,-4.781877,9,dia(-6,8,12),"Inicio Jornada"],
+      ["Ejemplo · Juan Pérez",37.884530,-4.779290,7,dia(-6,15,40),"Fin Jornada"],
+      ["Ejemplo · María López",37.886099,-4.781860,8,dia(-6,16,5),"Fin Jornada"],
       ["Ejemplo · Antonio Ruiz",37.882951,-4.776540,5,dia(-5,8,3),"Riego"],
       ["Ejemplo · Juan Pérez",37.884512,-4.779321,6,dia(-3,8,10),"Poda"],
       ["Ejemplo · Juan Pérez",37.884498,-4.779410,7,dia(-2,7,55),"Inicio Jornada"],
       ["Ejemplo · María López",37.886120,-4.781790,11,dia(-2,8,6),"Poda"],
       ["Ejemplo · Antonio Ruiz",37.882940,-4.776601,8,dia(-2,8,21),"Riego"],
+      ["Ejemplo · Juan Pérez",37.884520,-4.779380,6,dia(-2,15,58),"Fin Jornada"],
       ["Ejemplo · María López",37.886104,-4.781877,9,dia(-1,7,50),"Otros"]
     ];
     const hayRealHoy=registros.some(r=>diaDe(r)===diaKey(base));
@@ -320,15 +338,15 @@ label.item{cursor:pointer}
   const hoy=new Date();
   let mesVista=new Date(hoy.getFullYear(),hoy.getMonth(),1);
 
-  // Destinatarios por defecto hasta que se guarde otra configuración
-  let cfg={tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
+  // Empleado y destinatarios por defecto hasta que se guarde otra configuración
+  let cfg={nombre:store.get(KEY_NOM,'')||'Angel',tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
 
   /* ---------- Pestañas ---------- */
   const PESTANAS={reg:['tabReg','panelReg'],list:['tabList','panelList'],cfg:['tabCfg','panelCfg']};
   function abrir(tab){
     Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute('aria-selected',k===tab);$(p).hidden=k!==tab});
-    if(tab==='cfg'){$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
-      $('telefono').classList.remove('bad');$('email').classList.remove('bad')}
+    if(tab==='cfg'){$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
+      ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
     window.scrollTo(0,0);
   }
   Object.entries(PESTANAS).forEach(([k,[t]])=>$(t).addEventListener('click',()=>abrir(k)));
@@ -342,13 +360,13 @@ label.item{cursor:pointer}
   const emailsValidos=v=>v.split(',').map(x=>x.trim()).filter(Boolean).every(x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));
 
   $('btnGuardarCfg').addEventListener('click',()=>{
-    const tel=$('telefono').value.trim(), mail=$('email').value.trim();
-    const telOk=!tel||telefonoLimpio(tel).length>=10, mailOk=!mail||emailsValidos(mail);
-    $('telefono').classList.toggle('bad',!telOk);$('email').classList.toggle('bad',!mailOk);
+    const nombre=$('nombre').value.trim(), tel=$('telefono').value.trim(), mail=$('email').value.trim();
+    const nomOk=!!nombre, telOk=!tel||telefonoLimpio(tel).length>=10, mailOk=!mail||emailsValidos(mail);
+    $('nombre').classList.toggle('bad',!nomOk);$('telefono').classList.toggle('bad',!telOk);$('email').classList.toggle('bad',!mailOk);
     const s=$('cfgStatus');
-    if(!telOk||!mailOk){s.className='status err';s.textContent=!telOk?'El teléfono no es válido.':'Revisa el email: debe tener la forma nombre@dominio.com.';return}
-    cfg={tel,mail};store.set(KEY_TEL,tel);store.set(KEY_MAIL,mail);
-    pintarDestinos();
+    if(!nomOk||!telOk||!mailOk){s.className='status err';s.textContent=!nomOk?'Escribe el nombre del empleado.':!telOk?'El teléfono no es válido.':'Revisa el email: debe tener la forma nombre@dominio.com.';return}
+    cfg={nombre,tel,mail};store.set(KEY_NOM,nombre);store.set(KEY_TEL,tel);store.set(KEY_MAIL,mail);
+    pintarDestinos();pintarEmpleado();actualizarActividades();
     s.className='status ok';s.textContent='Configuración guardada.';
   });
 
@@ -357,9 +375,10 @@ label.item{cursor:pointer}
     document.querySelectorAll('.destMail').forEach(e=>e.textContent=cfg.mail||'Sin email · configurar');
   }
 
+  // En la pestaña Registro solo se muestra quién registra; se cambia en Configuración
+  function pintarEmpleado(){$('empleadoActual').value=cfg.nombre}
+
   /* ---------- Textos ---------- */
-  $('nombre').value=store.get(KEY_NOM,'');
-  $('nombre').addEventListener('input',e=>{store.set(KEY_NOM,e.target.value.trim());actualizarActividades()});
   $('actividad').addEventListener('change',e=>store.set(KEY_ACT,e.target.value));
 
   // El primer registro del día de cada empleado tiene que ser Inicio Jornada: hasta que lo haga,
@@ -367,7 +386,7 @@ label.item{cursor:pointer}
   const ACTIVIDADES=[...$('actividad').options].map(o=>o.value);
   let actCargada=false;
   function actualizarActividades(){
-    const sel=$('actividad'), nombre=$('nombre').value.trim(), hoyK=diaKey(new Date());
+    const sel=$('actividad'), nombre=cfg.nombre, hoyK=diaKey(new Date());
     const empezado=!!nombre&&registros.some(r=>!r.ejemplo&&r.nombre===nombre&&diaDe(r)===hoyK);
     const opciones=empezado?ACTIVIDADES:[ACTIVIDADES[0]];
     const actual=(actCargada&&sel.options.length>1)?sel.value:store.get(KEY_ACT,ACTIVIDADES[0]);
@@ -398,11 +417,18 @@ label.item{cursor:pointer}
     return `registros_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.txt`;
   }
 
-  function textoWhatsapp(lista){
-    return lista.map(r=>{
+  // conDuracion (resumen de fin de jornada): añade a cada actividad su duración, con las mismas
+  // reglas que en pantalla; el «siguiente» es el siguiente registro del propio resumen.
+  function textoWhatsapp(lista,conDuracion=false){
+    return lista.map((r,i)=>{
       const d=new Date(r.iso);
       const ubic=r.lat!=null?`https://maps.google.com/?q=${r.lat.toFixed(6)},${r.lon.toFixed(6)}`:'sin posición';
-      return `Empleado: ${r.nombre}\n${r.actividad?`Actividad: ${r.actividad}\n`:''}Fecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\nUbicación: ${ubic}\nPrecisión GPS: ${r.lat!=null?'±'+Math.round(r.precision)+' m':'sin dato'}`;
+      let dur='';
+      if(conDuracion){
+        const info=durRegistro(r,lista[i+1]||null,false);
+        if(info)dur=`Duración: ${info.texto}${info.nota?` (${info.nota})`:''}\n`;
+      }
+      return `Empleado: ${r.nombre}\n${r.actividad?`Actividad: ${r.actividad}\n`:''}Fecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\n${dur}Ubicación: ${ubic}\nPrecisión GPS: ${r.lat!=null?'±'+Math.round(r.precision)+' m':'sin dato'}`;
     }).join('\n\n');
   }
 
@@ -449,17 +475,20 @@ label.item{cursor:pointer}
   //  · Inicio Jornada: en vivo hasta ahora mientras la jornada siga abierta; cerrada, la duración total.
   //  · Fin Jornada: desde su inicio de jornada hasta este fin.
   //  · Resto: hasta el registro siguiente (sig), o en vivo si no hay siguiente.
-  function durRegistro(r,sig){
+  // Con enVivo=false (días pasados del Listado) no se cuenta hasta ahora: un inicio sin fin
+  // muestra «sin fin» y el último registro de otra actividad queda sin duración (null).
+  function durRegistro(r,sig,enVivo=true){
     const t=x=>new Date(x.iso);
+    let info;
     if(r.actividad===INICIO){
       const fin=finDe(r);
-      return fin?{texto:durHHMM(t(fin)-t(r)),nota:'jornada'}:{desde:r.iso,nota:'en curso'};
-    }
-    if(r.actividad===FIN){
+      info=fin?{texto:durHHMM(t(fin)-t(r)),nota:'jornada'}:{desde:r.iso,nota:'en curso'};
+    }else if(r.actividad===FIN){
       const ini=inicioDe(r);
-      return ini?{texto:durHHMM(t(r)-t(ini)),nota:'jornada'}:{texto:'--h:--m',nota:'sin inicio'};
-    }
-    return sig?{texto:durHHMM(t(sig)-t(r))}:{desde:r.iso,nota:'en curso'};
+      info=ini?{texto:durHHMM(t(r)-t(ini)),nota:'jornada'}:{texto:'--h:--m',nota:'sin inicio'};
+    }else info=sig?{texto:durHHMM(t(sig)-t(r))}:{desde:r.iso,nota:'en curso'};
+    if(info.desde&&!enVivo)return r.actividad===INICIO?{texto:'--h:--m',nota:'sin fin'}:null;
+    return info;
   }
   function crearDur(info){
     const dur=document.createElement('div');dur.className='dur';
@@ -483,6 +512,7 @@ label.item{cursor:pointer}
     }
     $('vacio').hidden=!!u;
     $('btnWhatsapp').disabled=$('btnEmail').disabled=!u;
+    $('tituloEnvio').textContent=u&&u.actividad===FIN?'Enviar resumen de la jornada':'Enviar último registro';
     actualizarVivo();
   }
 
@@ -538,14 +568,21 @@ label.item{cursor:pointer}
 
   function pintarListado(){
     const lista=visibles(), ol=$('lista');ol.textContent='';
+    const hoyK=diaKey(new Date());
     lista.slice().reverse().forEach(r=>{
       const li=document.createElement('li');
-      const lab=document.createElement('label');lab.className='item';
+      const lab=document.createElement('label');lab.className='item hoyitem';
       const cb=document.createElement('input');
       cb.type='checkbox';cb.id='chk_'+r.id;cb.checked=seleccion.has(r.id);
       cb.addEventListener('change',()=>{cb.checked?seleccion.add(r.id):seleccion.delete(r.id);pintarSeleccion()});
-      lab.appendChild(cb);lab.appendChild(contenidoRegistro(r));li.appendChild(lab);ol.appendChild(li);
+      lab.appendChild(cb);lab.appendChild(contenidoRegistro(r));
+      // Duración con las mismas reglas que en la pestaña Registro; el «siguiente» es el próximo registro del mismo día
+      const sigG=registros[registros.indexOf(r)+1], dia=diaDe(r);
+      const info=durRegistro(r,sigG&&diaDe(sigG)===dia?sigG:null,dia===hoyK);
+      if(info)lab.appendChild(crearDur(info));
+      li.appendChild(lab);ol.appendChild(li);
     });
+    actualizarVivo();
     $('contador').textContent=lista.length;
     $('vacioLista').hidden=lista.length>0;
     $('acciones').hidden=lista.length===0;
@@ -620,8 +657,7 @@ label.item{cursor:pointer}
 
   /* ---------- Registro ---------- */
   $('btnRegistro').addEventListener('click',()=>{
-    const nombre=$('nombre').value.trim();
-    if(!nombre){status('Escribe tu nombre antes de registrar.','err');$('nombre').focus();return}
+    const nombre=cfg.nombre;
     const ahora=new Date();
     const r={id:nuevoId(),nombre,actividad:$('actividad').value,fechaHora:fechaHora(ahora),iso:ahora.toISOString(),lat:null,lon:null,precision:null};
     const guardar=()=>{
@@ -646,23 +682,57 @@ label.item{cursor:pointer}
 
   /* ---------- Fin de jornada: proponer enviar el día completo ---------- */
   // Deja marcados en el Listado todos los registros del día de ese empleado y ofrece enviarlos en un solo mensaje
+  // Resumen de un Fin Jornada: todos los registros de ese día del empleado y la cabecera con la duración
+  function resumenDe(fin){
+    const k=diaDe(fin), lista=registros.filter(x=>diaDe(x)===k&&x.nombre===fin.nombre), ini=inicioDe(fin);
+    return {lista,cabecera:`Resumen de la jornada · ${fin.nombre} · ${fechaCorta(new Date(fin.iso))}\n`+
+      (ini?`Duración jornada: ${durHHMM(new Date(fin.iso)-new Date(ini.iso))}\n`:'')+'\n'};
+  }
   let resumenDia=null;
   function sugerirEnvioDia(fin){
-    const k=diaDe(fin), lista=registros.filter(x=>diaDe(x)===k&&x.nombre===fin.nombre), ini=inicioDe(fin);
-    filtroDia=k;seleccion=new Set(lista.map(x=>x.id));pintarCalendario();pintarListado();
-    resumenDia={lista,cabecera:`Resumen de la jornada · ${fin.nombre} · ${fechaCorta(new Date(fin.iso))}\n`+
-      (ini?`Duración jornada: ${durHHMM(new Date(fin.iso)-new Date(ini.iso))}\n`:'')+'\n'};
+    resumenDia=resumenDe(fin);
+    const lista=resumenDia.lista;
+    filtroDia=diaDe(fin);seleccion=new Set(lista.map(x=>x.id));pintarCalendario();pintarListado();
     $('sugTxt').textContent=`Se han seleccionado los ${lista.length} registros de hoy de ${fin.nombre}. ¿Enviarlos todos en un mensaje?`;
     $('sugFin').hidden=false;
   }
-  $('sugWa').addEventListener('click',()=>{if(resumenDia)enviarWhatsapp(resumenDia.lista,resumenDia.cabecera)});
+  $('sugWa').addEventListener('click',()=>{if(resumenDia)enviarWhatsapp(resumenDia.lista,resumenDia.cabecera,true)});
   $('sugMail').addEventListener('click',()=>{if(resumenDia)enviarEmail(resumenDia.lista,resumenDia.cabecera,true)});
   $('sugCerrar').addEventListener('click',()=>{$('sugFin').hidden=true});
 
+  /* ---------- Datos de prueba ---------- */
+  // Jornada abierta del empleado configurado: Inicio y luego Poda, Riego y Otros a +10, +15 y +20 min del anterior,
+  // terminando hace 5 min. Posiciones al azar en ±0,0003° (≈ ±33 m) de un punto: todas a menos de 100 m.
+  // Se guardan como registros reales (marcados «prueba»).
+  $('secPrueba').hidden=!MOSTRAR_EJEMPLOS;
+  $('btnPrueba').addEventListener('click',()=>{
+    const pasos=[[INICIO,0],['Poda',10],['Riego',15],['Otros',20]];
+    const total=pasos.reduce((s,p)=>s+p[1],0);
+    let t=Date.now()-(total+5)*60000;
+    const azar=()=>(Math.random()*2-1)*0.0003;
+    const nuevos=pasos.map(([actividad,min])=>{
+      t+=min*60000;const d=new Date(t);
+      return {id:nuevoId(),nombre:cfg.nombre,actividad,fechaHora:fechaHora(d),iso:d.toISOString(),
+        lat:37.884512+azar(),lon:-4.779321+azar(),precision:5+Math.round(Math.random()*7),prueba:true};
+    });
+    // Se borran todos los registros guardados y quedan solo estos de prueba (más los ejemplos de la
+    // semana anterior, que nunca se guardan). Si había registros reales se pide confirmación.
+    const hoyK=diaDe(nuevos[0]);
+    const guardados=registros.filter(r=>!r.ejemplo&&!r.prueba);
+    if(guardados.length&&!confirm(`Se borrarán los ${guardados.length} registro${guardados.length===1?'':'s'} guardado${guardados.length===1?'':'s'} y se cargarán los datos de prueba. ¿Continuar?`))return;
+    registros=registros.filter(r=>r.ejemplo&&diaDe(r)!==hoyK)
+      .concat(nuevos).sort((a,b)=>new Date(a.iso)-new Date(b.iso));
+    // El Listado queda filtrado en el día de hoy, donde solo están los registros de prueba recién cargados
+    guardarRegistros();seleccion.clear();filtroDia=hoyK;
+    const hoyD=new Date();mesVista=new Date(hoyD.getFullYear(),hoyD.getMonth(),1);
+    pintarTodo();
+    status(`Cargados ${nuevos.length} registros de prueba de ${cfg.nombre} (jornada sin terminar).`,'ok');
+  });
+
   /* ---------- Envíos ---------- */
-  function enviarWhatsapp(lista,cabecera=''){
+  function enviarWhatsapp(lista,cabecera='',resumen=false){
     if(!cfg.tel){abrir('cfg');$('telefono').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el teléfono de WhatsApp y guarda.';return}
-    window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(cabecera+textoWhatsapp(lista))}`,'_blank');
+    window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(cabecera+textoWhatsapp(lista,resumen))}`,'_blank');
   }
   function enviarEmail(lista,cabecera='',resumen=false){
     if(!cfg.mail){abrir('cfg');$('email').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el email del destinatario y guarda.';return}
@@ -677,15 +747,21 @@ label.item{cursor:pointer}
     const actividades=resumen?'Jornada completa':[...new Set(lista.map(r=>r.actividad).filter(Boolean))].join(', ');
     const asunto=['Registro',actividades,nombres,cuando].filter(Boolean).join(' ');
     const dest=cfg.mail.split(',').map(x=>x.trim()).filter(Boolean).join(',');
-    location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cabecera+textoWhatsapp(lista))}`;
+    location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cabecera+textoWhatsapp(lista,resumen))}`;
   }
   function haySeleccion(){
     if(!seleccionados().length){statusList('Marca al menos un registro.','err');return false}
     return true;
   }
 
-  $('btnWhatsapp').addEventListener('click',()=>{const u=ultimo();if(u)enviarWhatsapp([u])});
-  $('btnEmail').addEventListener('click',()=>{const u=ultimo();if(u)enviarEmail([u])});
+  // Si el último registro es un Fin Jornada se envía siempre el resumen del día completo
+  function enviarUltimo(enviar){
+    const u=ultimo();if(!u)return;
+    if(u.actividad===FIN){const res=resumenDe(u);enviar(res.lista,res.cabecera,true)}
+    else enviar([u]);
+  }
+  $('btnWhatsapp').addEventListener('click',()=>enviarUltimo(enviarWhatsapp));
+  $('btnEmail').addEventListener('click',()=>enviarUltimo(enviarEmail));
   $('btnWhatsappSel').addEventListener('click',()=>{if(haySeleccion())enviarWhatsapp(seleccionados())});
   $('btnEmailSel').addEventListener('click',()=>{if(haySeleccion())enviarEmail(seleccionados())});
 
@@ -715,6 +791,7 @@ label.item{cursor:pointer}
   });
 
   pintarDestinos();
+  pintarEmpleado();
   pintarTodo();
 })();
 </script>
