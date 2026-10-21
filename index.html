@@ -7,9 +7,9 @@
 <title>Registro de Jornada</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<!-- Mapa de la pestaña Listado: Leaflet + teselas de OpenStreetMap (sin clave) -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+<!-- Mapas: Leaflet incluido en la app (lo copia «npm run sync») + teselas de OpenStreetMap (sin clave) -->
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<script src="vendor/leaflet/leaflet.js" defer></script>
 <style>
 [hidden]{display:none!important}
 img{max-width:100%}
@@ -148,6 +148,15 @@ label.item{cursor:pointer}
 .leyenda .pin{width:14px;height:14px;border-width:1px;box-shadow:none}
 .popreg{font:500 .85rem var(--display);line-height:1.4}
 .popreg b{display:block;font-size:.95rem}
+/* Seguimiento GPS cada 5 minutos: punto verde que late mientras está activo */
+.seg{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:.9rem;color:var(--muted)}
+.seg .luz{width:10px;height:10px;flex:none;border-radius:50%;background:var(--line)}
+.seg.on{border-color:var(--olive);color:var(--fg)}
+.seg.on .luz{background:var(--ok);animation:latido 2s infinite}
+.seg.err{border-color:var(--err);color:var(--err)}
+.seg.err .luz{background:var(--err)}
+@keyframes latido{50%{opacity:.3}}
+.pts{font-family:var(--display);font-size:.78rem;color:var(--muted)}
 .filtro{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.88rem;color:var(--muted);min-height:32px}
 :root[data-theme="dark"]{
   --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
@@ -192,6 +201,7 @@ label.item{cursor:pointer}
 
     <button id="btnRegistro" type="button">REGISTRO</button>
     <p class="status" id="status" role="status" aria-live="polite"></p>
+    <div class="seg" id="seg" role="status" aria-live="polite"><span class="luz"></span><span id="segTxt"></span></div>
     <div class="ayuda" id="ayudaGps" hidden>
       <strong id="ayudaTitulo"></strong>
       <ol id="ayudaPasos"></ol>
@@ -236,7 +246,7 @@ label.item{cursor:pointer}
 
     <section id="secPrueba">
       <h2>Datos de prueba</h2>
-      <p class="hint">Borra todos los registros guardados y crea una jornada sin terminar del empleado configurado: Inicio Jornada y, 10, 15 y 20 minutos después, Poda, Riego y Otros, todo a menos de 100 m.</p>
+      <p class="hint">Borra todos los registros guardados y crea una jornada sin terminar del empleado configurado: Inicio Jornada y, 10, 15 y 20 minutos después, Poda, Riego y Otros, con sus puntos GPS cada 5 minutos, todo a menos de 100 m.</p>
       <button class="btn sec" id="btnPrueba" type="button">Cargar datos de prueba</button>
     </section>
   </div>
@@ -384,7 +394,42 @@ label.item{cursor:pointer}
       .map(([n,la,lo,p,d,act])=>({id:nuevoId(),nombre:n,actividad:act,fechaHora:fechaHora(d),iso:d.toISOString(),lat:la,lon:lo,precision:p,ejemplo:true}));
     registros=[...registros,...ejemplos].sort((a,b)=>new Date(a.iso)-new Date(b.iso));
   }
-  const guardarRegistros=()=>store.set(KEY_REG,registros.filter(r=>!r.ejemplo));
+  // Puntos GPS tomados cada 5 minutos durante la jornada. Cada uno lleva el id del registro de la actividad
+  // que estaba en curso cuando se tomó (registroId), además de esa actividad y el empleado.
+  const KEY_PTS='gea_puntos';
+  let puntos=store.get(KEY_PTS,[]);
+  // Los puntos de ejemplo, como los registros de ejemplo, se muestran pero nunca se guardan
+  const guardarPuntos=()=>store.set(KEY_PTS,puntos.filter(p=>!p.ejemplo));
+  if(MOSTRAR_EJEMPLOS){
+    // Puntos de ejemplo cada 5 minutos para cada actividad de ejemplo, desde su registro hasta el siguiente
+    // del mismo día (o hasta ahora). Recorren la zona de la actividad: paseo al azar que no se aleja más de
+    // ≈35 m del punto donde se registró. Semilla por registro: los mismos puntos en cada recarga.
+    const PASO=5*60000, ahoraT=Date.now();
+    const ejs=registros.filter(r=>r.ejemplo);
+    ejs.forEach((r,i)=>{
+      if(r.actividad==='Fin Jornada')return;
+      const sig=ejs[i+1], t0=new Date(r.iso).getTime();
+      const hasta=Math.min(sig&&diaDe(sig)===diaDe(r)?new Date(sig.iso).getTime():ahoraT,ahoraT);
+      let s=Math.floor(t0/60000)|0;
+      const azar=()=>{s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+      let dLat=0,dLon=0;
+      for(let tp=t0+PASO;tp<hasta;tp+=PASO){
+        dLat=Math.max(-0.0003,Math.min(0.0003,dLat+(azar()*2-1)*0.00008));
+        dLon=Math.max(-0.0004,Math.min(0.0004,dLon+(azar()*2-1)*0.0001));
+        const d=new Date(tp);
+        puntos.push({id:nuevoId(),registroId:r.id,nombre:r.nombre,actividad:r.actividad,fechaHora:fechaHora(d),iso:d.toISOString(),
+          lat:r.lat+dLat,lon:r.lon+dLon,precision:Math.round(4+azar()*10),ejemplo:true});
+      }
+    });
+  }
+  const puntosDe=r=>puntos.filter(p=>p.registroId===r.id);
+  // Al guardar registros se quitan los puntos cuyo registro ya no existe (eliminados o sustituidos por datos de prueba)
+  function guardarRegistros(){
+    store.set(KEY_REG,registros.filter(r=>!r.ejemplo));
+    const ids=new Set(registros.map(r=>r.id)), antes=puntos.length;
+    puntos=puntos.filter(p=>ids.has(p.registroId));
+    if(puntos.length!==antes)guardarPuntos();
+  }
   const ultimo=()=>registros.length?registros[registros.length-1]:null;
 
   // Estado del listado: selección, día filtrado y mes mostrado en el calendario
@@ -426,7 +471,8 @@ label.item{cursor:pointer}
     cfg={nombre,tel,mail};store.set(KEY_NOM,nombre);store.set(KEY_TEL,tel);store.set(KEY_MAIL,mail);
     // Los registros de ejemplo van siempre a nombre del empleado configurado
     registros.forEach(r=>{if(r.ejemplo)r.nombre=nombre});
-    pintarDestinos();pintarEmpleado();pintarTodo();
+    puntos.forEach(p=>{if(p.ejemplo)p.nombre=nombre});
+    pintarDestinos();pintarEmpleado();pintarTodo();actualizarSeguimiento();
     s.className='status ok';s.textContent='Configuración guardada.';
   });
 
@@ -470,7 +516,10 @@ label.item{cursor:pointer}
     return `${r.nombre};${r.actividad||''};${r.fechaHora};${pos}`;
   }
   function textoFichero(lista){
-    return 'EMPLEADO;ACTIVIDAD;FECHA_HORA;LATITUD;LONGITUD;PRECISION_M\n'+lista.map(linea).join('\n')+'\n';
+    const cab='EMPLEADO;ACTIVIDAD;FECHA_HORA;LATITUD;LONGITUD;PRECISION_M\n';
+    const pts=lista.flatMap(puntosDe);
+    return cab+lista.map(linea).join('\n')+'\n'+
+      (pts.length?'\nPUNTOS GPS CADA 5 MINUTOS (ACTIVIDAD EN CURSO)\n'+cab+pts.map(linea).join('\n')+'\n':'');
   }
   function nombreFichero(){
     const d=new Date();
@@ -488,7 +537,8 @@ label.item{cursor:pointer}
         const info=durRegistro(r,lista[i+1]||null,false);
         if(info)dur=`Duración: ${info.texto}${info.nota?` (${info.nota})`:''}\n`;
       }
-      return `Empleado: ${r.nombre}\n${r.actividad?`Actividad: ${r.actividad}\n`:''}Fecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\n${dur}Ubicación: ${ubic}\nPrecisión GPS: ${r.lat!=null?'±'+Math.round(r.precision)+' m':'sin dato'}`;
+      const n=puntosDe(r).length;
+      return `Empleado: ${r.nombre}\n${r.actividad?`Actividad: ${r.actividad}\n`:''}Fecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\n${dur}Ubicación: ${ubic}\nPrecisión GPS: ${r.lat!=null?'±'+Math.round(r.precision)+' m':'sin dato'}${n?`\nPuntos GPS cada 5 min: ${n}`:''}`;
     }).join('\n\n');
   }
 
@@ -508,6 +558,11 @@ label.item{cursor:pointer}
       a.textContent=`${r.lat.toFixed(6)}, ${r.lon.toFixed(6)}`;txt.appendChild(a);
       txt.appendChild(document.createTextNode(` · ±${Math.round(r.precision)} m`));
     }else txt.appendChild(document.createTextNode('Sin posición ('+(r.error||'no disponible')+')'));
+    const n=puntosDe(r).length;
+    if(n){
+      txt.appendChild(document.createElement('br'));
+      const s=document.createElement('span');s.className='pts';s.textContent=`${n} punto${n===1?'':'s'} GPS cada 5 min`;txt.appendChild(s);
+    }
     return txt;
   }
 
@@ -769,8 +824,17 @@ label.item{cursor:pointer}
       }
     }
     capaMapa.clearLayers();marcadores.clear();
-    const puntos=conPos.map(r=>[r.lat,r.lon]);
-    if(conLinea&&puntos.length>1)L.polyline(puntos,{color:'#9a5b2e',weight:3,opacity:.7,dashArray:'6 6'}).addTo(capaMapa);
+    const idsLista=new Set(lista.map(r=>r.id)), pts=puntos.filter(p=>idsLista.has(p.registroId));
+    if(pts.length)nota.textContent=[nota.textContent,`${pts.length} punto${pts.length===1?'':'s'} GPS cada 5 min (círculos pequeños).`].filter(Boolean).join(' ');
+    // Recorrido: registros y puntos de seguimiento en orden de hora
+    const recorrido=[...conPos,...pts].sort((a,b)=>new Date(a.iso)-new Date(b.iso)).map(x=>[x.lat,x.lon]);
+    const encuadre=[...conPos.map(r=>[r.lat,r.lon]),...pts.map(p=>[p.lat,p.lon])];
+    if(conLinea&&recorrido.length>1)L.polyline(recorrido,{color:'#9a5b2e',weight:3,opacity:.7,dashArray:'6 6'}).addTo(capaMapa);
+    pts.forEach(p=>{
+      const d=new Date(p.iso);
+      L.circleMarker([p.lat,p.lon],{radius:5,color:'#fff',weight:1.5,fillColor:iconoDe(p).color,fillOpacity:.9})
+        .bindTooltip(`${p.actividad} · ${pad(d.getHours())}:${pad(d.getMinutes())} · ±${Math.round(p.precision)} m`).addTo(capaMapa);
+    });
     conPos.forEach((r,i)=>{
       L.circle([r.lat,r.lon],{radius:r.precision||0,color:'#3f5a2a',weight:1,fillOpacity:.08}).addTo(capaMapa);
       const icono=L.divIcon({className:'',html:crearPin(iconoDe(r),String(i+1)).outerHTML,iconSize:[26,26],iconAnchor:[13,13]});
@@ -793,7 +857,7 @@ label.item{cursor:pointer}
     // El contenedor acaba de mostrarse: recalcular tamaño antes de encuadrar
     setTimeout(()=>{
       mapa.invalidateSize();
-      if(puntos.length)mapa.fitBounds(L.latLngBounds(puntos).pad(0.3),{maxZoom:18});
+      if(encuadre.length)mapa.fitBounds(L.latLngBounds(encuadre).pad(0.3),{maxZoom:18});
       else mapa.setView([FINCA.lat,FINCA.lon],16);
     },0);
     }};
@@ -881,6 +945,7 @@ label.item{cursor:pointer}
       registros=registros.filter(x=>!(x.ejemplo&&diaDe(x)===diaDe(r)));registros.push(r);guardarRegistros();
       seleccion.clear();filtroDia=null;mesVista=new Date(ahora.getFullYear(),ahora.getMonth(),1);
       pintarTodo();$('btnRegistro').disabled=false;
+      actualizarSeguimiento();
       if(r.actividad===FIN)sugerirEnvioDia(r);
     };
     $('ayudaGps').hidden=true;$('sugFin').hidden=true;
@@ -895,6 +960,124 @@ label.item{cursor:pointer}
       guardar();status('Registrado sin posición: '+r.error+'.','err');ayudaUbicacion(e.code);
     },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
   });
+
+
+  /* ---------- Seguimiento GPS cada 5 minutos ---------- */
+  // Mientras la jornada del empleado está abierta (su último registro de hoy no es Fin Jornada) se guarda
+  // un punto cada 5 minutos asociado a la actividad en curso. En la app (Android/iOS) sigue funcionando con
+  // el móvil bloqueado gracias a la notificación fija de ubicación; en un navegador solo mientras la página
+  // esté abierta y visible (se intenta mantener la pantalla encendida).
+  const INTERVALO_MS=5*60000, MARGEN_MS=20000;
+  const nativo=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+  const BG=nativo?Capacitor.registerPlugin('BackgroundGeolocation'):null;
+  const NOTIF=nativo?Capacitor.registerPlugin('LocalNotifications'):null;
+  // vigia: id del vigilante nativo, del temporizador web, o 'arrancando'; null si está parado
+  let vigia=null, segError='', bloqueo=null, pidiendo=false;
+
+  // Registro de la actividad en curso: el último registro real de hoy del empleado, si no es Fin Jornada
+  function actividadEnCurso(){
+    const r=registros.slice().reverse().find(x=>!x.ejemplo&&x.nombre===cfg.nombre);
+    return r&&r.actividad!==FIN&&diaDe(r)===diaKey(new Date())?r:null;
+  }
+  // Momento desde el que se cuentan los 5 minutos: el último punto de esa actividad, o el propio registro
+  function desdeDe(reg){
+    const ult=puntosDe(reg).pop();
+    return new Date((ult||reg).iso).getTime();
+  }
+  function nuevaPosicion(lat,lon,precision,t){
+    const reg=actividadEnCurso();
+    if(!reg){detenerSeguimiento();return}
+    if(segError){segError='';pintarSeguimiento()}
+    if(t-desdeDe(reg)<INTERVALO_MS-MARGEN_MS)return;
+    const d=new Date(t);
+    puntos.push({id:nuevoId(),registroId:reg.id,nombre:reg.nombre,actividad:reg.actividad,
+      fechaHora:fechaHora(d),iso:d.toISOString(),lat,lon,precision});
+    guardarPuntos();
+    pintarUltimo();pintarHoy();pintarSeguimiento();
+    if(!$('panelList').hidden)pintarListado();
+  }
+  function errorSeguimiento(msg){segError=msg;pintarSeguimiento()}
+
+  // Navegador: cada 30 s se comprueba si ya tocan 5 minutos y entonces se pide la posición
+  function tomarWeb(){
+    const reg=actividadEnCurso();
+    if(!reg){detenerSeguimiento();return}
+    if(pidiendo||Date.now()-desdeDe(reg)<INTERVALO_MS-MARGEN_MS)return;
+    pidiendo=true;
+    navigator.geolocation.getCurrentPosition(p=>{pidiendo=false;nuevaPosicion(p.coords.latitude,p.coords.longitude,p.coords.accuracy,Date.now())},
+      e=>{pidiendo=false;errorSeguimiento(e.code===1?'permiso de ubicación denegado':'posición no disponible')},
+      {enableHighAccuracy:true,timeout:30000,maximumAge:0});
+  }
+  async function mantenerPantalla(){
+    try{
+      if(bloqueo||!('wakeLock' in navigator)||document.visibilityState!=='visible')return;
+      bloqueo=await navigator.wakeLock.request('screen');
+      bloqueo.addEventListener('release',()=>{bloqueo=null});
+    }catch(e){}
+  }
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState!=='visible'||vigia===null)return;
+    if(!nativo){mantenerPantalla();tomarWeb()}
+    pintarTodo();pintarSeguimiento();
+  });
+
+  async function iniciarSeguimiento(){
+    if(vigia!==null)return;
+    segError='';
+    if(nativo){
+      vigia='arrancando';pintarSeguimiento();
+      // Android 13+: sin permiso de notificaciones no se ve el aviso fijo de ubicación
+      try{const p=await NOTIF.checkPermissions();if(p.display!=='granted')await NOTIF.requestPermissions()}catch(e){}
+      let id;
+      try{
+        id=await BG.addWatcher({
+          backgroundTitle:'Registro de Jornada',
+          backgroundMessage:'Guardando tu posición cada 5 minutos hasta Fin Jornada.',
+          requestPermissions:true,stale:false,distanceFilter:0
+        },(loc,err)=>{
+          if(err){
+            const sinPermiso=err.code==='NOT_AUTHORIZED';
+            errorSeguimiento(sinPermiso?'la app no tiene permiso de ubicación':'GPS no disponible');
+            if(sinPermiso){
+              detenerSeguimiento();
+              if(confirm('La app necesita permiso de ubicación para guardar tu posición cada 5 minutos. ¿Abrir los ajustes?'))BG.openSettings();
+            }
+            return;
+          }
+          if(loc)nuevaPosicion(loc.latitude,loc.longitude,loc.accuracy,loc.time||Date.now());
+        });
+      }catch(e){vigia=null;errorSeguimiento('no se pudo arrancar el GPS');return}
+      // Si mientras arrancaba se registró Fin Jornada, se quita enseguida
+      if(vigia!=='arrancando'){BG.removeWatcher({id}).catch(()=>{});return}
+      vigia=id;
+    }else if('geolocation' in navigator){
+      vigia=setInterval(tomarWeb,30000);
+      mantenerPantalla();tomarWeb();
+    }else{errorSeguimiento('este navegador no da GPS');return}
+    pintarSeguimiento();
+  }
+  function detenerSeguimiento(){
+    if(vigia===null)return;
+    if(nativo){if(vigia!=='arrancando')BG.removeWatcher({id:vigia}).catch(()=>{})}
+    else clearInterval(vigia);
+    vigia=null;
+    if(bloqueo){bloqueo.release().catch(()=>{});bloqueo=null}
+    pintarSeguimiento();
+  }
+  function actualizarSeguimiento(){
+    if(actividadEnCurso())iniciarSeguimiento();else detenerSeguimiento();
+    pintarSeguimiento();
+  }
+  function pintarSeguimiento(){
+    const reg=actividadEnCurso(), box=$('seg'), txt=$('segTxt');
+    if(!reg){box.className='seg';txt.textContent='Seguimiento GPS parado. Arranca con Inicio Jornada y se para con Fin Jornada.';return}
+    if(segError){box.className='seg err';txt.textContent=`Seguimiento GPS sin funcionar: ${segError}.`;return}
+    const pts=puntosDe(reg), ult=pts[pts.length-1];
+    box.className='seg on';
+    const hm=x=>{const d=new Date(x.iso);return `${pad(d.getHours())}:${pad(d.getMinutes())}`};
+    txt.textContent=`GPS cada 5 min · ${reg.actividad} · ${pts.length} punto${pts.length===1?'':'s'}`+
+      (ult?` · último ${hm(ult)}`:'')+(nativo?'':' · mantén esta página abierta y la pantalla encendida');
+  }
 
   /* ---------- Fin de jornada: proponer enviar el día completo ---------- */
   // Deja marcados en el Listado todos los registros del día de ese empleado y ofrece enviarlos en un solo mensaje
@@ -938,10 +1121,23 @@ label.item{cursor:pointer}
     if(guardados.length&&!confirm(`Se borrarán los ${guardados.length} registro${guardados.length===1?'':'s'} guardado${guardados.length===1?'':'s'} y se cargarán los datos de prueba. ¿Continuar?`))return;
     registros=registros.filter(r=>r.ejemplo&&diaDe(r)!==hoyK)
       .concat(nuevos).sort((a,b)=>new Date(a.iso)-new Date(b.iso));
+    // Puntos de seguimiento cada 5 minutos de cada actividad, hasta la siguiente o hasta ahora
+    // Se conservan solo los puntos de ejemplo de los días anteriores que siguen en pantalla
+    const idsQuedan=new Set(registros.map(r=>r.id));
+    puntos=puntos.filter(p=>p.ejemplo&&idsQuedan.has(p.registroId));
+    nuevos.forEach((r,i)=>{
+      const hasta=i+1<nuevos.length?new Date(nuevos[i+1].iso).getTime():Date.now();
+      for(let tp=new Date(r.iso).getTime()+INTERVALO_MS;tp<hasta;tp+=INTERVALO_MS){
+        const d=new Date(tp);
+        puntos.push({id:nuevoId(),registroId:r.id,nombre:r.nombre,actividad:r.actividad,fechaHora:fechaHora(d),iso:d.toISOString(),
+          lat:FINCA.lat+azar(),lon:FINCA.lon+azar(),precision:5+Math.round(Math.random()*7),prueba:true});
+      }
+    });
+    guardarPuntos();
     // El Listado queda filtrado en el día de hoy, donde solo están los registros de prueba recién cargados
     guardarRegistros();filtroDia=hoyK;marcarDia(hoyK);
     const hoyD=new Date();mesVista=new Date(hoyD.getFullYear(),hoyD.getMonth(),1);
-    pintarTodo();
+    pintarTodo();actualizarSeguimiento();
     status(`Cargados ${nuevos.length} registros de prueba de ${cfg.nombre} (jornada sin terminar).`,'ok');
   });
 
@@ -1009,6 +1205,7 @@ label.item{cursor:pointer}
   pintarDestinos();
   pintarEmpleado();
   pintarTodo();
+  actualizarSeguimiento();
 })();
 </script>
 </body>
