@@ -95,9 +95,12 @@ label.item{cursor:pointer}
 .item .txt{min-width:0;overflow-wrap:anywhere}
 .item b{font-family:var(--display);font-size:.95rem;display:block}
 .item a{color:var(--earth)}
-.item .fh{display:flex;align-items:center;gap:8px;margin-top:2px}
+.item .fh{display:flex;align-items:center;gap:4px;margin-top:2px;white-space:nowrap}
+.item .dur{font-size:1.05rem}
 .item .fh a.ubic{display:inline-flex;padding:4px;margin:-4px 0}
-.item .vel{margin-top:2px;color:var(--muted)}
+.item.col{flex-direction:column;gap:6px}
+.item .itemfila{display:flex;gap:12px;align-items:flex-start;width:100%}
+.item .vel{color:var(--muted);white-space:nowrap}
 /* Registros de hoy: datos a la izquierda, duración hh:mm hasta el siguiente a la derecha */
 .item.hoyitem{align-items:center}
 .dur{margin-left:auto;flex:none;text-align:right;font-family:var(--mono);font-size:1.2rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--fg)}
@@ -792,7 +795,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     return 2*R*Math.asin(Math.sqrt(h));
   };
   const coma1=n=>n.toFixed(1).replace('.',',');
-  // Texto «Distancia 1,2 km · Vel. media 2,5 km/h». La velocidad usa el tiempo de la actividad: hasta el registro
+  // Texto «Dist 1,2 km · Vel 2,5 km/h». La velocidad usa el tiempo de la actividad: hasta el registro
   // siguiente del mismo día, hasta ahora si es la última de hoy, o hasta su último punto si es de otro día.
   function textoRecorrido(r){
     const trazo=[r,...puntosDe(r)].filter(conPosicion).sort((a,b)=>new Date(a.iso)-new Date(b.iso));
@@ -802,7 +805,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       :dia===diaKey(new Date())?Date.now():trazo.length>1?new Date(trazo[trazo.length-1].iso).getTime():null;
     const ms=fin==null?0:fin-new Date(r.iso).getTime();
     const vel=ms>0?coma1(m/1000/(ms/3600000)):'–';
-    return `Distancia ${coma1(m/1000)} km · Vel. media ${vel} km/h`;
+    return `Dist ${coma1(m/1000)} km · Vel ${vel} km/h`;
   }
   const SVG_UBIC='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
 
@@ -1095,17 +1098,19 @@ textarea:focus{outline:none;border-color:var(--olive)}
       lista.filter(r=>seleccion.has(r.id)&&conPosicion(r)).forEach((r,i)=>num.set(r.id,i+1));
       lista.slice().reverse().forEach(r=>{
         const li=document.createElement('li');
-        const lab=document.createElement('label');lab.className='item hoyitem';
+        const lab=document.createElement('label');lab.className='item hoyitem col';
         const cb=document.createElement('input');
         cb.type='checkbox';cb.checked=seleccion.has(r.id);
         cb.addEventListener('change',()=>{cb.checked?seleccion.add(r.id):seleccion.delete(r.id);pintarListado()});
         const izq=document.createElement('div');izq.className='izq';izq.appendChild(cb);
         if(num.has(r.id)){const pin=crearPin(iconoDe(r),String(num.get(r.id)));pin.title=`Nº ${num.get(r.id)} en el mapa`;izq.appendChild(pin)}
-        lab.appendChild(izq);lab.appendChild(contenidoRegistro(r));
+        const cont=contenidoRegistro(r);
+        const fila=document.createElement('div');fila.className='itemfila';fila.appendChild(izq);fila.appendChild(cont);lab.appendChild(fila);
         // El «siguiente» para la duración es el próximo registro del mismo día
         const sigG=registros[registros.indexOf(r)+1], dia=diaDe(r);
         const info=durRegistro(r,sigG&&diaDe(sigG)===dia?sigG:null,dia===hoyK);
-        if(info)lab.appendChild(crearDur(info));
+        if(info)fila.appendChild(crearDur(info));
+        lab.appendChild(cont.querySelector('.vel')); // distancia y velocidad en una fila propia, a todo el ancho
         li.appendChild(lab);ol.appendChild(li);
       });
       actualizarVivo();
