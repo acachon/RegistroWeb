@@ -256,7 +256,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .popreg b{display:block;font-size:.95rem}
 .popreg .adjs{margin-top:6px}
 .popreg .adj{width:40px;height:40px}
-/* Seguimiento GPS cada 5 minutos: punto verde que late mientras está activo */
+/* Seguimiento GPS: punto verde que late mientras está activo */
 .seg{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:.9rem;color:var(--muted)}
 .seg .luz{width:10px;height:10px;flex:none;border-radius:50%;background:var(--line)}
 .seg.on{border-color:var(--olive);color:var(--fg)}
@@ -468,6 +468,16 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         <label class="lbl" for="syncClave">Clave</label>
         <input id="syncClave" type="password" autocomplete="new-password" spellcheck="false" placeholder="Clave del fichero central">
       </div>
+      <h2>Toma de puntos GPS <button type="button" class="infobtn" data-info="infoCfgGps">i</button></h2>
+      <div class="infobox" id="infoCfgGps" hidden>
+        <p class="hint">Cada cuánto se guarda la posición de la actividad en curso. Menos tiempo da recorridos más detallados pero gasta más batería y ocupa más.</p>
+        <p class="hint">Solo se guarda un punto si el empleado se ha movido más que el margen de error del GPS; las lecturas de más de 100 m de error se descartan.</p>
+        <p class="hint">Al sincronizar con el fichero central se borran del móvil los puntos de días anteriores ya enviados; las actividades conservan su distancia, área y velocidad.</p>
+      </div>
+      <div class="field">
+        <label class="lbl" for="gpsIntervalo">Guardar la posición cada</label>
+        <select id="gpsIntervalo"><option value="30">30 segundos</option><option value="60">1 minuto</option><option value="120">2 minutos</option><option value="300">5 minutos</option></select>
+      </div>
       <h2>Listas de opciones</h2>
       <div data-lista="tareas" data-titulo="Tipos de actividad" data-info="«Inicio Jornada» y «Fin Jornada» son fijos (de ellos dependen el seguimiento GPS y el resumen del día). Aquí editas las demás actividades.|Los cambios se aplican al pulsar «Guardar configuración». Los registros ya hechos conservan su actividad."></div>
       <div data-lista="pausas" data-titulo="Pausas del GPS" data-info="Minutos entre los que eliges al pausar la toma de coordenadas de la actividad en curso.|Los cambios se aplican al pulsar «Guardar configuración»."></div>
@@ -604,9 +614,14 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       .map(([n,la,lo,p,d,act])=>({id:nuevoId(),nombre:n,actividad:act,fechaHora:fechaHora(d),iso:d.toISOString(),lat:la,lon:lo,precision:p,ejemplo:true}));
     registros=[...registros,...ejemplos].sort(porHora);
   }
-  // Puntos GPS tomados cada 5 minutos durante la jornada; cada uno lleva el id del registro de la actividad en curso (registroId)
+  // Puntos GPS tomados durante la jornada (cada 1 min por defecto, se cambia en Configuración); cada uno lleva el id
+  // del registro de la actividad en curso (registroId)
   let puntos=store.get(KEY_PTS,[]);
-  const guardarPuntos=()=>store.set(KEY_PTS,puntos.filter(p=>!p.ejemplo));
+  // Si la memoria del navegador se llena se avisa: sincronizar libera los puntos de días anteriores
+  const guardarPuntos=()=>{
+    try{localStorage.setItem(KEY_PTS,JSON.stringify(puntos.filter(p=>!p.ejemplo)))}
+    catch(e){if(typeof aviso==='function')aviso('Memoria del móvil llena','Sincroniza con el fichero central para liberar espacio',{err:true,ms:8000})}
+  };
   if(MOSTRAR_EJEMPLOS){
     // Puntos de ejemplo cada 5 minutos de cada actividad de ejemplo, hasta la siguiente del mismo día (o hasta ahora):
     // paseo al azar que no se aleja más de ≈35 m del punto donde se registró
@@ -719,6 +734,11 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   (()=>{try{const q=new URLSearchParams(location.search);if(q.get('servicio')){sync.url=q.get('servicio');store.set(KEY_SYNC_URL,sync.url)}
     if(q.get('clave')){sync.clave=q.get('clave');store.set(KEY_SYNC_CLAVE,sync.clave)}
     if(q.has('servicio')||q.has('clave'))history.replaceState(null,'',location.pathname+location.hash)}catch(e){}})();
+  // Toma de puntos GPS: cada cuántos segundos (Configuración). El margen evita perder una toma por unos segundos de retraso.
+  const KEY_GPS_INT='gea_gps_intervalo', INTERVALOS=[30,60,120,300];
+  let intervaloSeg=INTERVALOS.includes(store.get(KEY_GPS_INT,60))?store.get(KEY_GPS_INT,60):60;
+  const intervaloMs=()=>intervaloSeg*1000, umbralMs=()=>intervaloSeg*1000-Math.min(20000,intervaloSeg*300);
+  const textoIntervalo=()=>intervaloSeg<60?`${intervaloSeg} s`:`${intervaloSeg/60} min`;
   let pausa=null; // {regId,hasta,min}: la toma de coordenadas de esa actividad está en pausa hasta ese momento
   let menuPausa=false; // se está eligiendo cuánto pausar
 
@@ -731,7 +751,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     pestana=tab;
     // Configuración es el engranaje de la cabecera (aria-pressed); el resto son pestañas (aria-selected)
     Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute(k==='cfg'?'aria-pressed':'aria-selected',k===tab);$(p).hidden=k!==tab});
-    if(tab==='cfg'){editores.forEach(e=>e.pintar());$('syncUrl').value=sync.url;$('syncClave').value=sync.clave;$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
+    if(tab==='cfg'){editores.forEach(e=>e.pintar());$('gpsIntervalo').value=intervaloSeg;$('syncUrl').value=sync.url;$('syncClave').value=sync.clave;$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
     if(tab==='reg')pintarListado();
@@ -802,6 +822,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     tiposInc=tipos;store.set(KEY_TIPOS,tipos);llenarTiposInc();
     tareasAct=tareas;store.set(KEY_TAREAS,tareas);
     pausasMin=pausas;store.set(KEY_PAUSAS,pausas);editores.forEach(e=>e.pintar());
+    const nuevoInt=+$('gpsIntervalo').value;
+    if(nuevoInt!==intervaloSeg){intervaloSeg=nuevoInt;store.set(KEY_GPS_INT,nuevoInt);detenerSeguimiento()} // arranca de nuevo con el intervalo nuevo
     cfg={nombre,tel,mail};store.set(KEY_NOM,nombre);store.set(KEY_TEL,tel);store.set(KEY_MAIL,mail);
     // Los datos de ejemplo van siempre a nombre del empleado configurado
     [registros,puntos,incidencias].forEach(l=>l.forEach(x=>{if(x.ejemplo)x.nombre=nombre}));
@@ -888,6 +910,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // hasta el registro siguiente del mismo día, hasta ahora si es la última de hoy, o hasta su último punto si es de otro día.
   // vivo: los datos cambian con el paso del tiempo (se refrescan cada segundo)
   function datosRecorrido(r){
+    if(r.fijo&&!puntosDe(r).length)return Object.assign({vivo:false},r.fijo); // sus puntos ya están solo en el fichero central
     const trazo=[r,...puntosDe(r)].filter(conPosicion).sort(porHora);
     let m=0;for(let i=1;i<trazo.length;i++)m+=metrosEntre(trazo[i-1],trazo[i]);
     const sig=registros[registros.indexOf(r)+1], dia=diaDe(r), esHoy=dia===hoyKey(), mismoDia=sig&&diaDe(sig)===dia;
@@ -1291,7 +1314,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         lab.appendChild(m);
       }
     },
-    // Recorrido (líneas y puntos GPS cada 5 min), área (polígono) y marcador numerado de cada actividad marcada
+    // Recorrido (líneas y puntos GPS), área (polígono) y marcador numerado de cada actividad marcada
     dibujarMapa(c,marcadas,ocultas){
       const lista=marcadas.filter(r=>!ocultas.has(r.actividad)), conPos=lista.filter(conPosicion), sin=lista.length-conPos.length;
       let nota=!lista.length?'No hay actividades marcadas. Márcalas en el listado para verlas en el mapa.'
@@ -1312,7 +1335,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         L.circleMarker([p.lat,p.lon],{radius:5,color:'#fff',weight:1.5,fillColor:iconoDe(p).color,fillOpacity:.9})
           .bindTooltip(`${p.actividad} · ${hhmm(new Date(p.iso))} · ±${Math.round(p.precision)} m`).addTo(c.lin);
       });
-      if(pts.length)nota=[nota,`${pts.length} ${plural(pts.length,'punto')} GPS cada 5 min (círculos pequeños).`].filter(Boolean).join(' ');
+      if(pts.length)nota=[nota,`${pts.length} ${plural(pts.length,'punto')} GPS (círculos pequeños).`].filter(Boolean).join(' ');
       conPos.forEach((r,i)=>{
         // El globo se genera al abrirlo para que una duración «en curso» salga actualizada; mismos datos que la tarjeta
         L.marker([r.lat,r.lon],{icon:divIcon(crearPin(iconoDe(r),String(i+1)),26,26,13,13)})
@@ -1407,11 +1430,11 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     }
   });
 
-  /* ---------- Seguimiento GPS cada 5 minutos ---------- */
+  /* ---------- Seguimiento GPS ---------- */
   // Mientras la jornada del empleado está abierta (su último registro de hoy no es Fin Jornada) se guarda un punto
-  // cada 5 minutos asociado a la actividad en curso. En la app (Android/iOS) sigue con el móvil bloqueado gracias a la
+  // cada minuto (o lo elegido en Configuración) asociado a la actividad en curso. En la app (Android/iOS) sigue con el móvil bloqueado gracias a la
   // notificación fija de ubicación; en un navegador solo con la página abierta y visible (se intenta mantener la pantalla encendida).
-  const INTERVALO_MS=5*60000, MARGEN_MS=20000;
+  const PASO_PRUEBA=5*60000; // puntos de los datos de prueba
   const nativo=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
   const plugin=n=>nativo?Capacitor.registerPlugin(n):null;
   const BG=plugin('BackgroundGeolocation'), NOTIF=plugin('LocalNotifications'), FS=plugin('Filesystem'), SHARE=plugin('Share');
@@ -1423,24 +1446,31 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     const r=registros.slice().reverse().find(x=>!x.ejemplo&&x.nombre===cfg.nombre);
     return r&&r.actividad!==FIN&&diaDe(r)===hoyKey()?r:null;
   }
-  // Momento desde el que se cuentan los 5 minutos: el último punto de esa actividad, o el propio registro
-  function desdeDe(reg){const p=puntosDe(reg);return new Date((p[p.length-1]||reg).iso).getTime()}
+  // Momento desde el que se cuenta el intervalo: el último punto o la última lectura de esa actividad, o el propio registro
+  let ultimaLectura=0;
+  function desdeDe(reg){const p=puntosDe(reg);return Math.max(new Date((p[p.length-1]||reg).iso).getTime(),ultimaLectura)}
   function nuevaPosicion(lat,lon,precision,t){
     const reg=actividadEnCurso();
     if(!reg){detenerSeguimiento();return}
     if(segError){segError='';pintarSeguimiento()}
-    if(t-desdeDe(reg)<INTERVALO_MS-MARGEN_MS)return;
+    if(t-desdeDe(reg)<umbralMs())return;
+    ultimaLectura=t;
+    // Para no llenar el móvil ni el fichero central: se descartan las lecturas con mucho error (más de 100 m)
+    // y las que no se han movido más que el margen de error del GPS respecto al punto anterior
+    if(precision>100)return;
+    const p=puntosDe(reg), ant=p[p.length-1]||(conPosicion(reg)?reg:null);
+    if(ant&&metrosEntre(ant,{lat,lon})<Math.max(precision||0,ant.precision||0,5))return;
     const d=new Date(t);
-    puntos.push({id:nuevoId(),registroId:reg.id,nombre:reg.nombre,actividad:reg.actividad,fechaHora:fechaHora(d),iso:d.toISOString(),lat,lon,precision});
+    puntos.push({id:nuevoId(),registroId:reg.id,nombre:reg.nombre,actividad:reg.actividad,iso:d.toISOString(),lat:+lat.toFixed(6),lon:+lon.toFixed(6),precision:Math.round(precision)});
     guardarPuntos();
     pintarListado();pintarSeguimiento();
   }
   function errorSeguimiento(msg){segError=msg;pintarSeguimiento()}
-  // Navegador: cada 30 s se comprueba si ya tocan 5 minutos y entonces se pide la posición
+  // Navegador: cada pocos segundos se comprueba si ya toca otro punto y entonces se pide la posición
   function tomarWeb(){
     const reg=actividadEnCurso();
     if(!reg){detenerSeguimiento();return}
-    if(pidiendo||Date.now()-desdeDe(reg)<INTERVALO_MS-MARGEN_MS)return;
+    if(pidiendo||Date.now()-desdeDe(reg)<umbralMs())return;
     pidiendo=true;
     navigator.geolocation.getCurrentPosition(p=>{pidiendo=false;nuevaPosicion(p.coords.latitude,p.coords.longitude,p.coords.accuracy,Date.now())},
       e=>{pidiendo=false;errorSeguimiento(e.code===1?'permiso de ubicación denegado':'posición no disponible')},
@@ -1469,7 +1499,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       try{
         id=await BG.addWatcher({
           backgroundTitle:'GEA - Registro',
-          backgroundMessage:'Guardando tu posición cada 5 minutos hasta Fin Jornada.',
+          backgroundMessage:`Guardando tu posición cada ${textoIntervalo()} hasta Fin Jornada.`,
           requestPermissions:true,stale:false,distanceFilter:0
         },(loc,err)=>{
           if(err){
@@ -1477,7 +1507,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
             errorSeguimiento(sinPermiso?'la app no tiene permiso de ubicación':'GPS no disponible');
             if(sinPermiso){
               detenerSeguimiento();
-              if(confirm('La app necesita permiso de ubicación para guardar tu posición cada 5 minutos. ¿Abrir los ajustes?'))BG.openSettings();
+              if(confirm('La app necesita permiso de ubicación para guardar tu posición durante la jornada. ¿Abrir los ajustes?'))BG.openSettings();
             }
             return;
           }
@@ -1488,7 +1518,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       if(vigia!=='arrancando'){BG.removeWatcher({id}).catch(()=>{});return}
       vigia=id;
     }else if('geolocation' in navigator){
-      vigia=setInterval(tomarWeb,30000);
+      vigia=setInterval(tomarWeb,Math.min(30000,intervaloMs()/3));
       mantenerPantalla();tomarWeb();
     }else{errorSeguimiento('este navegador no da GPS');return}
     pintarSeguimiento();
@@ -1522,7 +1552,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     const [cls,txt,tit]=!reg?['','parado','Se pone en marcha con Inicio Jornada']
       :segError?['err','error',`Seguimiento GPS sin funcionar: ${segError}`]
       :enPausa()?['pausa','pausa '+cuentaPausa(),'Toma de coordenadas en pausa; se reanuda sola al acabar la cuenta atrás']
-      :['on','activo','Guardando la posición cada 5 minutos'];
+      :['on','activo',`Guardando la posición cada ${textoIntervalo()}`];
     g.className='gps '+cls;g.innerHTML='<i></i><b>GPS </b>';g.append(txt);g.title=tit;
   }
   function pintarSeguimiento(){
@@ -1533,7 +1563,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     const pts=puntosDe(reg), ult=pts[pts.length-1];
     if(enPausa()){box.className='seg';txt.textContent=`GPS en pausa hasta las ${hhmm(new Date(pausa.hasta))} · ${reg.actividad}. Pulsa «reanudar» en la actividad para volver a grabar antes.`;return}
     box.className='seg on';
-    txt.textContent=`GPS cada 5 min · ${reg.actividad} · ${pts.length} ${plural(pts.length,'punto')}`+
+    txt.textContent=`GPS cada ${textoIntervalo()} · ${reg.actividad} · ${pts.length} ${plural(pts.length,'punto')}`+
       (ult?` · último ${hhmm(new Date(ult.iso))}`:'')+(nativo?'':' · mantén esta página abierta y la pantalla encendida');
   }
 
@@ -1612,7 +1642,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       const [zLa,zLo]=ZONAS_PRUEBA[r.actividad];
       // Paseo al azar alrededor del centro de la zona (≈ ±33 m en latitud, ±35 m en longitud)
       let dLa=r.lat-FINCA.lat-zLa, dLo=r.lon-FINCA.lon-zLo;
-      for(let tp=new Date(r.iso).getTime()+INTERVALO_MS;tp<hasta;tp+=INTERVALO_MS){
+      for(let tp=new Date(r.iso).getTime()+PASO_PRUEBA;tp<hasta;tp+=PASO_PRUEBA){
         dLa=Math.max(-0.0003,Math.min(0.0003,dLa+azar()*0.00012));
         dLo=Math.max(-0.0004,Math.min(0.0004,dLo+azar()*0.00015));
         const d=new Date(tp);
@@ -1972,7 +2002,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         guardarHecho();
       }
       const txt=total||p.adj.length?`${p.act.length} ${plural(p.act.length,'actividad','actividades')}, ${p.inc.length} ${plural(p.inc.length,'incidencia')}, ${p.pts.length} ${plural(p.pts.length,'punto')} GPS`+(p.adj.length?` y ${p.adj.length} ${plural(p.adj.length,'adjunto')}`:''):'No había nada nuevo';
-      aviso('Fichero central al día',txt);
+      const liberados=limpiarMovil();
+      aviso('Fichero central al día',txt+(liberados?` · ${liberados} ${plural(liberados,'punto antiguo borrado','puntos antiguos borrados')} del móvil`:''));
       avisar('syncEstado',`Última sincronización: ${fechaCorta(new Date())} ${hhmm(new Date())}. ${txt}.`,'ok');
     }catch(e){
       aviso('No se pudo sincronizar',String(e.message||e).replace(/^Failed to fetch$/,'sin conexión con el servicio'),{err:true,ms:6000});
@@ -1980,6 +2011,18 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     }finally{sincronizando=false;$('btnSync').classList.remove('girando');actualizarPendientes()}
   }
   $('btnSync').addEventListener('click',sincronizar);
+  // Tras sincronizar: borra del móvil los puntos GPS de días anteriores que ya están en el fichero central.
+  // Antes, cada actividad afectada guarda sus datos calculados (distancia, área, velocidad, duración) para seguir mostrándolos.
+  function limpiarMovil(){
+    const hoy=hoyKey(), quitar=new Set(puntos.filter(p=>!p.ejemplo&&sync.hecho.pts[p.id]&&diaDe(p)<hoy).map(p=>p.id));
+    if(!quitar.size)return 0;
+    const regs=new Set(puntos.filter(p=>quitar.has(p.id)).map(p=>p.registroId));
+    registros.forEach(r=>{if(regs.has(r.id)&&!r.fijo){const d=datosRecorrido(r);r.fijo={km:d.km,vel:d.vel,area:d.area,dur:d.dur,n:d.n}}});
+    puntos=puntos.filter(p=>!quitar.has(p.id));
+    quitar.forEach(id=>{delete sync.hecho.pts[id]});
+    guardarRegistros();guardarPuntos();store.set(KEY_SYNC,sync.hecho);pintarListado();
+    return quitar.size;
+  }
   // La clave se ve con asteriscos y no se puede copiar, cortar, pegar ni arrastrar (se escribe a mano o llega con el enlace de configuración)
   ['copy','cut','paste','drop','dragstart','contextmenu'].forEach(ev=>$('syncClave').addEventListener(ev,e=>e.preventDefault()));
 
