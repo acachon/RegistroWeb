@@ -277,40 +277,41 @@ textarea:focus{outline:none;border-color:var(--olive)}
     <details class="desp" id="detList" open>
       <summary>Listado actividades <span id="contadorH">0</span></summary>
       <div class="cuerpo">
-        <div class="sub">
-          <h3>Enviar actividades seleccionadas</h3>
-          <div class="send">
-            <button class="sendbtn wa" id="btnWhatsappSelH" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
-            <button class="sendbtn mail" id="btnEmailSelH" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
-          </div>
+      <div class="sub">
+        <div class="sechead">
+          <h3>Actividades de hoy</h3>
+          <button type="button" id="btnTodosH" class="mini">Seleccionar todas</button>
         </div>
-        <div class="sub">
-          <h3>Mapa de las actividades seleccionadas</h3>
-          <div id="mapaH"></div>
-          <ul class="leyenda" id="leyendaH"></ul>
-          <p class="hint" id="mapaNotaH"></p>
+        <div class="vista" role="group" aria-label="Modo de vista">
+          <button type="button" id="vistaListaH" aria-pressed="true">Listado</button>
+          <button type="button" id="vistaMapaH" aria-pressed="false">Mapa</button>
         </div>
-        <div class="sub">
-          <div class="sechead">
-            <h3>Actividades de hoy</h3>
-            <button type="button" id="btnTodosH" class="mini">Seleccionar todas</button>
-          </div>
-          <div class="filtro" id="filtroH">Actividades de hoy</div>
-          <ol id="listaH"></ol>
-          <p class="empty" id="vacioListaH">No hay registros.</p>
-      <div class="acciones" id="accionesH">
+        <ol id="listaH"></ol>
+        <div id="mapaH" hidden></div>
+        <ul class="leyenda" id="leyendaH" hidden></ul>
+        <p class="hint" id="mapaNotaH" hidden></p>
+        <p class="empty" id="vacioListaH">No hay registros.</p>
+        <div class="acciones" id="accionesH">
         <div class="row">
-          <button class="btn danger ico" id="btnBorrarH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
-          <button class="btn sec ico" id="btnCompartirH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
+      <button class="btn danger ico" id="btnBorrarH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
+      <button class="btn sec ico" id="btnCompartirH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
         </div>
         <div class="confirmbox" id="confirmBoxH" hidden>
-          <span id="confirmTxtH"></span>
-          <button class="btn danger" id="btnSiBorrarH" type="button">Sí, eliminar</button>
-          <button class="btn sec" id="btnNoBorrarH" type="button">Cancelar</button>
+      <span id="confirmTxtH"></span>
+      <button class="btn danger" id="btnSiBorrarH" type="button">Sí, eliminar</button>
+      <button class="btn sec" id="btnNoBorrarH" type="button">Cancelar</button>
         </div>
       </div>
-          <p class="status" id="statusListH" role="status" aria-live="polite"></p>
+        <p class="status" id="statusListH" role="status" aria-live="polite"></p>
+      </div>
+      <div class="sub">
+        <h3>Enviar seleccionadas</h3>
+        <div class="send">
+          <button class="sendbtn wa" id="btnWhatsappSelH" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
+          <button class="sendbtn mail" id="btnEmailSelH" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
         </div>
+        <p class="hint">WhatsApp y Email envían el texto con la ubicación. Para enviar el fichero usa <b>Compartir</b>.</p>
+      </div>
       </div>
     </details>
   </div>
@@ -318,34 +319,28 @@ textarea:focus{outline:none;border-color:var(--olive)}
   <!-- PESTAÑA HISTÓRICO -->
   <div class="panel" id="panelList" role="tabpanel" hidden>
     <section>
-        <div class="sub">
-      <h3>Enviar actividades seleccionadas</h3>
-      <div class="send">
-        <button class="sendbtn wa" id="btnWhatsappSel" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
-        <button class="sendbtn mail" id="btnEmailSel" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
-      </div>
-        </div>
-        <div class="sub">
-      <h3>Mapa de las actividades seleccionadas</h3>
-      <div id="mapa"></div>
-      <ul class="leyenda" id="leyenda"></ul>
-      <p class="hint" id="mapaNota"></p>
-        </div>
-        <div class="sub">
-      <div class="sechead">
-        <h3>Actividades <span id="contador">0</span></h3>
-        <button type="button" id="btnTodos" class="mini">Seleccionar todas</button>
-      </div>
-      <div class="calhead">
+      <div class="sub">
+        <div class="calhead">
         <button type="button" class="calnav" id="mesAnt" aria-label="Mes anterior">‹</button>
         <h2 id="mesLbl" aria-live="polite"></h2>
         <button type="button" class="calnav" id="mesSig" aria-label="Mes siguiente">›</button>
       </div>
       <div class="cal" id="cal"></div>
-      <div class="filtro" id="filtro"></div>
-      <ol id="lista"></ol>
-      <p class="empty" id="vacioLista">No hay registros.</p>
-      <div class="acciones" id="acciones">
+        <div class="filtro" id="filtro"></div>
+        <div class="sechead">
+          <h3>Actividades <span id="contador">0</span></h3>
+          <button type="button" id="btnTodos" class="mini">Seleccionar todas</button>
+        </div>
+        <div class="vista" role="group" aria-label="Modo de vista">
+          <button type="button" id="vistaLista" aria-pressed="true">Listado</button>
+          <button type="button" id="vistaMapa" aria-pressed="false">Mapa</button>
+        </div>
+        <ol id="lista"></ol>
+        <div id="mapa" hidden></div>
+        <ul class="leyenda" id="leyenda" hidden></ul>
+        <p class="hint" id="mapaNota" hidden></p>
+        <p class="empty" id="vacioLista">No hay registros.</p>
+        <div class="acciones" id="acciones">
         <div class="row">
       <button class="btn danger ico" id="btnBorrar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
       <button class="btn sec ico" id="btnCompartir" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
@@ -356,8 +351,16 @@ textarea:focus{outline:none;border-color:var(--olive)}
       <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
         </div>
       </div>
-      <p class="status" id="statusList" role="status" aria-live="polite"></p>
+        <p class="status" id="statusList" role="status" aria-live="polite"></p>
+      </div>
+      <div class="sub">
+        <h3>Enviar seleccionadas</h3>
+        <div class="send">
+          <button class="sendbtn wa" id="btnWhatsappSel" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
+          <button class="sendbtn mail" id="btnEmailSel" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
         </div>
+        <p class="hint">WhatsApp y Email envían el texto con la ubicación. Para enviar el fichero usa <b>Compartir</b>.</p>
+      </div>
     </section>
   </div>
 
@@ -1042,6 +1045,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const seleccionados=()=>visibles().filter(r=>seleccion.has(r.id));
     const mapa=crearMapa('mapa'+sfx,'mapaNota'+sfx,'Satélite',true);
     const status=(msg,cls)=>avisar('statusList'+sfx,msg,cls);
+    let enMapa=false;
     const hayMarcados=()=>{if(!seleccionados().length){status('Marca al menos un registro.','err');return false}return true};
 
     function pintar(){
@@ -1061,11 +1065,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
         li.appendChild(lab);ol.appendChild(li);
       });
       actualizarVivo();
-      E('contador').textContent=lista.length;
+      (deHoy?$('contadorH'):$('contador')).textContent=lista.length;
       E('vacioLista').hidden=lista.length>0;
       E('vacioLista').textContent=deHoy?'Hoy aún no hay actividades.':'No hay registros.';
-      E('acciones').hidden=lista.length===0;
-      E('btnTodos').hidden=lista.length<2;
+      E('lista').hidden=enMapa;E('mapa').hidden=E('leyenda').hidden=E('mapaNota').hidden=!enMapa;
       if(!deHoy){
         const f=E('filtro');f.textContent='';
         if(filtroDia){
@@ -1083,10 +1086,13 @@ textarea:focus{outline:none;border-color:var(--olive)}
       E('confirmBox').hidden=true;
       // El mapa solo se pinta con el listado visible y desplegado (Leaflet necesita su tamaño real)
       const abierto=deHoy?$('detList').open:true;
-      if(abierto&&!$(panel).hidden)
+      if(enMapa&&abierto&&!$(panel).hidden)
         mapa.pintar(lista.filter(r=>seleccion.has(r.id)),deHoy||!!filtroDia,'No hay actividades marcadas. Márcalas en el listado para verlas en el mapa.');
     }
 
+    const vista=m=>{enMapa=m;E('vistaLista').setAttribute('aria-pressed',!m);E('vistaMapa').setAttribute('aria-pressed',m);pintarListado()};
+    E('vistaLista').addEventListener('click',()=>vista(false));
+    E('vistaMapa').addEventListener('click',()=>vista(true));
     E('btnTodos').addEventListener('click',()=>{
       const lista=visibles();
       seleccion=seleccionados().length===lista.length?new Set():new Set(lista.map(r=>r.id));
