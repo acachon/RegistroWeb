@@ -1335,6 +1335,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       const n=seleccionados().length, total=lista.length;
       E('btnTodos').textContent=(n===total&&total>0)?'Quitar todas':'Seleccionar todas';
       ['btnCompartir','btnBorrar'].forEach(id=>E(id).disabled=n===0);
+      ['btnCompartir','btnBorrar'].forEach(id=>E(id).hidden=enMapa);
       ol.querySelectorAll('label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
       E('confirmBox').hidden=true;E('shareBox').hidden=true;
       // El mapa solo se pinta con el listado visible y desplegado (Leaflet necesita su tamaño real)
@@ -1997,6 +1998,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const n=incSeleccionadas().length, total=lista.length;
     $('btnTodosInc').textContent=(n===total&&total>0)?'Quitar todas':'Seleccionar todas';
     ['btnCompartirInc','btnBorrarInc'].forEach(id=>$(id).disabled=n===0);
+    ['btnCompartirInc','btnBorrarInc'].forEach(id=>$(id).hidden=vistaMapaInc);
     $('confirmBoxInc').hidden=true;$('shareBoxInc').hidden=true;
     pintarCalendarioInc();
     // El mapa solo se pinta con el listado visible y desplegado (Leaflet necesita su tamaño real)
