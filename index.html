@@ -28,8 +28,9 @@ img{max-width:100%}
   --wa:#2a9d5c; --mail:#3f74ad;
   color-scheme:dark}}
 *{box-sizing:border-box}
+html{font-size:112.5%}
 html,body{margin:0;background:var(--bg);color:var(--fg)}
-body{font:16px/1.45 var(--display);padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px);padding-inline:16px}
+body{font:1rem/1.45 var(--display);padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px);padding-inline:16px}
 main{max-width:480px;margin:0 auto;padding-block:16px 40px;display:flex;flex-direction:column;gap:20px}
 header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .titulo{min-width:0}
@@ -91,7 +92,7 @@ details.desp>summary span{font-family:var(--mono);font-weight:400;color:var(--mu
 .sub{display:flex;flex-direction:column;gap:12px}
 .sub h3{margin:0;font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .fila-guardar{align-items:flex-end}
-.fila-guardar #btnRegistro,.fila-guardar #btnIncidencia{width:auto;flex:none;padding:0 20px;font-size:1.05rem}
+.fila-guardar #btnRegistro,.fila-guardar #btnIncidencia{width:auto;flex:none;padding:0 12px;font-size:.95rem}
 .sechead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .sechead h2{justify-content:flex-start;gap:8px;white-space:nowrap}
 .mini{white-space:nowrap;flex:none;padding:6px 10px;font-size:.85rem;font-weight:700;background:transparent;color:var(--olive);border:2px solid var(--olive);border-radius:8px}
@@ -246,7 +247,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
 .item .adjs{margin-top:8px}
 #btnIncidencia{width:100%;min-height:52px;padding:10px 16px;background:var(--earth);color:#fff;font-size:1.1rem;font-weight:800;letter-spacing:.06em;border-radius:10px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
 #btnIncidencia:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
-#btnIncidencia[disabled]{opacity:.6;cursor:wait}
+#btnIncidencia[disabled]{background:#b9b3a8;color:#f1eee8;box-shadow:none;cursor:not-allowed;opacity:1}
+#btnIncidencia[disabled].ocupado{cursor:wait}
 #mapaInc{height:340px;border:1px solid var(--line);border-radius:10px;z-index:0}
 .pin.inc{width:30px;height:28px;background:transparent!important;border:0;border-radius:0;box-shadow:none;position:relative;color:#111}
 .pin.inc svg{position:absolute;inset:0;z-index:0!important;width:100%;height:100%;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
@@ -413,7 +415,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       </div>
       <div class="field">
         <label class="lbl" for="incComentario">Comentario (opcional)</label>
-        <textarea id="incComentario" placeholder="Qué ha pasado y dónde exactamente"></textarea>
+        <textarea id="incComentario" placeholder="Selecciona audio/video/foto o texto para registrar incidencia"></textarea>
       </div>
             </div>
     </details>
@@ -1812,7 +1814,13 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(dur){const s=document.createElement('span');s.className='dura';s.textContent=mmss(dur);b.appendChild(s)}
     return b;
   }
-  let urlsNuevos=[];
+  let urlsNuevos=[],incOcupada=false;
+  function actualizarBtnInc(){
+    const b=$('btnIncidencia');
+    b.disabled=incOcupada||!($('incComentario').value.trim()||nuevos.length);
+    b.classList.toggle('ocupado',incOcupada);
+  }
+  $('incComentario').addEventListener('input',actualizarBtnInc);
   function pintarNuevos(){
     urlsNuevos.forEach(u=>URL.revokeObjectURL(u));urlsNuevos=[];
     const c=$('incAdjNuevos');c.textContent='';
@@ -1823,8 +1831,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
       q.addEventListener('click',e=>{e.stopPropagation();nuevos.splice(i,1);pintarNuevos()});
       m.appendChild(q);c.appendChild(m);
     });
+    actualizarBtnInc();
   }
 
+  actualizarBtnInc();
   // Audio: se graba dentro de la página (MediaRecorder). Si el navegador no puede, se abre la grabadora del móvil.
   let grabador=null, grabInicio=0, grabTimer=null;
   $('incAudio').addEventListener('click',async()=>{
@@ -1891,10 +1901,11 @@ textarea:focus{outline:none;border-color:var(--olive)}
       incidencias.push(x);guardarIncidencias();
       nuevos=[];pintarNuevos();$('incComentario').value='';
       diasSelInc=new Set();selInc=new Set([x.id]);
-      $('btnIncidencia').disabled=false;
+      incOcupada=false;actualizarBtnInc();
       pintarIncidencias();pintarListado();
     };
-    $('btnIncidencia').disabled=true;statusInc('Obteniendo posición GPS…');
+    if($('btnIncidencia').disabled)return;
+    incOcupada=true;actualizarBtnInc();statusInc('Obteniendo posición GPS…');
     if(!('geolocation' in navigator)){x.error='GPS no disponible';guardar().then(()=>statusInc('Incidencia guardada sin posición: este navegador no da GPS.','err'));return}
     navigator.geolocation.getCurrentPosition(p=>{
       x.lat=p.coords.latitude;x.lon=p.coords.longitude;x.precision=p.coords.accuracy;
