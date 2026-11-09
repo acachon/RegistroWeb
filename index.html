@@ -484,12 +484,18 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       <div data-lista="tipos" data-titulo="Tipos de incidencia" data-info="Los cambios se aplican al pulsar «Guardar configuración». Las incidencias ya registradas conservan su tipo."></div>
       <button class="btn" id="btnGuardarCfg" type="button">Guardar configuración</button>
       <p class="status" id="cfgStatus" role="status" aria-live="polite"></p>
+      <p class="hint" id="versionTxt"></p>
     </section>
   </div>
 </main>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
+  // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
+  const VERSION='2026-11-09 23:55';
+  // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
+  window.addEventListener('error',e=>{try{aviso('Error en la App',String(e.message||e.error||'desconocido').slice(0,140),{err:true,ms:8000})}catch(x){}});
+  window.addEventListener('unhandledrejection',e=>{try{aviso('Error en la App',String((e.reason&&e.reason.message)||e.reason||'desconocido').slice(0,140),{err:true,ms:8000})}catch(x){}});
   // Crea un elemento con clase y texto (el texto siempre con textContent: puede venir de lo que escribe el usuario)
   const el=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e};
   const boton=(cls,txt)=>{const b=el('button',cls,txt);b.type='button';return b};
@@ -2072,6 +2078,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   pausa=store.get(KEY_PAUSA,null); // la pausa del GPS sobrevive a recargar la página
   pintarDestinos();
   pintarEmpleado();
+  $('versionTxt').textContent=`Versión ${VERSION}${nativo?' · App Android':' · web'}`;
   if(ultimo())LA.sel=new Set([ultimo().id]);
   {const v=LI.visibles();LI.sel=new Set(v.length?[v[v.length-1].id]:[])}
   pintarTodo();
