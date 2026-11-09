@@ -35,7 +35,7 @@ header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
 .clock{font-family:var(--mono);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
-.tabs button{flex:1;padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
+.tabs button{flex:1 1 auto;min-width:0;padding:10px 5px;font-size:.86rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
 .tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
 .panel{display:flex;flex-direction:column;gap:20px}
 .lbl{display:block;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -158,12 +158,44 @@ label.item{cursor:pointer}
 @keyframes latido{50%{opacity:.3}}
 .pts{font-family:var(--display);font-size:.78rem;color:var(--muted)}
 .filtro{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.88rem;color:var(--muted);min-height:32px}
+/* Incidencias: aviso en ámbar, miniaturas de fotos, vídeos y audios, y visor a pantalla completa */
+textarea{width:100%;min-height:76px;resize:vertical;font:500 1rem/1.4 var(--display);padding:12px 14px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
+textarea:focus{outline:none;border-color:var(--olive)}
+.medios{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.medio{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;font-size:.92rem;font-weight:700;background:var(--bg);color:var(--fg);border:2px solid var(--line);border-radius:10px;min-width:0}
+.medio svg{width:24px;height:24px}
+.medio.grabando{border-color:var(--err);color:var(--err);background:var(--card)}
+.medio.grabando svg{animation:latido 1s infinite}
+.galeria{align-self:flex-start;padding:0;background:transparent;color:var(--earth);font-size:.88rem;font-weight:700;text-decoration:underline;border-radius:4px}
+.adjs{display:flex;flex-wrap:wrap;gap:6px}
+.adjs:empty{display:none}
+.adj{position:relative;width:60px;height:60px;flex:none;display:flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--card) center/cover no-repeat;color:var(--fg)}
+.adj svg{width:24px;height:24px}
+.adj .dura{position:absolute;bottom:2px;right:3px;font:600 .62rem var(--mono);color:var(--fg)}
+.adj .quitar{position:absolute;top:-7px;right:-7px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;padding:0;background:var(--err);color:#fff;font-size:.8rem;font-weight:800;border-radius:50%;border:2px solid var(--card)}
+.item .coment{display:block;margin-top:4px;font-family:var(--display);font-style:italic;color:var(--fg)}
+.item .adjs{margin-top:8px}
+#btnIncidencia{width:100%;min-height:52px;padding:10px 16px;background:var(--earth);color:#fff;font-size:1.1rem;font-weight:800;letter-spacing:.06em;border-radius:10px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+#btnIncidencia:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+#btnIncidencia[disabled]{opacity:.6;cursor:wait}
+#mapaInc{height:340px;border:1px solid var(--line);border-radius:10px;z-index:0}
+.pin.inc{width:30px;height:28px;background:transparent!important;border:0;border-radius:0;box-shadow:none;position:relative;color:#111}
+.pin.inc svg{position:absolute;inset:0;z-index:0!important;width:100%;height:100%;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.pin.inc span{position:relative;z-index:1;top:4px;font-size:.72rem;font-weight:800}
+.leyenda .pin.inc{width:16px;height:15px}
+.visor{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(10,12,8,.92)}
+.visor img,.visor video{max-width:100%;max-height:78vh;border-radius:8px;background:#000}
+.visor audio{width:100%;max-width:420px}
+.visor p{margin:0;color:#eef0e6;font-size:.9rem;text-align:center}
+.visor .btn{flex:none;background:#eef0e6;color:#1f2617}
 :root[data-theme="dark"]{
   --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
   --olive:#8fb064; --olive-ink:#142008; --olive-soft:#2a331f; --earth:#d49a66; --ok:#7fc27a; --err:#ef8a74;
   --wa:#2a9d5c; --mail:#3f74ad;
   color-scheme:dark}
 @media (max-width:360px){.send{grid-template-columns:1fr}}
+/* Cuatro pestañas en móviles estrechos: letra algo menor para que «Configuración» quepa entera */
+@media (max-width:430px){.tabs{gap:2px;padding:3px}.tabs button{font-size:.78rem;padding:10px 3px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -177,6 +209,7 @@ label.item{cursor:pointer}
   <nav class="tabs" role="tablist">
     <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Registro</button>
     <button type="button" role="tab" id="tabList" aria-selected="false" aria-controls="panelList">Listado Registros</button>
+    <button type="button" role="tab" id="tabInc" aria-selected="false" aria-controls="panelInc">Incidencias</button>
     <button type="button" role="tab" id="tabCfg" aria-selected="false" aria-controls="panelCfg">Configuración</button>
   </nav>
 
@@ -298,6 +331,92 @@ label.item{cursor:pointer}
         <button class="sendbtn mail" id="btnEmailSel" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
       </div>
     </section>
+  </div>
+
+  <!-- PESTAÑA INCIDENCIAS -->
+  <div class="panel" id="panelInc" role="tabpanel" hidden>
+    <section>
+      <h2>Nueva incidencia</h2>
+      <div class="fila2">
+        <div class="campo-nombre">
+          <label class="lbl" for="incEmpleado">Empleado</label>
+          <input id="incEmpleado" type="text" readonly tabindex="-1" title="Se cambia en Configuración">
+        </div>
+        <div class="campo-act">
+          <label class="lbl" for="incTipo">Tipo</label>
+          <select id="incTipo">
+            <option>Árbol caído</option>
+            <option>Herramienta rota</option>
+            <option>Avería de riego</option>
+            <option>Vallado o puerta</option>
+            <option>Animales</option>
+            <option>Otros</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="incComentario">Comentario (opcional)</label>
+        <textarea id="incComentario" placeholder="Qué ha pasado y dónde exactamente"></textarea>
+      </div>
+      <div class="field">
+        <span class="lbl">Adjuntar</span>
+        <div class="medios">
+          <button type="button" class="medio" id="incFoto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h3l2-3h6l2 3h3v13H4z"/><circle cx="12" cy="13" r="4"/></svg>Foto</button>
+          <button type="button" class="medio" id="incVideo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>Vídeo</button>
+          <button type="button" class="medio" id="incAudio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg><span id="incAudioTxt">Audio</span></button>
+        </div>
+        <button type="button" class="galeria" id="incGaleria">o elegir un archivo de la galería</button>
+        <input type="file" id="fileFoto" accept="image/*" capture="environment" hidden>
+        <input type="file" id="fileVideo" accept="video/*" capture="environment" hidden>
+        <input type="file" id="fileAudio" accept="audio/*" capture hidden>
+        <input type="file" id="fileGaleria" accept="image/*,video/*,audio/*" multiple hidden>
+        <div class="adjs" id="incAdjNuevos"></div>
+      </div>
+      <button id="btnIncidencia" type="button">REGISTRAR INCIDENCIA</button>
+      <p class="status" id="statusInc" role="status" aria-live="polite"></p>
+    </section>
+
+    <section>
+      <div class="sechead">
+        <h2>Incidencias <span id="contadorInc">0</span></h2>
+        <button type="button" id="btnTodosInc" class="mini">Seleccionar todas</button>
+      </div>
+      <div class="vista" role="group" aria-label="Modo de vista">
+        <button type="button" id="vistaListaInc" aria-pressed="true">Listado</button>
+        <button type="button" id="vistaMapaInc" aria-pressed="false">Mapa</button>
+      </div>
+      <ol id="listaInc"></ol>
+      <div id="mapaInc" hidden></div>
+      <p class="hint" id="mapaIncNota" hidden></p>
+      <p class="empty" id="vacioInc">No hay incidencias.</p>
+      <div class="acciones">
+        <div class="row">
+          <button class="btn danger ico" id="btnBorrarInc" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
+          <button class="btn sec ico" id="btnCompartirInc" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
+        </div>
+        <div id="confirmBoxInc" hidden style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;border:2px solid var(--err);border-radius:10px">
+          <span id="confirmTxtInc" style="flex:1 1 100%"></span>
+          <button class="btn danger" id="btnSiBorrarInc" type="button">Sí, eliminar</button>
+          <button class="btn sec" id="btnNoBorrarInc" type="button">Cancelar</button>
+        </div>
+      </div>
+      <p class="status" id="statusListInc" role="status" aria-live="polite"></p>
+    </section>
+
+    <section>
+      <h2>Enviar seleccionadas</h2>
+      <div class="send">
+        <button class="sendbtn wa" id="btnWhatsappInc" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
+        <button class="sendbtn mail" id="btnEmailInc" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
+      </div>
+      <p class="hint">WhatsApp y Email envían el texto con la ubicación. Para enviar también las fotos, vídeos y audios usa <b>Compartir</b> y elige WhatsApp o el correo.</p>
+    </section>
+  </div>
+
+  <div class="visor" id="visor" hidden role="dialog" aria-modal="true" aria-label="Adjunto">
+    <div id="visorMedio"></div>
+    <p id="visorTxt"></p>
+    <button type="button" class="btn" id="visorCerrar">Cerrar</button>
   </div>
 
   <!-- PESTAÑA CONFIGURACIÓN -->
@@ -432,6 +551,76 @@ label.item{cursor:pointer}
   }
   const ultimo=()=>registros.length?registros[registros.length-1]:null;
 
+  /* ---------- Incidencias: datos ---------- */
+  // Cada incidencia: {id,nombre,tipo,comentario,fechaHora,iso,lat,lon,precision,error?,adjuntos:[{id,tipo,mime,nombre,size,dur?}]}.
+  // Los datos van en localStorage; los archivos (fotos, vídeos, audios) en IndexedDB, que admite mucho más espacio.
+  const KEY_INC='gea_incidencias';
+  let incidencias=store.get(KEY_INC,[]);
+  const guardarIncidencias=()=>store.set(KEY_INC,incidencias.filter(x=>!x.ejemplo));
+  // Archivos de ejemplo (y de reserva si IndexedDB no está disponible): solo en memoria
+  const mediaMem=new Map();
+  const media={
+    db:null,
+    abrir(){
+      if(this.db)return this.db;
+      this.db=new Promise((ok,ko)=>{
+        try{
+          const rq=indexedDB.open('gea_media',1);
+          rq.onupgradeneeded=()=>rq.result.createObjectStore('adjuntos');
+          rq.onsuccess=()=>ok(rq.result);rq.onerror=()=>ko(rq.error);
+        }catch(e){ko(e)}
+      });
+      return this.db;
+    },
+    async op(modo,fn){const db=await this.abrir();return new Promise((ok,ko)=>{const tx=db.transaction('adjuntos',modo);const rq=fn(tx.objectStore('adjuntos'));tx.oncomplete=()=>ok(rq&&rq.result);tx.onerror=()=>ko(tx.error)})},
+    async guardar(id,blob){try{await this.op('readwrite',s=>s.put(blob,id))}catch(e){mediaMem.set(id,blob)}},
+    async leer(id){if(mediaMem.has(id))return mediaMem.get(id);try{return await this.op('readonly',s=>s.get(id))}catch(e){return null}},
+    async borrar(id){mediaMem.delete(id);try{await this.op('readwrite',s=>s.delete(id))}catch(e){}}
+  };
+
+  if(MOSTRAR_EJEMPLOS){
+    // Incidencias de ejemplo junto a la finca, con una foto y un audio generados aquí mismo (no se guardan)
+    const base=new Date(), dia=(n,h,m)=>new Date(base.getFullYear(),base.getMonth(),base.getDate()+n,h,m);
+    const empleado=store.get(KEY_NOM,'')||'Angel';
+    const ej=[
+      [-3,9,35,'Avería de riego','Fuga en un gotero de la línea 4, se encharca el pie del olivo.',0.00041,0.00052,7,[]],
+      [-2,10,48,'Árbol caído','Olivo partido por el viento, bloquea el camino de la parcela norte.',-0.00033,-0.00061,5,['foto']],
+      [-1,12,15,'Herramienta rota','La tijera eléctrica de poda no carga. Dejo nota de voz.',0.00012,0.00071,9,['audio']],
+      [0,9,30,'Vallado o puerta','Puerta de acceso desde la carretera sin cerrar bien.',-0.00052,0.00018,6,['foto','audio']]
+    ].filter(x=>dia(x[0],x[1],x[2])<base);
+    ej.forEach(([n,h,m,tipo,comentario,dLat,dLon,prec,adj])=>{
+      const d=new Date(dia(n,h,m));
+      incidencias.push({id:nuevoId(),nombre:empleado,tipo,comentario,fechaHora:fechaHora(d),iso:d.toISOString(),
+        lat:FINCA.lat+dLat,lon:FINCA.lon+dLon,precision:prec,ejemplo:true,
+        adjuntos:adj.map(t=>({id:'ej_'+t+'_'+n,tipo:t,mime:t==='foto'?'image/jpeg':'audio/wav',nombre:t==='foto'?'foto_ejemplo.jpg':'audio_ejemplo.wav',size:0,dur:t==='audio'?3:undefined}))});
+    });
+    incidencias.sort((a,b)=>new Date(a.iso)-new Date(b.iso));
+    // Audio de ejemplo: 3 s de tono suave en WAV
+    const wav=(seg=3,hz=440)=>{
+      const sr=8000,n=sr*seg,b=new ArrayBuffer(44+n*2),v=new DataView(b);
+      const w=(o,s)=>[...s].forEach((c,i)=>v.setUint8(o+i,c.charCodeAt(0)));
+      w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+      v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+      for(let i=0;i<n;i++){const env=Math.min(1,i/800,(n-i)/800);v.setInt16(44+i*2,Math.sin(2*Math.PI*hz*i/sr)*env*6000*(1+0.3*Math.sin(i/900)),true)}
+      return new Blob([b],{type:'audio/wav'});
+    };
+    // Foto de ejemplo dibujada: cielo, suelo y un tronco caído
+    const foto=(titulo)=>new Promise(ok=>{
+      const c=document.createElement('canvas');c.width=640;c.height=480;const g=c.getContext('2d');
+      const cielo=g.createLinearGradient(0,0,0,260);cielo.addColorStop(0,'#8ec5e8');cielo.addColorStop(1,'#dfeef5');
+      g.fillStyle=cielo;g.fillRect(0,0,640,260);g.fillStyle='#b59a6a';g.fillRect(0,260,640,220);
+      g.fillStyle='#5f7d3a';for(let i=0;i<7;i++){g.beginPath();g.arc(60+i*90,250,38,0,7);g.fill()}
+      g.save();g.translate(320,360);g.rotate(-0.18);g.fillStyle='#6b4a2b';g.fillRect(-230,-22,460,44);g.restore();
+      g.fillStyle='#4d6b2c';g.beginPath();g.arc(530,330,70,0,7);g.fill();
+      g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,430,640,50);g.fillStyle='#fff';g.font='bold 24px sans-serif';g.fillText(titulo,18,463);
+      c.toBlob(b=>ok(b),'image/jpeg',0.82);
+    });
+    incidencias.filter(x=>x.ejemplo).forEach(x=>x.adjuntos.forEach(a=>{
+      if(a.tipo==='audio'){const b=wav(3,a.id.endsWith('_0')?520:440);mediaMem.set(a.id,b);a.size=b.size}
+      else foto(`Foto de ejemplo · ${x.tipo}`).then(b=>{if(b){mediaMem.set(a.id,b);a.size=b.size;if(typeof pintarIncidencias==='function')pintarIncidencias()}});
+    }));
+  }
+
   // Estado del listado: selección, día filtrado y mes mostrado en el calendario
   let seleccion=new Set();
   let filtroDia=null;
@@ -442,7 +631,7 @@ label.item{cursor:pointer}
   let cfg={nombre:store.get(KEY_NOM,'')||'Angel',tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
 
   /* ---------- Pestañas ---------- */
-  const PESTANAS={reg:['tabReg','panelReg'],list:['tabList','panelList'],cfg:['tabCfg','panelCfg']};
+  const PESTANAS={reg:['tabReg','panelReg'],list:['tabList','panelList'],inc:['tabInc','panelInc'],cfg:['tabCfg','panelCfg']};
   function abrir(tab){
     Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute('aria-selected',k===tab);$(p).hidden=k!==tab});
     if(tab==='cfg'){$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
@@ -450,6 +639,7 @@ label.item{cursor:pointer}
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
     if(tab==='reg')pintarMapaHoy();
     if(tab==='list'&&vistaMapa)pintarListado();
+    if(tab==='inc')pintarIncidencias();
     window.scrollTo(0,0);
   }
   Object.entries(PESTANAS).forEach(([k,[t]])=>$(t).addEventListener('click',()=>abrir(k)));
@@ -472,7 +662,8 @@ label.item{cursor:pointer}
     // Los registros de ejemplo van siempre a nombre del empleado configurado
     registros.forEach(r=>{if(r.ejemplo)r.nombre=nombre});
     puntos.forEach(p=>{if(p.ejemplo)p.nombre=nombre});
-    pintarDestinos();pintarEmpleado();pintarTodo();actualizarSeguimiento();
+    incidencias.forEach(x=>{if(x.ejemplo)x.nombre=nombre});
+    pintarDestinos();pintarEmpleado();pintarTodo();actualizarSeguimiento();pintarIncidencias();
     s.className='status ok';s.textContent='Configuración guardada.';
   });
 
@@ -482,7 +673,7 @@ label.item{cursor:pointer}
   }
 
   // En la pestaña Registro solo se muestra quién registra; se cambia en Configuración
-  function pintarEmpleado(){$('empleadoActual').value=cfg.nombre}
+  function pintarEmpleado(){$('empleadoActual').value=cfg.nombre;$('incEmpleado').value=cfg.nombre}
 
   /* ---------- Textos ---------- */
   $('actividad').addEventListener('change',e=>store.set(KEY_ACT,e.target.value));
@@ -738,6 +929,38 @@ label.item{cursor:pointer}
     const li=document.createElement('li');li.appendChild(crearPin(ic,''));li.appendChild(document.createTextNode(nom));
     $(id).appendChild(li);
   }));
+  // Incidencia: triángulo de aviso ámbar con su número
+  const SVG_TRI='<svg viewBox="0 0 30 28" aria-hidden="true"><path d="M15 2 L28.5 26 H1.5 Z" fill="#f2b600" stroke="#1f2617" stroke-width="2" stroke-linejoin="round"/></svg>';
+  function crearPinInc(texto){
+    const p=document.createElement('div');p.className='pin inc';p.innerHTML=SVG_TRI;
+    const s=document.createElement('span');s.textContent=texto;p.appendChild(s);return p;
+  }
+  {const li=document.createElement('li');li.appendChild(crearPinInc(''));li.appendChild(document.createTextNode('Incidencia'));$('leyendaHoy').appendChild(li)}
+  // Globo de una incidencia (con textContent: tipo y comentario vienen de lo que escribe el usuario)
+  function globoIncidencia(x,num){
+    const pop=document.createElement('div');pop.className='popreg';
+    const b=document.createElement('b');b.textContent=`${num?num+'. ':''}⚠ ${x.tipo}`;pop.appendChild(b);
+    const n=(x.adjuntos||[]).length;
+    [x.nombre,x.fechaHora.slice(0,16),x.comentario||null,n?`${n} adjunto${n===1?'':'s'}`:null,x.precision!=null?`Precisión ±${Math.round(x.precision)} m`:null]
+      .filter(Boolean).forEach(t=>{pop.appendChild(document.createTextNode(t));pop.appendChild(document.createElement('br'))});
+    return pop;
+  }
+  function marcadorIncidencia(x,num,capa){
+    const icono=L.divIcon({className:'',html:crearPinInc(num?String(num):'!').outerHTML,iconSize:[30,28],iconAnchor:[15,24]});
+    return L.marker([x.lat,x.lon],{icon:icono,zIndexOffset:500}).bindPopup(()=>globoIncidencia(x,num)).addTo(capa);
+  }
+  // Fondos de mapa a elegir (Mapa / Satélite); cada mapa recuerda el último usado en este móvil
+  function ponerFondos(mapa,claveFondo,fondoInicial){
+    // Satélite: Esri World Imagery (sin clave); en zonas rurales solo hay imagen hasta el zoom 18, más allá se amplía.
+    const fondos={
+      'Mapa':L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}),
+      'Satélite':L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {maxZoom:19,maxNativeZoom:18,attribution:'Imágenes &copy; Esri, Maxar, Earthstar Geographics'})
+    };
+    (fondos[store.get(claveFondo,fondoInicial)]||fondos[fondoInicial]).addTo(mapa);
+    L.control.layers(fondos,null,{collapsed:true}).addTo(mapa);
+    mapa.on('baselayerchange',e=>store.set(claveFondo,e.name));
+  }
   function ponerVista(enMapa){
     vistaMapa=enMapa;
     $('vistaLista').setAttribute('aria-pressed',!enMapa);$('vistaMapa').setAttribute('aria-pressed',enMapa);
@@ -789,24 +1012,17 @@ label.item{cursor:pointer}
       }
     }
 
-    return {pintar(lista,conLinea,avisoVacio){
+    // incs: incidencias que se añaden al mapa como triángulos de aviso (pestaña Registro: las de hoy)
+    return {pintar(lista,conLinea,avisoVacio,incs=[]){
     const conPos=lista.filter(r=>r.lat!=null), sin=lista.length-conPos.length, nota=$(idNota);
-    nota.textContent=!lista.length?avisoVacio
+    const incsPos=incs.filter(x=>x.lat!=null);
+    nota.textContent=!lista.length&&!incsPos.length?avisoVacio
       :sin?`${sin} registro${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
     if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';$(idMapa).hidden=true;return}
     if(!mapa){
       // Sin botones + / −: el zoom se hace con los dedos (o la rueda del ratón en el ordenador)
       mapa=L.map(idMapa,{zoomControl:false});
-      // Dos fondos a elegir con el control de capas; se recuerda el último usado en este móvil.
-      // Satélite: Esri World Imagery (sin clave); en zonas rurales solo hay imagen hasta el zoom 18, más allá se amplía.
-      const fondos={
-        'Mapa':L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}),
-        'Satélite':L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-          {maxZoom:19,maxNativeZoom:18,attribution:'Imágenes &copy; Esri, Maxar, Earthstar Geographics'})
-      };
-      (fondos[store.get(claveFondo,fondoInicial)]||fondos[fondoInicial]).addTo(mapa);
-      L.control.layers(fondos,null,{collapsed:true}).addTo(mapa);
-      mapa.on('baselayerchange',e=>store.set(claveFondo,e.name));
+      ponerFondos(mapa,claveFondo,fondoInicial);
       capaMapa=L.layerGroup().addTo(mapa);
       capaYo=L.layerGroup().addTo(mapa);
       if(conUbicacion){
@@ -854,6 +1070,8 @@ label.item{cursor:pointer}
       };
       marcadores.set(r.id,L.marker([r.lat,r.lon],{icon:icono}).bindPopup(crearGlobo).addTo(capaMapa));
     });
+    incsPos.forEach(x=>{marcadorIncidencia(x,null,capaMapa);encuadre.push([x.lat,x.lon])});
+    if(incsPos.length)nota.textContent=[nota.textContent,`${incsPos.length} incidencia${incsPos.length===1?'':'s'} (triángulos).`].filter(Boolean).join(' ');
     // El contenedor acaba de mostrarse: recalcular tamaño antes de encuadrar
     setTimeout(()=>{
       mapa.invalidateSize();
@@ -874,7 +1092,7 @@ label.item{cursor:pointer}
     // Mientras la página carga, Leaflet aún no está: lo pintará el evento «load»
     if(typeof L==='undefined'&&document.readyState!=='complete')return;
     const k=diaKey(new Date());
-    mapaHoy.pintar(registros.filter(r=>diaDe(r)===k),true,'Hoy aún no hay registros. Pulsa REGISTRO para empezar.');
+    mapaHoy.pintar(registros.filter(r=>diaDe(r)===k),true,'Hoy aún no hay registros. Pulsa REGISTRO para empezar.',incidencias.filter(x=>diaDe(x)===k));
   }
   // Leaflet se carga con «defer», después de este código: pintar el mapa de hoy en cuanto esté
   window.addEventListener('load',pintarMapaHoy);
@@ -1177,13 +1395,38 @@ label.item{cursor:pointer}
   $('btnWhatsappSel').addEventListener('click',()=>{if(haySeleccion())enviarWhatsapp(seleccionados())});
   $('btnEmailSel').addEventListener('click',()=>{if(haySeleccion())enviarEmail(seleccionados())});
 
+  /* ---------- Compartir archivos (web y app) ---------- */
+  // En el navegador se usa el menú Compartir del sistema (Web Share). En la app de Android el WebView no lo
+  // tiene: los archivos se escriben en la caché de la app y se comparten con el plugin Share.
+  const FS=nativo?Capacitor.registerPlugin('Filesystem'):null;
+  const SHARE=nativo?Capacitor.registerPlugin('Share'):null;
+  const aBase64=blob=>new Promise((ok,ko)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.onerror=()=>ko(r.error);r.readAsDataURL(blob)});
+  // Devuelve 'ok', 'cancelado' o un texto de error
+  async function compartirArchivos(files,titulo,texto){
+    if(nativo&&SHARE&&FS){
+      try{
+        const uris=[];
+        for(const f of files){
+          const res=await FS.writeFile({path:`compartir/${f.name}`,data:await aBase64(f),directory:'CACHE',recursive:true});
+          uris.push(res.uri);
+        }
+        await SHARE.share({title:titulo,text:texto||undefined,files:uris.length?uris:undefined,dialogTitle:titulo});
+        return 'ok';
+      }catch(e){return /cancel/i.test(String(e&&e.message))?'cancelado':'No se pudo compartir: '+(e&&e.message||e)}
+    }
+    const datos={title:titulo,files};if(texto)datos.text=texto;
+    if(navigator.canShare&&navigator.canShare(datos)){
+      try{await navigator.share(datos);return 'ok'}
+      catch(e){return e.name==='AbortError'?'cancelado':'No se pudieron compartir los archivos.'}
+    }
+    return 'Este navegador no permite compartir archivos. Usa WhatsApp o Email.';
+  }
+
   $('btnCompartir').addEventListener('click',async()=>{
     if(!haySeleccion())return;
     const file=new File([textoFichero(seleccionados())],nombreFichero(),{type:'text/plain'});
-    if(navigator.canShare&&navigator.canShare({files:[file]})){
-      try{await navigator.share({files:[file],title:'Registros de jornada'})}
-      catch(e){if(e.name!=='AbortError')statusList('No se pudo compartir el fichero.','err')}
-    }else statusList('Este navegador no permite adjuntar ficheros. Usa WhatsApp o Email.','err');
+    const res=await compartirArchivos([file],'Registros de jornada');
+    if(res!=='ok'&&res!=='cancelado')statusList(res,'err');
   });
 
   $('btnBorrar').addEventListener('click',()=>{
@@ -1202,10 +1445,308 @@ label.item{cursor:pointer}
     statusList(`${n} registro${n===1?'':'s'} eliminado${n===1?'':'s'}.`,'ok');
   });
 
+  /* ---------- Incidencias ---------- */
+  const statusInc=(msg,cls)=>avisar('statusInc',msg,cls);
+  const statusListInc=(msg,cls)=>avisar('statusListInc',msg,cls);
+  const ICO_MEDIO={
+    video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>',
+    audio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>'
+  };
+  const tipoDeMime=m=>m.startsWith('image/')?'foto':m.startsWith('video/')?'video':m.startsWith('audio/')?'audio':null;
+  const extDe=(mime,nombre)=>{const m=(nombre||'').match(/\.([a-z0-9]{2,5})$/i);if(m)return m[1].toLowerCase();
+    return ({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','video/mp4':'mp4','video/webm':'webm','video/quicktime':'mov',
+      'audio/webm':'webm','audio/mp4':'m4a','audio/ogg':'ogg','audio/mpeg':'mp3','audio/wav':'wav','audio/aac':'aac'})[mime.split(';')[0]]||'bin'};
+  const tamano=b=>b>=1048576?(b/1048576).toFixed(1).replace('.',',')+' MB':Math.max(1,Math.round(b/1024))+' KB';
+  const mmss=s=>`${Math.floor(s/60)}:${pad(Math.floor(s%60))}`;
+
+  // Las fotos se reducen a 1600 px y JPEG 80 % para que ocupen poco (≈300-500 KB)
+  async function reducirFoto(file){
+    try{
+      const url=URL.createObjectURL(file);
+      const img=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=url});
+      const k=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight));
+      const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);
+      c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
+      const b=await new Promise(ok=>c.toBlob(ok,'image/jpeg',0.8));
+      return b&&b.size<file.size?b:file;
+    }catch(e){return file}
+  }
+
+  // Adjuntos de la incidencia que se está preparando: [{tipo,blob,mime,dur?}]
+  let nuevos=[];
+  async function anadirArchivo(file,durSeg){
+    const tipo=tipoDeMime(file.type||'');
+    if(!tipo){statusInc('Ese archivo no es una foto, un vídeo ni un audio.','err');return}
+    const blob=tipo==='foto'?await reducirFoto(file):file;
+    nuevos.push({tipo,blob,mime:blob.type||file.type,nombre:file.name,dur:durSeg});
+    if(tipo==='video'&&blob.size>50*1048576)statusInc(`El vídeo ocupa ${tamano(blob.size)}: puede tardar en enviarse. Mejor vídeos cortos.`,'err');
+    else statusInc('');
+    pintarNuevos();
+  }
+  [['incFoto','fileFoto'],['incVideo','fileVideo'],['incGaleria','fileGaleria']].forEach(([b,f])=>$(b).addEventListener('click',()=>$(f).click()));
+  ['fileFoto','fileVideo','fileAudio','fileGaleria'].forEach(id=>$(id).addEventListener('change',async e=>{
+    for(const f of [...e.target.files])await anadirArchivo(f);
+    e.target.value='';
+  }));
+
+  // Miniatura: foto con su imagen de fondo; vídeo y audio con su icono. urls: se liberan al repintar.
+  function miniatura(tipo,blob,dur,urls){
+    const b=document.createElement('button');b.type='button';b.className='adj';
+    if(tipo==='foto'&&blob){const u=URL.createObjectURL(blob);urls.push(u);b.style.backgroundImage=`url("${u}")`;b.setAttribute('aria-label','Ver foto')}
+    else{b.innerHTML=ICO_MEDIO[tipo]||'';b.setAttribute('aria-label',tipo==='video'?'Ver vídeo':'Escuchar audio')}
+    if(dur){const s=document.createElement('span');s.className='dura';s.textContent=mmss(dur);b.appendChild(s)}
+    return b;
+  }
+  let urlsNuevos=[];
+  function pintarNuevos(){
+    urlsNuevos.forEach(u=>URL.revokeObjectURL(u));urlsNuevos=[];
+    const c=$('incAdjNuevos');c.textContent='';
+    nuevos.forEach((a,i)=>{
+      const m=miniatura(a.tipo,a.blob,a.dur,urlsNuevos);
+      m.addEventListener('click',()=>abrirVisor(a.tipo,a.blob,`${a.tipo==='foto'?'Foto':a.tipo==='video'?'Vídeo':'Audio'} · ${tamano(a.blob.size)}`));
+      const q=document.createElement('button');q.type='button';q.className='quitar';q.textContent='✕';q.setAttribute('aria-label','Quitar adjunto');
+      q.addEventListener('click',e=>{e.stopPropagation();nuevos.splice(i,1);pintarNuevos()});
+      m.appendChild(q);c.appendChild(m);
+    });
+  }
+
+  // Audio: se graba dentro de la página (MediaRecorder). Si el navegador no puede, se abre la grabadora del móvil.
+  let grabador=null, grabInicio=0, grabTimer=null;
+  $('incAudio').addEventListener('click',async()=>{
+    if(grabador){grabador.stop();return}
+    if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)){$('fileAudio').click();return}
+    let stream;
+    try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}
+    catch(e){
+      statusInc(e.name==='NotAllowedError'?'Permite el micrófono para grabar audio (icono a la izquierda de la dirección, o Ajustes → Apps → Registro Jornada → Permisos).':'No se puede usar el micrófono. Se abre la grabadora del móvil.','err');
+      if(e.name!=='NotAllowedError')$('fileAudio').click();
+      return;
+    }
+    const tipo=['audio/webm;codecs=opus','audio/mp4','audio/ogg;codecs=opus','audio/webm'].find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t));
+    const trozos=[];
+    grabador=new MediaRecorder(stream,tipo?{mimeType:tipo}:undefined);
+    grabador.ondataavailable=e=>{if(e.data&&e.data.size)trozos.push(e.data)};
+    grabador.onstop=()=>{
+      stream.getTracks().forEach(t=>t.stop());clearInterval(grabTimer);
+      const dur=(Date.now()-grabInicio)/1000, mime=(grabador.mimeType||tipo||'audio/webm').split(';')[0];
+      grabador=null;$('incAudio').classList.remove('grabando');$('incAudioTxt').textContent='Audio';
+      const blob=new Blob(trozos,{type:mime});
+      if(blob.size)anadirArchivo(new File([blob],`audio.${extDe(mime)}`,{type:mime}),dur);
+    };
+    grabador.start();grabInicio=Date.now();
+    $('incAudio').classList.add('grabando');$('incAudioTxt').textContent='Parar 0:00';
+    grabTimer=setInterval(()=>{
+      const s=(Date.now()-grabInicio)/1000;$('incAudioTxt').textContent='Parar '+mmss(s);
+      if(s>=180)grabador&&grabador.stop(); // máximo 3 minutos
+    },500);
+    statusInc('Grabando audio… pulsa Parar para terminar.');
+  });
+
+  // Visor a pantalla completa para fotos, vídeos y audios
+  let urlVisor=null;
+  function abrirVisor(tipo,blob,texto){
+    if(!blob){statusListInc('Este adjunto ya no está en el móvil.','err');return}
+    cerrarVisor();
+    urlVisor=URL.createObjectURL(blob);
+    const el=document.createElement(tipo==='foto'?'img':tipo==='video'?'video':'audio');
+    el.src=urlVisor;if(tipo!=='foto'){el.controls=true;el.autoplay=true;el.playsInline=true}else el.alt='Foto de la incidencia';
+    $('visorMedio').appendChild(el);$('visorTxt').textContent=texto||'';
+    $('visor').hidden=false;$('visorCerrar').focus();
+  }
+  function cerrarVisor(){
+    $('visorMedio').textContent='';$('visor').hidden=true;
+    if(urlVisor){URL.revokeObjectURL(urlVisor);urlVisor=null}
+  }
+  $('visorCerrar').addEventListener('click',cerrarVisor);
+  $('visor').addEventListener('click',e=>{if(e.target.id==='visor')cerrarVisor()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('visor').hidden)cerrarVisor()});
+
+  // Registrar: fecha, hora y posición GPS como un registro de actividad, más tipo, comentario y adjuntos
+  $('btnIncidencia').addEventListener('click',()=>{
+    if(grabador){statusInc('Para primero la grabación de audio.','err');return}
+    const ahora=new Date();
+    const x={id:nuevoId(),nombre:cfg.nombre,tipo:$('incTipo').value,comentario:$('incComentario').value.trim(),
+      fechaHora:fechaHora(ahora),iso:ahora.toISOString(),lat:null,lon:null,precision:null,adjuntos:[]};
+    const guardar=async()=>{
+      for(const [i,a] of nuevos.entries()){
+        const id=nuevoId(), nombre=`incidencia_${ahora.getFullYear()}${pad(ahora.getMonth()+1)}${pad(ahora.getDate())}_${pad(ahora.getHours())}${pad(ahora.getMinutes())}_${i+1}.${extDe(a.mime,a.nombre)}`;
+        await media.guardar(id,a.blob);
+        x.adjuntos.push({id,tipo:a.tipo,mime:a.mime,nombre,size:a.blob.size,dur:a.dur?Math.round(a.dur):undefined});
+      }
+      incidencias.push(x);guardarIncidencias();
+      nuevos=[];pintarNuevos();$('incComentario').value='';
+      selInc=new Set([x.id]);
+      $('btnIncidencia').disabled=false;
+      pintarIncidencias();pintarMapaHoy();
+    };
+    $('btnIncidencia').disabled=true;statusInc('Obteniendo posición GPS…');
+    if(!('geolocation' in navigator)){x.error='GPS no disponible';guardar().then(()=>statusInc('Incidencia guardada sin posición: este navegador no da GPS.','err'));return}
+    navigator.geolocation.getCurrentPosition(p=>{
+      x.lat=p.coords.latitude;x.lon=p.coords.longitude;x.precision=p.coords.accuracy;
+      guardar().then(()=>{statusInc(`Incidencia guardada ${x.fechaHora.slice(11,19)} · precisión ±${Math.round(x.precision)} m. Envíala desde el listado.`,'ok');if(navigator.vibrate)navigator.vibrate(120)});
+    },e=>{
+      x.error=e.code===1?'permiso denegado':e.code===3?'tiempo agotado':'posición no disponible';
+      guardar().then(()=>{statusInc('Incidencia guardada sin posición: '+x.error+'.','err');abrir('reg');ayudaUbicacion(e.code)});
+    },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
+  });
+
+  // Listado: la más reciente arriba; por defecto solo está marcada la última
+  let selInc=new Set(incidencias.length?[incidencias[incidencias.length-1].id]:[]);
+  let vistaMapaInc=false, urlsLista=[];
+  const incSeleccionadas=()=>incidencias.filter(x=>selInc.has(x.id));
+  function resumenAdjuntos(adj){
+    const c={foto:0,video:0,audio:0};(adj||[]).forEach(a=>c[a.tipo]++);
+    return [[c.foto,'foto','fotos'],[c.video,'vídeo','vídeos'],[c.audio,'audio','audios']].filter(([n])=>n).map(([n,s,p])=>`${n} ${n===1?s:p}`).join(', ');
+  }
+  function contenidoIncidencia(x){
+    const txt=document.createElement('div');txt.className='txt';
+    const b=document.createElement('b');b.textContent='⚠ '+x.tipo;
+    const a=document.createElement('span');a.className='act';a.textContent=x.nombre;b.appendChild(a);
+    if(x===incidencias[incidencias.length-1]){const t=document.createElement('span');t.className='tag';t.textContent='Última';b.appendChild(t)}
+    if(x.ejemplo){const t=document.createElement('span');t.className='tag';t.textContent='Ejemplo';b.appendChild(t)}
+    txt.appendChild(b);
+    txt.appendChild(document.createTextNode(x.fechaHora));txt.appendChild(document.createElement('br'));
+    if(x.lat!=null){
+      const l=document.createElement('a');l.href=`https://maps.google.com/?q=${x.lat},${x.lon}`;l.target='_blank';l.rel='noopener';
+      l.textContent=`${x.lat.toFixed(6)}, ${x.lon.toFixed(6)}`;txt.appendChild(l);
+      txt.appendChild(document.createTextNode(` · ±${Math.round(x.precision)} m`));
+    }else txt.appendChild(document.createTextNode('Sin posición ('+(x.error||'no disponible')+')'));
+    if(x.comentario){const c=document.createElement('span');c.className='coment';c.textContent=`«${x.comentario}»`;txt.appendChild(c)}
+    if((x.adjuntos||[]).length){
+      const fila=document.createElement('div');fila.className='adjs';
+      x.adjuntos.forEach(ad=>{
+        const m=miniatura(ad.tipo,null,ad.dur,urlsLista);
+        // La imagen de la foto se carga aparte (IndexedDB es asíncrono)
+        if(ad.tipo==='foto')media.leer(ad.id).then(bl=>{if(bl){const u=URL.createObjectURL(bl);urlsLista.push(u);m.style.backgroundImage=`url("${u}")`;m.innerHTML=''}});
+        else m.innerHTML=ICO_MEDIO[ad.tipo]+(ad.dur?`<span class="dura">${mmss(ad.dur)}</span>`:'');
+        if(ad.tipo==='foto')m.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>';
+        m.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();
+          abrirVisor(ad.tipo,await media.leer(ad.id),`${x.tipo} · ${x.fechaHora.slice(0,16)}${ad.size?' · '+tamano(ad.size):''}`)});
+        fila.appendChild(m);
+      });
+      txt.appendChild(fila);
+    }
+    return txt;
+  }
+  function pintarIncidencias(){
+    urlsLista.forEach(u=>URL.revokeObjectURL(u));urlsLista=[];
+    const ol=$('listaInc');ol.textContent='';
+    incidencias.slice().reverse().forEach(x=>{
+      const li=document.createElement('li');
+      const lab=document.createElement('label');lab.className='item'+(selInc.has(x.id)?' sel':'');
+      lab.style.borderLeftColor='#f2b600';
+      const cb=document.createElement('input');cb.type='checkbox';cb.id='inc_'+x.id;cb.checked=selInc.has(x.id);
+      cb.addEventListener('change',()=>{cb.checked?selInc.add(x.id):selInc.delete(x.id);pintarSelInc();if(vistaMapaInc)pintarMapaInc()});
+      lab.appendChild(cb);lab.appendChild(contenidoIncidencia(x));li.appendChild(lab);ol.appendChild(li);
+    });
+    $('contadorInc').textContent=incidencias.length;
+    $('vacioInc').hidden=incidencias.length>0;
+    ol.hidden=vistaMapaInc;$('mapaInc').hidden=!vistaMapaInc;$('mapaIncNota').hidden=!vistaMapaInc;
+    pintarSelInc();
+    if(vistaMapaInc)pintarMapaInc();
+  }
+  function pintarSelInc(){
+    const n=incSeleccionadas().length, total=incidencias.length;
+    $('btnTodosInc').textContent=(n===total&&total>0)?'Quitar selección':'Seleccionar todas';
+    ['btnWhatsappInc','btnEmailInc','btnCompartirInc','btnBorrarInc'].forEach(id=>$(id).disabled=n===0);
+    document.querySelectorAll('#listaInc label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
+    $('confirmBoxInc').hidden=true;
+  }
+  $('btnTodosInc').addEventListener('click',()=>{
+    selInc=incSeleccionadas().length===incidencias.length?new Set():new Set(incidencias.map(x=>x.id));
+    pintarIncidencias();
+  });
+  function vistaInc(enMapa){
+    vistaMapaInc=enMapa;
+    $('vistaListaInc').setAttribute('aria-pressed',!enMapa);$('vistaMapaInc').setAttribute('aria-pressed',enMapa);
+    pintarIncidencias();
+  }
+  $('vistaListaInc').addEventListener('click',()=>vistaInc(false));
+  $('vistaMapaInc').addEventListener('click',()=>vistaInc(true));
+
+  // Mapa de incidencias: las marcadas, numeradas por orden de hora
+  let mapaI=null, capaI=null;
+  function pintarMapaInc(){
+    const nota=$('mapaIncNota');
+    if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';return}
+    if(!mapaI){
+      mapaI=L.map('mapaInc',{zoomControl:false});
+      ponerFondos(mapaI,`${KEY_CAPA}_mapaInc`,'Satélite');
+      capaI=L.layerGroup().addTo(mapaI);
+    }
+    capaI.clearLayers();
+    const lista=incSeleccionadas(), conPos=lista.filter(x=>x.lat!=null), sin=lista.length-conPos.length;
+    nota.textContent=!lista.length?'No hay incidencias marcadas. Márcalas en Listado para verlas en el mapa.'
+      :sin?`${sin} incidencia${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
+    conPos.forEach((x,i)=>{
+      L.circle([x.lat,x.lon],{radius:x.precision||0,color:'#b07d00',weight:1,fillOpacity:.08}).addTo(capaI);
+      marcadorIncidencia(x,i+1,capaI);
+    });
+    setTimeout(()=>{
+      mapaI.invalidateSize();
+      if(conPos.length)mapaI.fitBounds(L.latLngBounds(conPos.map(x=>[x.lat,x.lon])).pad(0.3),{maxZoom:18});
+      else mapaI.setView([FINCA.lat,FINCA.lon],16);
+    },0);
+  }
+
+  // Envíos: el mismo formato que los registros, con la línea INCIDENCIA delante
+  function textoIncidencias(lista){
+    return lista.map(x=>{
+      const d=new Date(x.iso), adj=resumenAdjuntos(x.adjuntos);
+      const ubic=x.lat!=null?`https://maps.google.com/?q=${x.lat.toFixed(6)},${x.lon.toFixed(6)}`:'sin posición';
+      return `INCIDENCIA: ${x.tipo}\nEmpleado: ${x.nombre}\nFecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\nUbicación: ${ubic}\nPrecisión GPS: ${x.lat!=null?'±'+Math.round(x.precision)+' m':'sin dato'}`+
+        (x.comentario?`\nComentario: ${x.comentario}`:'')+(adj?`\nAdjuntos: ${adj}`:'');
+    }).join('\n\n');
+  }
+  function haySelInc(){if(!incSeleccionadas().length){statusListInc('Marca al menos una incidencia.','err');return false}return true}
+  $('btnWhatsappInc').addEventListener('click',()=>{
+    if(!haySelInc())return;
+    if(!cfg.tel){abrir('cfg');$('telefono').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el teléfono de WhatsApp y guarda.';return}
+    window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(textoIncidencias(incSeleccionadas()))}`,'_blank');
+  });
+  $('btnEmailInc').addEventListener('click',()=>{
+    if(!haySelInc())return;
+    if(!cfg.mail){abrir('cfg');$('email').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el email del destinatario y guarda.';return}
+    const lista=incSeleccionadas(), fh=x=>{const d=new Date(x.iso);return `${fechaCorta(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+    const tipos=[...new Set(lista.map(x=>x.tipo))].join(', '), nombres=[...new Set(lista.map(x=>x.nombre))].join(', ');
+    const cuando=lista.length===1?fh(lista[0]):`${fh(lista[0])} – ${fh(lista[lista.length-1])}`;
+    const asunto=['Incidencia',tipos,nombres,cuando].join(' ');
+    const dest=cfg.mail.split(',').map(s=>s.trim()).filter(Boolean).join(',');
+    location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(textoIncidencias(lista))}`;
+  });
+  // Compartir: texto + todas las fotos, vídeos y audios de las incidencias marcadas
+  $('btnCompartirInc').addEventListener('click',async()=>{
+    if(!haySelInc())return;
+    const lista=incSeleccionadas(), files=[];
+    statusListInc('Preparando adjuntos…');
+    for(const x of lista)for(const a of x.adjuntos||[]){
+      const bl=await media.leer(a.id);
+      if(bl)files.push(new File([bl],a.nombre,{type:a.mime||bl.type}));
+    }
+    const res=await compartirArchivos(files,'Incidencias de la finca',textoIncidencias(lista));
+    statusListInc(res==='ok'?`Compartida${lista.length===1?'':'s'} ${lista.length} incidencia${lista.length===1?'':'s'} con ${files.length} adjunto${files.length===1?'':'s'}.`:res==='cancelado'?'':res,res==='ok'?'ok':'err');
+  });
+  $('btnBorrarInc').addEventListener('click',()=>{
+    if(!haySelInc())return;
+    const n=incSeleccionadas().length;
+    $('confirmTxtInc').textContent=`¿Eliminar ${n} incidencia${n===1?'':'s'} y sus adjuntos del móvil? No se puede deshacer.`;
+    $('confirmBoxInc').hidden=false;
+  });
+  $('btnNoBorrarInc').addEventListener('click',()=>{$('confirmBoxInc').hidden=true});
+  $('btnSiBorrarInc').addEventListener('click',async()=>{
+    const borrar=incSeleccionadas(), n=borrar.length, ids=new Set(borrar.map(x=>x.id));
+    for(const x of borrar)for(const a of x.adjuntos||[])await media.borrar(a.id);
+    incidencias=incidencias.filter(x=>!ids.has(x.id));guardarIncidencias();
+    selInc=new Set(incidencias.length?[incidencias[incidencias.length-1].id]:[]);
+    pintarIncidencias();pintarMapaHoy();
+    statusListInc(`${n} incidencia${n===1?'':'s'} eliminada${n===1?'':'s'}.`,'ok');
+  });
+
   pintarDestinos();
   pintarEmpleado();
   pintarTodo();
   actualizarSeguimiento();
+  pintarIncidencias();
 })();
 </script>
 </body>
