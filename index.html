@@ -472,7 +472,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       <div class="infobox" id="infoCfgGps" hidden>
         <p class="hint">Cada cuánto se guarda la posición de la actividad en curso. Menos tiempo da recorridos más detallados pero gasta más batería y ocupa más.</p>
         <p class="hint">Solo se guarda un punto si el empleado se ha movido más que el margen de error del GPS; las lecturas de más de 100 m de error se descartan.</p>
-        <p class="hint">Al sincronizar con el fichero central se borran del móvil los puntos de días anteriores ya enviados; las actividades conservan su distancia, área y velocidad.</p>
+        <p class="hint">Los puntos se quedan en el móvil para ver los recorridos de días anteriores en el mapa. Solo cuando la memoria del navegador se acerca a su límite se borran los más antiguos que ya están en el fichero central; esas actividades conservan su distancia, área y velocidad.</p>
       </div>
       <div class="field">
         <label class="lbl" for="gpsIntervalo">Guardar la posición cada</label>
@@ -617,10 +617,16 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // Puntos GPS tomados durante la jornada (cada 1 min por defecto, se cambia en Configuración); cada uno lleva el id
   // del registro de la actividad en curso (registroId)
   let puntos=store.get(KEY_PTS,[]);
-  // Si la memoria del navegador se llena se avisa: sincronizar libera los puntos de días anteriores
+  // Los puntos se quedan en el móvil (para ver en el mapa los recorridos de días anteriores) hasta que la memoria del
+  // navegador se acerca a su límite: entonces se borran los más antiguos que ya están en el fichero central (limpiarMovil).
+  let limpiando=false;
   const guardarPuntos=()=>{
-    try{localStorage.setItem(KEY_PTS,JSON.stringify(puntos.filter(p=>!p.ejemplo)))}
-    catch(e){if(typeof aviso==='function')aviso('Memoria del móvil llena','Sincroniza con el fichero central para liberar espacio',{err:true,ms:8000})}
+    const escribir=()=>localStorage.setItem(KEY_PTS,JSON.stringify(puntos.filter(p=>!p.ejemplo)));
+    try{escribir();if(!limpiando&&typeof limpiarMovil==='function')limpiarMovil()}
+    catch(e){
+      if(!limpiando&&typeof limpiarMovil==='function'&&limpiarMovil(true))return;
+      if(typeof aviso==='function')aviso('Memoria del móvil llena','Sincroniza con el fichero central para liberar espacio',{err:true,ms:8000});
+    }
   };
   if(MOSTRAR_EJEMPLOS){
     // Puntos de ejemplo cada 5 minutos de cada actividad de ejemplo, hasta la siguiente del mismo día (o hasta ahora):
@@ -2002,8 +2008,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         guardarHecho();
       }
       const txt=total||p.adj.length?`${p.act.length} ${plural(p.act.length,'actividad','actividades')}, ${p.inc.length} ${plural(p.inc.length,'incidencia')}, ${p.pts.length} ${plural(p.pts.length,'punto')} GPS`+(p.adj.length?` y ${p.adj.length} ${plural(p.adj.length,'adjunto')}`:''):'No había nada nuevo';
-      const liberados=limpiarMovil();
-      aviso('Fichero central al día',txt+(liberados?` · ${liberados} ${plural(liberados,'punto antiguo borrado','puntos antiguos borrados')} del móvil`:''));
+      aviso('Fichero central al día',txt);
+      setTimeout(()=>limpiarMovil(),3600); // solo actúa si la memoria del navegador está cerca de su límite
       avisar('syncEstado',`Última sincronización: ${fechaCorta(new Date())} ${hhmm(new Date())}. ${txt}.`,'ok');
     }catch(e){
       aviso('No se pudo sincronizar',String(e.message||e).replace(/^Failed to fetch$/,'sin conexión con el servicio'),{err:true,ms:6000});
@@ -2011,17 +2017,30 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     }finally{sincronizando=false;$('btnSync').classList.remove('girando');actualizarPendientes()}
   }
   $('btnSync').addEventListener('click',sincronizar);
-  // Tras sincronizar: borra del móvil los puntos GPS de días anteriores que ya están en el fichero central.
+  // Memoria del navegador: unos 5 millones de caracteres por web. Al pasar del 70 % se borran del móvil los puntos GPS
+  // ya enviados al fichero central, por días y empezando por el más antiguo, hasta bajar al 50 %. Los de hoy nunca se borran.
   // Antes, cada actividad afectada guarda sus datos calculados (distancia, área, velocidad, duración) para seguir mostrándolos.
-  function limpiarMovil(){
-    const hoy=hoyKey(), quitar=new Set(puntos.filter(p=>!p.ejemplo&&sync.hecho.pts[p.id]&&diaDe(p)<hoy).map(p=>p.id));
-    if(!quitar.size)return 0;
-    const regs=new Set(puntos.filter(p=>quitar.has(p.id)).map(p=>p.registroId));
-    registros.forEach(r=>{if(regs.has(r.id)&&!r.fijo){const d=datosRecorrido(r);r.fijo={km:d.km,vel:d.vel,area:d.area,dur:d.dur,n:d.n}}});
-    puntos=puntos.filter(p=>!quitar.has(p.id));
-    quitar.forEach(id=>{delete sync.hecho.pts[id]});
-    guardarRegistros();guardarPuntos();store.set(KEY_SYNC,sync.hecho);pintarListado();
-    return quitar.size;
+  const MEMORIA_LIMITE=3500000, MEMORIA_OBJETIVO=2500000;
+  const usoMemoria=()=>{let n=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);n+=k.length+(localStorage.getItem(k)||'').length}}catch(e){}return n};
+  function limpiarMovil(forzar=false){
+    if(!forzar&&usoMemoria()<MEMORIA_LIMITE)return 0;
+    const hoy=hoyKey(), dias=[...new Set(puntos.filter(p=>!p.ejemplo&&sync.hecho.pts[p.id]&&diaDe(p)<hoy).map(diaDe))].sort();
+    let total=0;
+    limpiando=true;
+    try{
+      for(const dia of dias){
+        const quitar=new Set(puntos.filter(p=>!p.ejemplo&&sync.hecho.pts[p.id]&&diaDe(p)===dia).map(p=>p.id));
+        const regs=new Set(puntos.filter(p=>quitar.has(p.id)).map(p=>p.registroId));
+        registros.forEach(r=>{if(regs.has(r.id)&&!r.fijo){const d=datosRecorrido(r);r.fijo={km:d.km,vel:d.vel,area:d.area,dur:d.dur,n:d.n}}});
+        puntos=puntos.filter(p=>!quitar.has(p.id));
+        quitar.forEach(id=>{delete sync.hecho.pts[id]});
+        total+=quitar.size;
+        guardarRegistros();try{localStorage.setItem(KEY_PTS,JSON.stringify(puntos.filter(p=>!p.ejemplo)))}catch(e){}store.set(KEY_SYNC,sync.hecho);
+        if(usoMemoria()<MEMORIA_OBJETIVO)break;
+      }
+    }finally{limpiando=false}
+    if(total){pintarListado();aviso('Memoria del móvil liberada',`${total} ${plural(total,'punto GPS antiguo borrado','puntos GPS antiguos borrados')}; siguen en el fichero central`)}
+    return total;
   }
   // La clave se ve con asteriscos y no se puede copiar, cortar, pegar ni arrastrar (se escribe a mano o llega con el enlace de configuración)
   ['copy','cut','paste','drop','dragstart','contextmenu'].forEach(ev=>$('syncClave').addEventListener(ev,e=>e.preventDefault()));
