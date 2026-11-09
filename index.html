@@ -712,7 +712,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   let cfg={nombre:store.get(KEY_NOM,'')||'Angel',tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
   // Fichero central: dirección del servicio, clave y lo ya enviado (para no reenviar ni duplicar)
   const KEY_SYNC_URL='gea_sync_url', KEY_SYNC_CLAVE='gea_sync_clave', KEY_SYNC='gea_sync';
-  const sync={url:store.get(KEY_SYNC_URL,''),clave:store.get(KEY_SYNC_CLAVE,''),hecho:Object.assign({act:{},inc:{},pts:{},adj:{}},store.get(KEY_SYNC,{}))};
+  // Servicio de la Hoja «GEA - Registro central» (sin la clave no admite datos)
+  const SYNC_URL_SERIE='https://script.google.com/macros/s/AKfycbxQAaU7u7FpRTmCC81dQ8Un6UoWvh1o9x_qtkixPX6o35IMhniYSnMiPZEbFGGMccbOPw/exec';
+  const sync={url:store.get(KEY_SYNC_URL,'')||SYNC_URL_SERIE,clave:store.get(KEY_SYNC_CLAVE,''),hecho:Object.assign({act:{},inc:{},pts:{},adj:{}},store.get(KEY_SYNC,{}))};
   // Enlace de configuración: …/?servicio=URL&clave=CLAVE rellena los dos campos y se quita de la dirección
   (()=>{try{const q=new URLSearchParams(location.search);if(q.get('servicio')){sync.url=q.get('servicio');store.set(KEY_SYNC_URL,sync.url)}
     if(q.get('clave')){sync.clave=q.get('clave');store.set(KEY_SYNC_CLAVE,sync.clave)}
