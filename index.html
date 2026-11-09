@@ -31,22 +31,26 @@ img{max-width:100%}
 html,body{margin:0;background:var(--bg);color:var(--fg)}
 body{font:16px/1.45 var(--display);padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px);padding-inline:16px}
 main{max-width:480px;margin:0 auto;padding-block:16px 40px;display:flex;flex-direction:column;gap:20px}
-header{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.titulo{min-width:0}
+/* Empleado de este móvil, a modo de recordatorio bajo el nombre de la web; se cambia en Configuración */
+.empleado{margin:2px 0 0;font-size:.95rem;font-weight:600;color:var(--olive);overflow-wrap:anywhere}
+.cabder{display:flex;align-items:center;gap:8px;flex:none}
+/* Configuración: botón de engranaje en la cabecera en lugar de una pestaña */
+.engranaje{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;padding:0;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px}
+.engranaje svg{width:22px;height:22px}
+.engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
 h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
 .clock{font-family:var(--mono);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
-.tabs button{flex:1 1 auto;min-width:0;padding:10px 5px;font-size:.86rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
+.tabs button{flex:1;padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
 .tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
 .panel{display:flex;flex-direction:column;gap:20px}
 .lbl{display:block;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 input[type=text],input[type=tel],input[type=email]{width:100%;font:500 1.1rem var(--display);padding:14px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
 select{width:100%;font:500 .95rem var(--display);padding:15px 4px 15px 8px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
 .fila2{display:flex;gap:8px}
-.campo-nombre{flex:1.15 1 0;min-width:0}
 .campo-act{flex:1 1 0;min-width:0}
-/* Empleado fijo (viene de Configuración): sin borde de edición y con fondo apagado */
-input[readonly]{background:var(--bg);border-style:dashed;color:var(--muted);cursor:default}
-input[readonly]:focus{border-color:var(--line)}
 input:focus,select:focus{outline:none;border-color:var(--olive)}
 select:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
 .act{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--olive-soft);color:var(--olive);font-family:var(--display);font-size:.72rem;font-weight:700;letter-spacing:.03em;vertical-align:1px}
@@ -194,32 +198,31 @@ textarea:focus{outline:none;border-color:var(--olive)}
   --wa:#2a9d5c; --mail:#3f74ad;
   color-scheme:dark}
 @media (max-width:360px){.send{grid-template-columns:1fr}}
-/* Cuatro pestañas en móviles estrechos: letra algo menor para que «Configuración» quepa entera */
-@media (max-width:430px){.tabs{gap:2px;padding:3px}.tabs button{font-size:.78rem;padding:10px 3px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <main>
   <header>
-    <h1>Registro de Jornada</h1>
-    <span class="clock" id="clock">--:--:--</span>
+    <div class="titulo">
+      <h1>Registro de Jornada</h1>
+      <p class="empleado" id="empleadoSub"></p>
+    </div>
+    <div class="cabder">
+      <span class="clock" id="clock">--:--:--</span>
+      <button type="button" class="engranaje" id="tabCfg" aria-pressed="false" aria-label="Configuración" title="Configuración"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    </div>
   </header>
 
   <nav class="tabs" role="tablist">
-    <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Registro</button>
+    <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Actividad</button>
     <button type="button" role="tab" id="tabList" aria-selected="false" aria-controls="panelList">Listado Registros</button>
     <button type="button" role="tab" id="tabInc" aria-selected="false" aria-controls="panelInc">Incidencias</button>
-    <button type="button" role="tab" id="tabCfg" aria-selected="false" aria-controls="panelCfg">Configuración</button>
   </nav>
 
   <!-- PESTAÑA PRINCIPAL -->
   <div class="panel" id="panelReg" role="tabpanel">
     <div class="fila2">
-      <div class="campo-nombre">
-        <label class="lbl" for="empleadoActual">Empleado</label>
-        <input id="empleadoActual" type="text" readonly tabindex="-1" title="Se cambia en Configuración">
-      </div>
       <div class="campo-act">
         <label class="lbl" for="actividad">Actividad</label>
         <select id="actividad">
@@ -338,10 +341,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
     <section>
       <h2>Nueva incidencia</h2>
       <div class="fila2">
-        <div class="campo-nombre">
-          <label class="lbl" for="incEmpleado">Empleado</label>
-          <input id="incEmpleado" type="text" readonly tabindex="-1" title="Se cambia en Configuración">
-        </div>
         <div class="campo-act">
           <label class="lbl" for="incTipo">Tipo</label>
           <select id="incTipo">
@@ -632,8 +631,13 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   /* ---------- Pestañas ---------- */
   const PESTANAS={reg:['tabReg','panelReg'],list:['tabList','panelList'],inc:['tabInc','panelInc'],cfg:['tabCfg','panelCfg']};
+  // pestanaAntes: la última pestaña que no era Configuración, para volver a ella al pulsar otra vez el engranaje
+  let pestana='reg', pestanaAntes='reg';
   function abrir(tab){
-    Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute('aria-selected',k===tab);$(p).hidden=k!==tab});
+    if(pestana!=='cfg')pestanaAntes=pestana;
+    pestana=tab;
+    // Configuración es el engranaje de la cabecera (aria-pressed); el resto son pestañas (aria-selected)
+    Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute(k==='cfg'?'aria-pressed':'aria-selected',k===tab);$(p).hidden=k!==tab});
     if(tab==='cfg'){$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
@@ -642,7 +646,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(tab==='inc')pintarIncidencias();
     window.scrollTo(0,0);
   }
-  Object.entries(PESTANAS).forEach(([k,[t]])=>$(t).addEventListener('click',()=>abrir(k)));
+  Object.entries(PESTANAS).forEach(([k,[t]])=>$(t).addEventListener('click',()=>abrir(k==='cfg'&&pestana==='cfg'?pestanaAntes:k)));
 
   /* ---------- Configuración ---------- */
   function telefonoLimpio(v){
@@ -672,8 +676,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
     document.querySelectorAll('.destMail').forEach(e=>e.textContent=cfg.mail||'Sin email · configurar');
   }
 
-  // En la pestaña Registro solo se muestra quién registra; se cambia en Configuración
-  function pintarEmpleado(){$('empleadoActual').value=cfg.nombre;$('incEmpleado').value=cfg.nombre}
+  // El empleado de este móvil se muestra como subtítulo de la cabecera; se cambia en Configuración
+  function pintarEmpleado(){$('empleadoSub').textContent=cfg.nombre}
 
   /* ---------- Textos ---------- */
   $('actividad').addEventListener('change',e=>store.set(KEY_ACT,e.target.value));
