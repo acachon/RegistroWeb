@@ -42,8 +42,8 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:12p
 .engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
 h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
 .clock{font-family:var(--mono);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
-.tabs button{flex:1;padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.tabs button{padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
 .tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
 .panel{display:flex;flex-direction:column;gap:20px}
 .lbl{display:block;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -216,8 +216,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   <nav class="tabs" role="tablist">
     <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Actividad</button>
-    <button type="button" role="tab" id="tabList" aria-selected="false" aria-controls="panelList">Listado Registros</button>
+    <button type="button" role="tab" id="tabList" aria-selected="false" aria-controls="panelList">Listado Actividades</button>
     <button type="button" role="tab" id="tabInc" aria-selected="false" aria-controls="panelInc">Incidencias</button>
+    <button type="button" role="tab" id="tabListInc" aria-selected="false" aria-controls="panelListInc">Listado Incidencias</button>
   </nav>
 
   <!-- PESTAÑA PRINCIPAL -->
@@ -282,7 +283,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
     <section id="secPrueba">
       <h2>Datos de prueba</h2>
-      <p class="hint">Borra todos los registros guardados y crea una jornada sin terminar del empleado configurado: Inicio Jornada y, 10, 15 y 20 minutos después, Poda, Riego y Otros, con sus puntos GPS cada 5 minutos, todo a menos de 100 m.</p>
+      <p class="hint">Borra todos los registros guardados y crea una jornada sin terminar del empleado configurado: Inicio Jornada y, 10, 15 y 20 minutos después, Poda, Riego y Otros, con sus puntos GPS cada 5 minutos, todo a menos de 100 m. Añade además 3 incidencias de prueba en la zona de la finca El Caimbo (sustituyen a las de pruebas anteriores).</p>
       <button class="btn sec" id="btnPrueba" type="button">Cargar datos de prueba</button>
     </section>
   </div>
@@ -375,6 +376,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
       <p class="status" id="statusInc" role="status" aria-live="polite"></p>
     </section>
 
+  </div>
+
+  <!-- PESTAÑA LISTADO INCIDENCIAS -->
+  <div class="panel" id="panelListInc" role="tabpanel" hidden>
     <section>
       <div class="sechead">
         <h2>Incidencias <span id="contadorInc">0</span></h2>
@@ -630,7 +635,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   let cfg={nombre:store.get(KEY_NOM,'')||'Angel',tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
 
   /* ---------- Pestañas ---------- */
-  const PESTANAS={reg:['tabReg','panelReg'],list:['tabList','panelList'],inc:['tabInc','panelInc'],cfg:['tabCfg','panelCfg']};
+  const PESTANAS={reg:['tabReg','panelReg'],list:['tabList','panelList'],inc:['tabInc','panelInc'],listInc:['tabListInc','panelListInc'],cfg:['tabCfg','panelCfg']};
   // pestanaAntes: la última pestaña que no era Configuración, para volver a ella al pulsar otra vez el engranaje
   let pestana='reg', pestanaAntes='reg';
   function abrir(tab){
@@ -643,7 +648,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
     if(tab==='reg')pintarMapaHoy();
     if(tab==='list'&&vistaMapa)pintarListado();
-    if(tab==='inc')pintarIncidencias();
+    if(tab==='listInc')pintarIncidencias();
     window.scrollTo(0,0);
   }
   Object.entries(PESTANAS).forEach(([k,[t]])=>$(t).addEventListener('click',()=>abrir(k==='cfg'&&pestana==='cfg'?pestanaAntes:k)));
@@ -1357,10 +1362,21 @@ textarea:focus{outline:none;border-color:var(--olive)}
     });
     guardarPuntos();
     // El Listado queda filtrado en el día de hoy, donde solo están los registros de prueba recién cargados
+    // Incidencias de prueba en la zona de El Caimbo, de hoy, tras el inicio de la jornada de prueba
+    incidencias=incidencias.filter(x=>!x.prueba);
+    [['Árbol caído','Olivo caído por el viento junto al camino principal.',0.00045,-0.00050,25],
+     ['Avería de riego','Tubería de goteo rota en la línea 7, sale agua.',-0.00040,0.00060,15],
+     ['Herramienta rota','Se ha roto la tijera de poda, hay que sustituirla.',0.00010,0.00020,8]].forEach(([tipo,comentario,dLa,dLo,hace])=>{
+      const d=new Date(Date.now()-hace*60000);
+      incidencias.push({id:nuevoId(),nombre:cfg.nombre,tipo,comentario,fechaHora:fechaHora(d),iso:d.toISOString(),
+        lat:FINCA.lat+dLa,lon:FINCA.lon+dLo,precision:5+Math.round(Math.random()*7),adjuntos:[],prueba:true});
+    });
+    incidencias.sort((a,b)=>new Date(a.iso)-new Date(b.iso));
+    guardarIncidencias();pintarIncidencias();
     guardarRegistros();filtroDia=hoyK;marcarDia(hoyK);
     const hoyD=new Date();mesVista=new Date(hoyD.getFullYear(),hoyD.getMonth(),1);
     pintarTodo();actualizarSeguimiento();
-    status(`Cargados ${nuevos.length} registros de prueba de ${cfg.nombre} (jornada sin terminar).`,'ok');
+    status(`Cargados ${nuevos.length} registros y 3 incidencias de prueba de ${cfg.nombre} (jornada sin terminar).`,'ok');
   });
 
   /* ---------- Envíos ---------- */
@@ -1680,7 +1696,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     }
     capaI.clearLayers();
     const lista=incSeleccionadas(), conPos=lista.filter(x=>x.lat!=null), sin=lista.length-conPos.length;
-    nota.textContent=!lista.length?'No hay incidencias marcadas. Márcalas en Listado para verlas en el mapa.'
+    nota.textContent=!lista.length?'No hay incidencias marcadas. Márcalas en el listado para verlas en el mapa.'
       :sin?`${sin} incidencia${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
     conPos.forEach((x,i)=>{
       L.circle([x.lat,x.lon],{radius:x.precision||0,color:'#b07d00',weight:1,fillOpacity:.08}).addTo(capaI);
