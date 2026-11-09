@@ -986,15 +986,14 @@ textarea:focus{outline:none;border-color:var(--olive)}
   function crearMapa(idMapa,idNota,fondoInicial,conUbicacion=false){
     const claveFondo=`${KEY_CAPA}_${idMapa}`;
     let mapa=null, capaMapa=null, capaYo=null, capaLin=null, capaPol=null, ctlVista=null;
-    let modoVista='ambos'; // qué se dibuja de cada actividad: 'trayectoria', 'area' o 'ambos'
+    const ver={recorrido:true,area:true}; // qué se dibuja de cada actividad (cada botón del control lo muestra u oculta)
     const marcadores=new Map(); // id de registro → marcador, para abrir su globo
 
-    // Muestra u oculta las líneas (trayectoria) y los polígonos (área) según el control del mapa
+    // Muestra u oculta el recorrido (líneas y puntos GPS) y el área (polígonos) según el control del mapa
     function aplicarModo(){
-      const lin=modoVista!=='area', pol=modoVista!=='trayectoria';
-      if(lin)capaLin.addTo(mapa);else mapa.removeLayer(capaLin);
-      if(pol)capaPol.addTo(mapa);else mapa.removeLayer(capaPol);
-      ctlVista.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===modoVista));
+      if(ver.recorrido)capaLin.addTo(mapa);else mapa.removeLayer(capaLin);
+      if(ver.area)capaPol.addTo(mapa);else mapa.removeLayer(capaPol);
+      ctlVista.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',ver[b.dataset.m]));
     }
     // Envolvente convexa de unos puntos [lat,lon] (algoritmo de la cadena monótona): el polígono más sencillo que los contiene
     function envolvente(pts){
@@ -1053,12 +1052,12 @@ textarea:focus{outline:none;border-color:var(--olive)}
       capaLin=L.layerGroup().addTo(mapa);
       capaMapa=L.layerGroup().addTo(mapa);
       capaYo=L.layerGroup().addTo(mapa);
-      // Control para elegir qué se ve de cada actividad: Trayectoria / Área / Ambos
+      // Control para mostrar u ocultar el recorrido y el área de cada actividad
       const Vista=L.Control.extend({options:{position:'bottomleft'},onAdd(){
         const caja=L.DomUtil.create('div','vistamapa');ctlVista=caja;
-        [['trayectoria','Trayectoria'],['area','Área'],['ambos','Ambos']].forEach(([m,t])=>{
+        [['recorrido','Recorrido'],['area','Área']].forEach(([m,t])=>{
           const bt=L.DomUtil.create('button','',caja);bt.type='button';bt.dataset.m=m;bt.textContent=t;
-          L.DomEvent.on(bt,'click',e=>{L.DomEvent.stop(e);modoVista=m;aplicarModo()});
+          L.DomEvent.on(bt,'click',e=>{L.DomEvent.stop(e);ver[m]=!ver[m];aplicarModo()});
         });
         L.DomEvent.disableClickPropagation(caja);
         return caja;
@@ -1081,6 +1080,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     }
     capaMapa.clearLayers();capaLin.clearLayers();capaPol.clearLayers();marcadores.clear();
     ctlVista.style.display=conLinea?'':'none';
+    if(!conLinea){ver.recorrido=ver.area=true;aplicarModo()} // sin control a la vista, todo visible
     const idsLista=new Set(lista.map(r=>r.id)), pts=puntos.filter(p=>idsLista.has(p.registroId)&&conPosicion(p));
     if(pts.length)nota.textContent=[nota.textContent,`${pts.length} punto${pts.length===1?'':'s'} GPS cada 5 min (círculos pequeños).`].filter(Boolean).join(' ');
     const encuadre=[...conPos.map(r=>[r.lat,r.lon]),...pts.map(p=>[p.lat,p.lon])];
@@ -1098,7 +1098,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     pts.forEach(p=>{
       const d=new Date(p.iso);
       L.circleMarker([p.lat,p.lon],{radius:5,color:'#fff',weight:1.5,fillColor:iconoDe(p).color,fillOpacity:.9})
-        .bindTooltip(`${p.actividad} · ${pad(d.getHours())}:${pad(d.getMinutes())} · ±${Math.round(p.precision)} m`).addTo(capaMapa);
+        .bindTooltip(`${p.actividad} · ${pad(d.getHours())}:${pad(d.getMinutes())} · ±${Math.round(p.precision)} m`).addTo(capaLin); // los puntos forman parte del recorrido
     });
     conPos.forEach((r,i)=>{
       L.circle([r.lat,r.lon],{radius:r.precision||0,color:'#3f5a2a',weight:1,fillOpacity:.08}).addTo(capaMapa);
