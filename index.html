@@ -735,7 +735,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   const KEY_SYNC_URL='gea_sync_url', KEY_SYNC_CLAVE='gea_sync_clave', KEY_SYNC='gea_sync';
   // Servicio de la Hoja «GEA - Registro central» (sin la clave no admite datos)
   const SYNC_URL_SERIE='https://script.google.com/macros/s/AKfycbxQAaU7u7FpRTmCC81dQ8Un6UoWvh1o9x_qtkixPX6o35IMhniYSnMiPZEbFGGMccbOPw/exec';
-  const sync={url:store.get(KEY_SYNC_URL,'')||SYNC_URL_SERIE,clave:store.get(KEY_SYNC_CLAVE,''),hecho:Object.assign({act:{},inc:{},pts:{},adj:{}},store.get(KEY_SYNC,{}))};
+  // Clave de serie: vacía en la web pública (llega con el enlace de configuración); la App la lleva incluida
+  const SYNC_CLAVE_SERIE='';
+  const sync={url:store.get(KEY_SYNC_URL,'')||SYNC_URL_SERIE,clave:store.get(KEY_SYNC_CLAVE,'')||SYNC_CLAVE_SERIE,hecho:Object.assign({act:{},inc:{},pts:{},adj:{}},store.get(KEY_SYNC,{}))};
   // Enlace de configuración: …/?servicio=URL&clave=CLAVE rellena los dos campos y se quita de la dirección
   (()=>{try{const q=new URLSearchParams(location.search);if(q.get('servicio')){sync.url=q.get('servicio');store.set(KEY_SYNC_URL,sync.url)}
     if(q.get('clave')){sync.clave=q.get('clave');store.set(KEY_SYNC_CLAVE,sync.clave)}
@@ -1795,7 +1797,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     let stream;
     try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}
     catch(e){
-      statusInc(e.name==='NotAllowedError'?'Permite el micrófono para grabar audio (icono a la izquierda de la dirección, o Ajustes → Apps → Registro Jornada → Permisos).':'No se puede usar el micrófono. Se abre la grabadora del móvil.','err');
+      statusInc(e.name==='NotAllowedError'?'Permite el micrófono para grabar audio (icono a la izquierda de la dirección, o Ajustes → Apps → GEA - Registro → Permisos).':'No se puede usar el micrófono. Se abre la grabadora del móvil.','err');
       if(e.name!=='NotAllowedError')$('fileAudio').click();
       return;
     }
