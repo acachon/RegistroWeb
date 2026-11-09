@@ -114,6 +114,7 @@ label.item{cursor:pointer}
 .pausa{flex:none;margin-left:auto}
 .pausabtn{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px;padding:6px 8px;background:transparent;border:2px solid var(--olive);color:var(--olive);border-radius:10px;font:700 .72rem var(--display)}
 .pausabtn svg{width:24px;height:24px}
+.pausacuenta{font:600 .72rem var(--mono);font-variant-numeric:tabular-nums;letter-spacing:.02em}
 .pausabtn[aria-pressed=true]{background:var(--olive);color:var(--olive-ink)}
 .pausaopc{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:.85rem;color:var(--muted)}
 .item .itemfila{display:flex;gap:12px;align-items:flex-start;width:100%}
@@ -852,7 +853,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
   setInterval(()=>{
     const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     if(diaKey(d)!==diaPintado){diaPintado=diaKey(d);pintarTodo()}else actualizarVivo();
-    if(pausa&&Date.now()>=pausa.hasta){actualizarSeguimiento();pintarListado()} // terminó el tiempo de pausa
+    if(pausa&&Date.now()>=pausa.hasta){actualizarSeguimiento();pintarListado()} // terminó el tiempo de pausa: se reanuda sola, como con «reanudar»
+    else if(pausa)document.querySelectorAll('.pausacuenta').forEach(e=>{e.textContent=cuentaPausa()});
   },1000);
 
   function avisar(id,msg,cls){const s=$(id);s.textContent=msg;s.className='status '+(cls||'')}
@@ -1283,7 +1285,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
           bt.innerHTML=(pausada
             ?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>'
             :'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></svg>')
-            +`<span>${pausada?'reanudar':'pausar'}</span>`;
+            +`<span>${pausada?'reanudar':'pausar'}</span>`+(pausada?`<small class="pausacuenta">${cuentaPausa()}</small>`:'');
           bt.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(pausada)reanudar();else{menuPausa=!menuPausa;pintarListado()}});
           ctl.appendChild(bt);fila.appendChild(ctl);
         }
@@ -1565,6 +1567,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
   }
   // Pausa de la toma de coordenadas de la actividad en curso: dura lo elegido y termina sola, o antes con «reanudar».
   // Al registrar otra actividad (o Fin Jornada) la pausa deja de valer.
+  // Cuenta atrás (mm:ss) hasta que la pausa termine y se reanude sola la toma de coordenadas
+  const cuentaPausa=()=>{const seg=Math.max(0,Math.ceil((pausa.hasta-Date.now())/1000));return `${pad(Math.floor(seg/60))}:${pad(seg%60)}`};
   const enPausa=()=>{const r=actividadEnCurso();return !!(r&&pausa&&pausa.regId===r.id&&Date.now()<pausa.hasta)};
   function pausar(min){
     const r=actividadEnCurso();if(!r)return;
