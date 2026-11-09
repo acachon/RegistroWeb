@@ -126,7 +126,10 @@ label.item{cursor:pointer}
 .barra .btn svg{width:16px;height:16px}
 .confirmbox.share{border-color:var(--olive)}
 .confirmbox .btn{flex:1 1 auto;padding:10px 12px}
-.confirmbox .btn.wa{background:var(--wa);color:#fff} .confirmbox .btn.mail{background:var(--mail);color:#fff}
+.confirmbox .chk{flex:1 1 100%;display:flex;align-items:center;gap:10px;font-weight:700;font-size:1rem;cursor:pointer}
+.confirmbox .chk input{width:22px;height:22px;margin:0;accent-color:var(--olive)}
+.confirmbox .chk small{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.78rem;overflow-wrap:anywhere}
+.izq{display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
 .confirmbox span{flex:1 1 100%}
 /* Calendario: los días con registros llevan fondo y punto; el día filtrado va en oliva */
 .calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -301,9 +304,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
         </div>
         <div class="confirmbox share" id="shareBoxH" hidden>
           <span id="shareTxtH"></span>
-          <button class="btn wa" id="btnShWaH" type="button">WhatsApp</button>
-          <button class="btn mail" id="btnShMailH" type="button">Email</button>
-          <button class="btn" id="btnShAmbosH" type="button">Ambos</button>
+          <label class="chk"><input type="checkbox" id="shWaH" checked>WhatsApp <small class="destTel">Sin teléfono</small></label>
+          <label class="chk"><input type="checkbox" id="shMailH" checked>Email <small class="destMail">Sin email</small></label>
+          <button class="btn" id="btnShOkH" type="button">Confirmar</button>
           <button class="btn sec" id="btnShNoH" type="button">Cancelar</button>
         </div>
         <div class="vista" role="group" aria-label="Modo de vista">
@@ -347,9 +350,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
         </div>
         <div class="confirmbox share" id="shareBox" hidden>
           <span id="shareTxt"></span>
-          <button class="btn wa" id="btnShWa" type="button">WhatsApp</button>
-          <button class="btn mail" id="btnShMail" type="button">Email</button>
-          <button class="btn" id="btnShAmbos" type="button">Ambos</button>
+          <label class="chk"><input type="checkbox" id="shWa" checked>WhatsApp <small class="destTel">Sin teléfono</small></label>
+          <label class="chk"><input type="checkbox" id="shMail" checked>Email <small class="destMail">Sin email</small></label>
+          <button class="btn" id="btnShOk" type="button">Confirmar</button>
           <button class="btn sec" id="btnShNo" type="button">Cancelar</button>
         </div>
         <div class="vista" role="group" aria-label="Modo de vista">
@@ -1053,13 +1056,18 @@ textarea:focus{outline:none;border-color:var(--olive)}
     function pintar(){
       const lista=visibles(), ol=E('lista');ol.textContent='';
       const hoyK=diaKey(new Date());
+      // Número de orden de cada registro marcado: el mismo que lleva su marcador en el mapa
+      const num=new Map();
+      lista.filter(r=>seleccion.has(r.id)&&r.lat!=null).forEach((r,i)=>num.set(r.id,i+1));
       lista.slice().reverse().forEach(r=>{
         const li=document.createElement('li');
         const lab=document.createElement('label');lab.className='item hoyitem';
         const cb=document.createElement('input');
         cb.type='checkbox';cb.checked=seleccion.has(r.id);
         cb.addEventListener('change',()=>{cb.checked?seleccion.add(r.id):seleccion.delete(r.id);pintarListado()});
-        lab.appendChild(cb);lab.appendChild(contenidoRegistro(r));
+        const izq=document.createElement('div');izq.className='izq';izq.appendChild(cb);
+        if(num.has(r.id)){const pin=crearPin(iconoDe(r),String(num.get(r.id)));pin.title=`Nº ${num.get(r.id)} en el mapa`;izq.appendChild(pin)}
+        lab.appendChild(izq);lab.appendChild(contenidoRegistro(r));
         // El «siguiente» para la duración es el próximo registro del mismo día
         const sigG=registros[registros.indexOf(r)+1], dia=diaDe(r);
         const info=durRegistro(r,sigG&&diaDe(sigG)===dia?sigG:null,dia===hoyK);
@@ -1106,17 +1114,18 @@ textarea:focus{outline:none;border-color:var(--olive)}
       const n=seleccionados().length;
       E('confirmBox').hidden=true;
       E('shareTxt').textContent=`¿Cómo quieres compartir ${n===1?'la actividad marcada':`las ${n} actividades marcadas`}?`;
+      E('shWa').checked=E('shMail').checked=true;E('btnShOk').disabled=false;
       E('shareBox').hidden=false;
     });
+    const hayCanal=()=>{E('btnShOk').disabled=!(E('shWa').checked||E('shMail').checked)};
+    E('shWa').addEventListener('change',hayCanal);E('shMail').addEventListener('change',hayCanal);
     const compartir=(wa,mail)=>{
       const lista=seleccionados();if(!lista.length){E('shareBox').hidden=true;return}
       E('shareBox').hidden=true;
       if(wa)enviarWhatsapp(lista);
       if(mail)enviarEmail(lista);
     };
-    E('btnShWa').addEventListener('click',()=>compartir(true,false));
-    E('btnShMail').addEventListener('click',()=>compartir(false,true));
-    E('btnShAmbos').addEventListener('click',()=>compartir(true,true));
+    E('btnShOk').addEventListener('click',()=>compartir(E('shWa').checked,E('shMail').checked));
     E('btnShNo').addEventListener('click',()=>{E('shareBox').hidden=true});
     E('btnBorrar').addEventListener('click',()=>{
       if(!hayMarcados())return;
