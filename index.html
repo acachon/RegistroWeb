@@ -145,6 +145,10 @@ label.item{cursor:pointer}
 .barra .btn{flex:none;padding:6px 8px;font-size:.85rem;border-radius:8px}
 .barra .btn.ico{gap:5px}
 .barra [id^=btnCompartir]{margin-left:auto}
+.barra .btn[id^=btnCompartir]{min-height:52px;padding:10px 16px;background:var(--olive);color:var(--olive-ink);border:0;font-size:1.05rem;font-weight:800;letter-spacing:.06em;border-radius:10px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.barra .btn[id^=btnCompartir]:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.barra .btn[id^=btnCompartir][disabled]{background:#b9b3a8;color:#f1eee8;box-shadow:none;cursor:not-allowed}
+.barra .btn[id^=btnCompartir] svg{width:20px;height:20px}
 .barra .mini{padding:6px 8px}
 .barra .btn svg{width:16px;height:16px}
 .confirmbox.share{border-color:var(--olive)}
@@ -338,7 +342,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
         </div>
       <div class="sub">
         <div class="sechead">
-          <h3 id="tituloDia">Actividades de hoy</h3>
+          <h3 id="tituloDia">Hoy</h3>
           <div class="calbtns"><button type="button" class="mini" id="btnHoy" hidden>Volver a hoy</button>
           <button type="button" class="mini calbtn" id="btnCal" aria-expanded="false" aria-controls="calBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendario</button></div>
         </div>
@@ -351,7 +355,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
           <div class="cal" id="cal"></div>
         </div>
         <div class="barra">
-          <button type="button" id="btnTodosH" class="mini">Seleccionar todas</button>
+          <button type="button" id="btnTodosH" class="mini">Selecciona Todo</button>
           <button class="btn danger ico" id="btnBorrarH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
           <button class="btn sec ico" id="btnCompartirH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
         </div>
@@ -430,7 +434,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
         </div>
       <div class="sub">
         <div class="sechead">
-          <h3 id="tituloDiaInc">Incidencias de hoy</h3>
+          <h3 id="tituloDiaInc">Hoy</h3>
           <div class="calbtns"><button type="button" class="mini" id="btnHoyInc" hidden>Volver a hoy</button>
           <button type="button" class="mini calbtn" id="btnCalInc" aria-expanded="false" aria-controls="calBoxInc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendario</button></div>
         </div>
@@ -443,7 +447,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
           <div class="cal" id="calInc"></div>
         </div>
         <div class="barra">
-          <button type="button" id="btnTodosInc" class="mini">Seleccionar todas</button>
+          <button type="button" id="btnTodosInc" class="mini">Selecciona Todo</button>
           <button class="btn danger ico" id="btnBorrarInc" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
           <button class="btn sec ico" id="btnCompartirInc" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
         </div>
@@ -1329,11 +1333,11 @@ textarea:focus{outline:none;border-color:var(--olive)}
       // Título: por defecto «hoy»; con otros días elegidos se indica cuáles y aparece «Volver a hoy» junto a «Calendario»
       const ds=[...diasEf()].sort();
       $('btnHoy').hidden=!diasSel.size;
-      if(!diasSel.size)$('tituloDia').textContent='Actividades de hoy';
+      if(!diasSel.size)$('tituloDia').textContent='Hoy';
       else if(ds.length===1){const [y,m,d]=ds[0].split('-').map(Number);$('tituloDia').textContent=`Actividades del ${fechaCorta(new Date(y,m-1,d))}`}
       else $('tituloDia').textContent=`Actividades de ${ds.length} días`;
       const n=seleccionados().length, total=lista.length;
-      E('btnTodos').textContent=(n===total&&total>0)?'Quitar todas':'Seleccionar todas';
+      E('btnTodos').textContent=(n===total&&total>0)?'Quitar Todo':'Selecciona Todo';
       ['btnCompartir','btnBorrar'].forEach(id=>E(id).disabled=n===0);
       ['btnCompartir','btnBorrar'].forEach(id=>E(id).hidden=enMapa);
       ol.querySelectorAll('label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
@@ -1988,7 +1992,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     // Título y botones de día
     const ds=[...diasEfInc()].sort();
     $('btnHoyInc').hidden=!diasSelInc.size;
-    if(!diasSelInc.size)$('tituloDiaInc').textContent='Incidencias de hoy';
+    if(!diasSelInc.size)$('tituloDiaInc').textContent='Hoy';
     else if(ds.length===1){const [y,m,d]=ds[0].split('-').map(Number);$('tituloDiaInc').textContent=`Incidencias del ${fechaCorta(new Date(y,m-1,d))}`}
     else $('tituloDiaInc').textContent=`Incidencias de ${ds.length} días`;
     $('contadorInc').textContent=lista.length;
@@ -1996,7 +2000,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     $('vacioListaInc').textContent=diasSelInc.size?'No hay incidencias en los días elegidos.':'Hoy no hay incidencias.';
     ol.hidden=vistaMapaInc;$('mapaInc').hidden=$('leyendaInc').hidden=!vistaMapaInc;$('mapaNotaInc').hidden=!vistaMapaInc;
     const n=incSeleccionadas().length, total=lista.length;
-    $('btnTodosInc').textContent=(n===total&&total>0)?'Quitar todas':'Seleccionar todas';
+    $('btnTodosInc').textContent=(n===total&&total>0)?'Quitar Todo':'Selecciona Todo';
     ['btnCompartirInc','btnBorrarInc'].forEach(id=>$(id).disabled=n===0);
     ['btnCompartirInc','btnBorrarInc'].forEach(id=>$(id).hidden=vistaMapaInc);
     $('confirmBoxInc').hidden=true;$('shareBoxInc').hidden=true;
