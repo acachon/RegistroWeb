@@ -280,13 +280,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <div class="fila2 fila-guardar">
           <div class="campo-act">
             <label class="lbl" for="actividad">Tipo de actividad</label>
-            <select id="actividad">
-              <option>Inicio Jornada</option>
-              <option>Fin Jornada</option>
-              <option>Poda</option>
-              <option>Riego</option>
-              <option>Otros</option>
-            </select>
+            <select id="actividad"></select>
           </div>
           <button id="btnRegistro" type="button">REGISTRAR</button>
         </div>
@@ -470,16 +464,30 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="gestor@ejemplo.com">
         <p class="hint" id="mailHint">Puedes poner varios separados por coma.</p>
       </div>
-      <h2>Tipos de incidencia</h2>
-      <div class="field">
-        <span class="lbl">Opciones del desplegable «Tipo de incidencia»</span>
-        <ul class="tiposed" id="tiposLista"></ul>
-        <div class="tiposbtn">
-          <button type="button" class="mini" id="tipoNuevo">+ Añadir tipo</button>
-          <button type="button" class="mini" id="tiposDefecto">Restaurar los de serie</button>
+      <h2>Listas de opciones</h2>
+      <details class="desp" id="detTiposAct">
+        <summary>Tipos de actividad</summary>
+        <div class="cuerpo">
+          <p class="hint">«Inicio Jornada» y «Fin Jornada» son fijos (de ellos dependen el seguimiento GPS y el resumen del día). Aquí editas las demás actividades.</p>
+          <ul class="tiposed" id="tareasLista"></ul>
+          <div class="tiposbtn">
+            <button type="button" class="mini" id="tareaNueva">+ Añadir actividad</button>
+            <button type="button" class="mini" id="tareasDefecto">Restaurar las de serie</button>
+          </div>
+          <p class="hint">Los cambios se aplican al pulsar «Guardar configuración». Los registros ya hechos conservan su actividad.</p>
         </div>
-        <p class="hint">Los cambios se aplican al pulsar «Guardar configuración». Las incidencias ya registradas conservan su tipo.</p>
-      </div>
+      </details>
+      <details class="desp" id="detTiposInc">
+        <summary>Tipos de incidencia</summary>
+        <div class="cuerpo">
+          <ul class="tiposed" id="tiposLista"></ul>
+          <div class="tiposbtn">
+            <button type="button" class="mini" id="tipoNuevo">+ Añadir tipo</button>
+            <button type="button" class="mini" id="tiposDefecto">Restaurar los de serie</button>
+          </div>
+          <p class="hint">Los cambios se aplican al pulsar «Guardar configuración». Las incidencias ya registradas conservan su tipo.</p>
+        </div>
+      </details>
       <button class="btn" id="btnGuardarCfg" type="button">Guardar configuración</button>
       <p class="status" id="cfgStatus" role="status" aria-live="polite"></p>
     </section>
@@ -701,26 +709,41 @@ textarea:focus{outline:none;border-color:var(--olive)}
   }
   const emailsValidos=v=>v.split(',').map(x=>x.trim()).filter(Boolean).every(x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));
 
-  // Tipos de incidencia: lista editable desde Configuración (por defecto, los de siempre)
-  const KEY_TIPOS='gea_tipos_incidencia';
+  // Listas editables desde Configuración: actividades (además de Inicio y Fin Jornada) y tipos de incidencia
+  const KEY_TIPOS='gea_tipos_incidencia', KEY_TAREAS='gea_tipos_actividad';
   const TIPOS_SERIE=['Árbol caído','Herramienta rota','Avería de riego','Vallado o puerta','Animales','Otros'];
-  let tiposInc=(()=>{const t=store.get(KEY_TIPOS,null);return Array.isArray(t)&&t.length?t:TIPOS_SERIE.slice()})();
+  const TAREAS_SERIE=['Poda','Riego','Otros'];
+  const ACT_FIJAS=['Inicio Jornada','Fin Jornada'];
+  const leerLista=(k,serie)=>{const t=store.get(k,null);return Array.isArray(t)&&t.length?t:serie.slice()};
+  let tiposInc=leerLista(KEY_TIPOS,TIPOS_SERIE), tareasAct=leerLista(KEY_TAREAS,TAREAS_SERIE);
   function llenarTiposInc(){
     const sel=$('incTipo'), actual=sel.value;
     sel.textContent='';
     tiposInc.forEach(v=>{const o=document.createElement('option');o.textContent=v;sel.appendChild(o)});
     if(tiposInc.includes(actual))sel.value=actual;
   }
-  function filaTipo(valor){
-    const li=document.createElement('li');
-    const i=document.createElement('input');i.type='text';i.value=valor;i.maxLength=40;i.placeholder='Tipo de incidencia';i.setAttribute('aria-label','Tipo de incidencia');
-    const q=document.createElement('button');q.type='button';q.className='quitar';q.textContent='✕';q.setAttribute('aria-label','Quitar este tipo');
-    q.addEventListener('click',()=>li.remove());
-    li.appendChild(i);li.appendChild(q);$('tiposLista').appendChild(li);return i;
+  // Editor de una lista: filas con campo de texto y ✕, «Añadir» y «Restaurar». valores() devuelve la lista sin vacíos ni repetidos.
+  function editorLista(idUl,idNuevo,idSerie,serie,actual,reservados=[]){
+    const ul=$(idUl);
+    const fila=valor=>{
+      const li=document.createElement('li');
+      const i=document.createElement('input');i.type='text';i.value=valor;i.maxLength=40;i.placeholder='Nombre';i.setAttribute('aria-label','Nombre de la opción');
+      const q=document.createElement('button');q.type='button';q.className='quitar';q.textContent='✕';q.setAttribute('aria-label','Quitar esta opción');
+      q.addEventListener('click',()=>li.remove());
+      li.appendChild(i);li.appendChild(q);ul.appendChild(li);return i;
+    };
+    const pintar=lista=>{ul.textContent='';lista.forEach(fila)};
+    $(idNuevo).addEventListener('click',()=>fila('').focus());
+    $(idSerie).addEventListener('click',()=>pintar(serie));
+    const valores=()=>{
+      const vistos=new Set(reservados.map(v=>v.toLowerCase()));
+      return [...ul.querySelectorAll('input')].map(i=>i.value.trim()).filter(v=>v&&!vistos.has(v.toLowerCase())&&vistos.add(v.toLowerCase()));
+    };
+    return {pintar:()=>pintar(actual()),valores};
   }
-  function pintarEditorTipos(lista=tiposInc){$('tiposLista').textContent='';lista.forEach(filaTipo)}
-  $('tipoNuevo').addEventListener('click',()=>filaTipo('').focus());
-  $('tiposDefecto').addEventListener('click',()=>pintarEditorTipos(TIPOS_SERIE));
+  const edTipos=editorLista('tiposLista','tipoNuevo','tiposDefecto',TIPOS_SERIE,()=>tiposInc);
+  const edTareas=editorLista('tareasLista','tareaNueva','tareasDefecto',TAREAS_SERIE,()=>tareasAct,ACT_FIJAS);
+  const pintarEditorTipos=()=>{edTipos.pintar();edTareas.pintar()};
   llenarTiposInc();
 
   $('btnGuardarCfg').addEventListener('click',()=>{
@@ -728,11 +751,13 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const nomOk=!!nombre, telOk=!tel||telefonoLimpio(tel).length>=10, mailOk=!mail||emailsValidos(mail);
     $('nombre').classList.toggle('bad',!nomOk);$('telefono').classList.toggle('bad',!telOk);$('email').classList.toggle('bad',!mailOk);
     const s=$('cfgStatus');
-    // Tipos de incidencia: sin vacíos ni repetidos
-    const vistos=new Set(), tipos=[...$('tiposLista').querySelectorAll('input')].map(i=>i.value.trim()).filter(v=>v&&!vistos.has(v.toLowerCase())&&vistos.add(v.toLowerCase()));
+    // Listas de opciones: sin vacíos ni repetidos
+    const tipos=edTipos.valores(), tareas=edTareas.valores();
     if(nomOk&&telOk&&mailOk&&!tipos.length){s.className='status err';s.textContent='Debe haber al menos un tipo de incidencia.';return}
+    if(nomOk&&telOk&&mailOk&&!tareas.length){s.className='status err';s.textContent='Debe haber al menos una actividad además de Inicio y Fin Jornada.';return}
     if(!nomOk||!telOk||!mailOk){s.className='status err';s.textContent=!nomOk?'Escribe el nombre del empleado.':!telOk?'El teléfono no es válido.':'Revisa el email: debe tener la forma nombre@dominio.com.';return}
-    tiposInc=tipos;store.set(KEY_TIPOS,tipos);llenarTiposInc();pintarEditorTipos();
+    tiposInc=tipos;store.set(KEY_TIPOS,tipos);llenarTiposInc();
+    tareasAct=tareas;store.set(KEY_TAREAS,tareas);actualizarActividades();pintarEditorTipos();
     cfg={nombre,tel,mail};store.set(KEY_NOM,nombre);store.set(KEY_TEL,tel);store.set(KEY_MAIL,mail);
     // Los registros de ejemplo van siempre a nombre del empleado configurado
     registros.forEach(r=>{if(r.ejemplo)r.nombre=nombre});
@@ -755,12 +780,13 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   // El primer registro del día de cada empleado tiene que ser Inicio Jornada: hasta que lo haga,
   // el desplegable solo ofrece esa opción. Después se recupera la última actividad elegida.
-  const ACTIVIDADES=[...$('actividad').options].map(o=>o.value);
+  // Inicio y Fin Jornada son fijos; el resto de actividades se edita en Configuración (ACT_FIJAS, arriba)
+  const actividades=()=>[...ACT_FIJAS,...tareasAct];
   let actCargada=false;
   function actualizarActividades(){
     const sel=$('actividad'), nombre=cfg.nombre, hoyK=diaKey(new Date());
     const empezado=!!nombre&&registros.some(r=>!r.ejemplo&&r.nombre===nombre&&diaDe(r)===hoyK);
-    const opciones=empezado?ACTIVIDADES:[ACTIVIDADES[0]];
+    const ACTIVIDADES=actividades(), opciones=empezado?ACTIVIDADES:[ACTIVIDADES[0]];
     const actual=(actCargada&&sel.options.length>1)?sel.value:store.get(KEY_ACT,ACTIVIDADES[0]);
     actCargada=true;
     sel.textContent='';
