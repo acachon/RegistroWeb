@@ -141,14 +141,16 @@ label.item{cursor:pointer}
 .field{display:flex;flex-direction:column;gap:4px}
 .field .hint.err{color:var(--err)}
 .confirmbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;border:2px solid var(--err);border-radius:10px}
-.barra{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.barra{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.barraizq{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .barra .btn{flex:none;padding:6px 8px;font-size:.85rem;border-radius:8px}
 .barra .btn.ico{gap:5px}
 .barra [id^=btnCompartir]{margin-left:auto}
-.barra .btn[id^=btnCompartir]{min-height:52px;padding:10px 16px;background:var(--olive);color:var(--olive-ink);border:0;font-size:1.05rem;font-weight:800;letter-spacing:.06em;border-radius:10px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
+.barra .btn[id^=btnCompartir]{min-height:52px;padding:10px 12px;background:var(--olive);color:var(--olive-ink);border:0;font-size:1rem;font-weight:800;letter-spacing:.04em;border-radius:10px;box-shadow:0 4px 0 rgba(0,0,0,.25)}
 .barra .btn[id^=btnCompartir]:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
 .barra .btn[id^=btnCompartir][disabled]{background:#b9b3a8;color:#f1eee8;box-shadow:none;cursor:not-allowed}
 .barra .btn[id^=btnCompartir] svg{width:20px;height:20px}
+@media(max-width:340px){.barra .btn[id^=btnCompartir]{padding:10px 8px;font-size:.9rem;letter-spacing:0;gap:4px}.barra .btn[id^=btnCompartir] svg{width:16px;height:16px}}
 .barra .mini{padding:6px 8px}
 .barra .btn svg{width:16px;height:16px}
 .confirmbox.share{border-color:var(--olive)}
@@ -355,8 +357,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
           <div class="cal" id="cal"></div>
         </div>
         <div class="barra">
+          <div class="barraizq">
           <button type="button" id="btnTodosH" class="mini">Selecciona Todo</button>
           <button class="btn danger ico" id="btnBorrarH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
+          </div>
           <button class="btn sec ico" id="btnCompartirH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
         </div>
         <div class="confirmbox" id="confirmBoxH" hidden>
@@ -447,8 +451,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
           <div class="cal" id="calInc"></div>
         </div>
         <div class="barra">
+          <div class="barraizq">
           <button type="button" id="btnTodosInc" class="mini">Selecciona Todo</button>
           <button class="btn danger ico" id="btnBorrarInc" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
+          </div>
           <button class="btn sec ico" id="btnCompartirInc" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
         </div>
         <div class="confirmbox" id="confirmBoxInc" hidden>
