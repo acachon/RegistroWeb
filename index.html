@@ -492,7 +492,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='2026-11-09 23:55';
+  const VERSION='2026-11-10 00:15';
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
   window.addEventListener('error',e=>{try{aviso('Error en la App',String(e.message||e.error||'desconocido').slice(0,140),{err:true,ms:8000})}catch(x){}});
   window.addEventListener('unhandledrejection',e=>{try{aviso('Error en la App',String((e.reason&&e.reason.message)||e.reason||'desconocido').slice(0,140),{err:true,ms:8000})}catch(x){}});
@@ -582,6 +582,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // Datos de ejemplo para comprobar la web: se muestran junto a los reales pero nunca se guardan.
   // Poner MOSTRAR_EJEMPLOS=false cuando la web vaya a usarse de verdad.
   const MOSTRAR_EJEMPLOS=true;
+  let listo=false; // la página terminó de arrancar
   // Ubicación de referencia de los datos de prueba: la finca
   const FINCA={lat:37.852699,lon:-3.730443};
   const INICIO='Inicio Jornada', FIN='Fin Jornada';
@@ -731,7 +732,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     });
     incidencias.filter(x=>x.ejemplo).forEach(x=>x.adjuntos.forEach(a=>{
       if(a.tipo==='audio'){const b=wav(3,a.id.endsWith('_0')?520:440);mediaMem.set(a.id,b);a.size=b.size}
-      else foto(`Foto de ejemplo · ${x.tipo}`).then(b=>{if(b){mediaMem.set(a.id,b);a.size=b.size;pintarIncidencias()}});
+      else foto(`Foto de ejemplo · ${x.tipo}`).then(b=>{if(b){mediaMem.set(a.id,b);a.size=b.size;if(listo)pintarIncidencias()}});
     }));
   }
 
@@ -1450,8 +1451,25 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // notificación fija de ubicación; en un navegador solo con la página abierta y visible (se intenta mantener la pantalla encendida).
   const PASO_PRUEBA=5*60000; // puntos de los datos de prueba
   const nativo=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
-  const plugin=n=>nativo?Capacitor.registerPlugin(n):null;
-  const BG=plugin('BackgroundGeolocation'), NOTIF=plugin('LocalNotifications'), FS=plugin('Filesystem'), SHARE=plugin('Share');
+  // Plugins nativos de la App. Sin @capacitor/core empaquetado, Capacitor.registerPlugin no existe: los métodos se crean
+  // a partir de la lista de plugins que inyecta Android (PluginHeaders), como hace el propio Capacitor.
+  function plugin(nombre){
+    if(!nativo)return null;
+    const cap=window.Capacitor;
+    try{if(typeof cap.registerPlugin==='function')return cap.registerPlugin(nombre)}catch(e){}
+    if(cap.Plugins&&cap.Plugins[nombre])return cap.Plugins[nombre];
+    const cab=(cap.PluginHeaders||[]).find(h=>h.name===nombre);
+    if(!cab)return null;
+    const o={};
+    cab.methods.forEach(m=>{
+      o[m.name]=m.rtype==='promise'?(opc={})=>cap.nativePromise(nombre,m.name,opc)
+        :(opc={},cb)=>Promise.resolve(cap.nativeCallback(nombre,m.name,opc,cb));
+    });
+    return o;
+  }
+  const sinFallo=n=>{try{return plugin(n)}catch(e){return null}};
+  const BG=sinFallo('BackgroundGeolocation'), NOTIF=sinFallo('LocalNotifications'), FS=sinFallo('Filesystem'), SHARE=sinFallo('Share');
+  const segNativo=nativo&&!!BG; // seguimiento en segundo plano con el plugin; si no está, como en la web
   // vigia: id del vigilante nativo, del temporizador web, o 'arrancando'; null si está parado
   let vigia=null, segError='', bloqueo=null, pidiendo=false;
 
@@ -1499,16 +1517,16 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   }
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState!=='visible'||vigia===null)return;
-    if(!nativo){mantenerPantalla();tomarWeb()}
+    if(!segNativo){mantenerPantalla();tomarWeb()}
     pintarTodo();pintarSeguimiento();
   });
   async function iniciarSeguimiento(){
     if(vigia!==null)return;
     segError='';
-    if(nativo){
+    if(segNativo){
       vigia='arrancando';pintarSeguimiento();
       // Android 13+: sin permiso de notificaciones no se ve el aviso fijo de ubicación
-      try{const p=await NOTIF.checkPermissions();if(p.display!=='granted')await NOTIF.requestPermissions()}catch(e){}
+      try{if(NOTIF){const p=await NOTIF.checkPermissions();if(p.display!=='granted')await NOTIF.requestPermissions()}}catch(e){}
       let id;
       try{
         id=await BG.addWatcher({
@@ -1539,7 +1557,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   }
   function detenerSeguimiento(){
     if(vigia===null)return;
-    if(nativo){if(vigia!=='arrancando')BG.removeWatcher({id:vigia}).catch(()=>{})}
+    if(segNativo){if(vigia!=='arrancando')BG.removeWatcher({id:vigia}).catch(()=>{})}
     else clearInterval(vigia);
     vigia=null;
     if(bloqueo){bloqueo.release().catch(()=>{});bloqueo=null}
@@ -1578,7 +1596,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     if(enPausa()){box.className='seg';txt.textContent=`GPS en pausa hasta las ${hhmm(new Date(pausa.hasta))} · ${reg.actividad}. Pulsa «reanudar» en la actividad para volver a grabar antes.`;return}
     box.className='seg on';
     txt.textContent=`GPS cada ${textoIntervalo()} · ${reg.actividad} · ${pts.length} ${plural(pts.length,'punto')}`+
-      (ult?` · último ${hhmm(new Date(ult.iso))}`:'')+(nativo?'':' · mantén esta página abierta y la pantalla encendida');
+      (ult?` · último ${hhmm(new Date(ult.iso))}`:'')+(segNativo?'':' · mantén esta página abierta y la pantalla encendida');
   }
 
   /* ---------- Fin de jornada: proponer enviar el día completo ---------- */
@@ -2084,6 +2102,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   pintarTodo();
   actualizarSeguimiento();
   pintarIncidencias();
+  listo=true;
 })();
 </script>
 </body>
