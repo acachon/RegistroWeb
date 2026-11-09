@@ -806,7 +806,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   const coma1=n=>n.toFixed(1).replace('.',',');
   // Texto «Dist 1,2 km · Vel 2,5 km/h». La velocidad usa el tiempo de la actividad: hasta el registro
   // siguiente del mismo día, hasta ahora si es la última de hoy, o hasta su último punto si es de otro día.
-  function textoRecorrido(r){
+  function datosRecorrido(r){
     const trazo=[r,...puntosDe(r)].filter(conPosicion).sort((a,b)=>new Date(a.iso)-new Date(b.iso));
     let m=0;for(let i=1;i<trazo.length;i++)m+=metrosEntre(trazo[i-1],trazo[i]);
     const sig=registros[registros.indexOf(r)+1], dia=diaDe(r);
@@ -814,8 +814,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
       :dia===diaKey(new Date())?Date.now():trazo.length>1?new Date(trazo[trazo.length-1].iso).getTime():null;
     const ms=fin==null?0:fin-new Date(r.iso).getTime();
     const vel=ms>0?coma1(m/1000/(ms/3600000)):'–';
-    return `Dist ${coma1(m/1000)} km · Vel ${vel} km/h`;
+    return {km:coma1(m/1000),vel};
   }
+  function textoRecorrido(r){const d=datosRecorrido(r);return `Dist ${d.km} km · Vel ${d.vel} km/h`}
   const SVG_UBIC='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
 
   function contenidoRegistro(r){
@@ -1113,7 +1114,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
         const sigG=registros[registros.indexOf(r)+1], dia=diaDe(r);
         const info=durRegistro(r,sigG&&diaDe(sigG)===dia?sigG:null,dia===diaKey(new Date()));
         const dur=info?`Duración: ${info.desde?durHHMM(Date.now()-new Date(info.desde)):info.texto}${info.nota?` (${info.nota})`:''}`:null;
-        [r.nombre,r.fechaHora.slice(0,16),dur,`Precisión ±${Math.round(r.precision)} m`].filter(Boolean)
+        [r.nombre,r.fechaHora.slice(0,16),dur,`Velocidad media: ${datosRecorrido(r).vel} km/h`].filter(Boolean)
           .forEach(t=>{pop.appendChild(document.createTextNode(t));pop.appendChild(document.createElement('br'))});
         return pop;
       };
