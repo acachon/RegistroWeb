@@ -745,19 +745,14 @@ textarea:focus{outline:none;border-color:var(--olive)}
     return `registros_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.txt`;
   }
 
-  // conDuracion (resumen de fin de jornada): añade a cada actividad su duración, con las mismas
-  // reglas que en pantalla; el «siguiente» es el siguiente registro del propio resumen.
-  function textoWhatsapp(lista,conDuracion=false){
-    return lista.map((r,i)=>{
-      const d=new Date(r.iso);
+  // Mismos datos que en pantalla (distancia, área, velocidad y duración), con la ubicación al final.
+  // datosRecorrido se declara más abajo, pero solo se usa al enviar, cuando ya existe.
+  function textoWhatsapp(lista){
+    return lista.map(r=>{
+      const d=new Date(r.iso), t=datosRecorrido(r);
       const ubic=r.lat!=null?`https://maps.google.com/?q=${r.lat.toFixed(6)},${r.lon.toFixed(6)}`:'sin posición';
-      let dur='';
-      if(conDuracion){
-        const info=durRegistro(r,lista[i+1]||null,false);
-        if(info)dur=`Duración: ${info.texto}${info.nota?` (${info.nota})`:''}\n`;
-      }
-      const n=puntosDe(r).length;
-      return `Empleado: ${r.nombre}\n${r.actividad?`Actividad: ${r.actividad}\n`:''}Fecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\n${dur}Ubicación: ${ubic}\nPrecisión GPS: ${r.lat!=null?'±'+Math.round(r.precision)+' m':'sin dato'}${n?`\nPuntos GPS cada 5 min: ${n}`:''}`;
+      return `Empleado: ${r.nombre}\n${r.actividad?`Actividad: ${r.actividad}\n`:''}Fecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\n`+
+        `Dist.: ${t.km} km\nÁrea: ${t.area} Ha\nVel.: ${t.vel} km/h\nDur.: ${t.dur}\nUbicación: ${ubic}`;
     }).join('\n\n');
   }
 
