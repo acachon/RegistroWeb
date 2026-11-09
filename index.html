@@ -216,7 +216,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
 .medio svg{width:24px;height:24px}
 .medio.grabando{border-color:var(--err);color:var(--err);background:var(--card)}
 .medio.grabando svg{animation:latido 1s infinite}
-.galeria{align-self:flex-start;padding:0;background:transparent;color:var(--earth);font-size:.88rem;font-weight:700;text-decoration:underline;border-radius:4px}
+.fotoopc{display:flex;gap:8px;flex-wrap:wrap}
+.fotoopc[hidden]{display:none}
 .adjs{display:flex;flex-wrap:wrap;gap:6px}
 .adjs:empty{display:none}
 .adj{position:relative;width:60px;height:60px;flex:none;display:flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--card) center/cover no-repeat;color:var(--fg)}
@@ -376,11 +377,14 @@ textarea:focus{outline:none;border-color:var(--olive)}
           <button type="button" class="medio" id="incVideo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>Vídeo</button>
           <button type="button" class="medio" id="incAudio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg><span id="incAudioTxt">Audio</span></button>
         </div>
-        <button type="button" class="galeria" id="incGaleria">o elegir un archivo de la galería</button>
+        <div class="fotoopc" id="fotoOpc" hidden>
+          <button type="button" class="mini" id="fotoCamara">Hacer una foto</button>
+          <button type="button" class="mini" id="fotoGaleria">Elegir de la galería</button>
+        </div>
         <input type="file" id="fileFoto" accept="image/*" capture="environment" hidden>
         <input type="file" id="fileVideo" accept="video/*" capture="environment" hidden>
         <input type="file" id="fileAudio" accept="audio/*" capture hidden>
-        <input type="file" id="fileGaleria" accept="image/*,video/*,audio/*" multiple hidden>
+        <input type="file" id="fileGaleria" accept="image/*" multiple hidden>
         <div class="adjs" id="incAdjNuevos"></div>
       </div>
       <div class="field">
@@ -1608,7 +1612,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
     else statusInc('');
     pintarNuevos();
   }
-  [['incFoto','fileFoto'],['incVideo','fileVideo'],['incGaleria','fileGaleria']].forEach(([b,f])=>$(b).addEventListener('click',()=>$(f).click()));
+  [['incVideo','fileVideo'],['fotoCamara','fileFoto'],['fotoGaleria','fileGaleria']].forEach(([b,f])=>$(b).addEventListener('click',()=>{$('fotoOpc').hidden=true;$('incFoto').setAttribute('aria-expanded',false);$(f).click()}));
+  // Foto: ofrece hacerla con la cámara o elegirla de la galería
+  $('incFoto').setAttribute('aria-expanded',false);
+  $('incFoto').addEventListener('click',()=>{const o=$('fotoOpc');o.hidden=!o.hidden;$('incFoto').setAttribute('aria-expanded',!o.hidden)});
   ['fileFoto','fileVideo','fileAudio','fileGaleria'].forEach(id=>$(id).addEventListener('change',async e=>{
     for(const f of [...e.target.files])await anadirArchivo(f);
     e.target.value='';
