@@ -119,6 +119,14 @@ label.item{cursor:pointer}
 .field{display:flex;flex-direction:column;gap:4px}
 .field .hint.err{color:var(--err)}
 .confirmbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;border:2px solid var(--err);border-radius:10px}
+.barra{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.barra .btn{flex:none;padding:6px 8px;font-size:.85rem;border-radius:8px}
+.barra .btn.ico{gap:5px}
+.barra .mini{padding:6px 8px}
+.barra .btn svg{width:16px;height:16px}
+.confirmbox.share{border-color:var(--olive)}
+.confirmbox .btn{flex:1 1 auto;padding:10px 12px}
+.confirmbox .btn.wa{background:var(--wa);color:#fff} .confirmbox .btn.mail{background:var(--mail);color:#fff}
 .confirmbox span{flex:1 1 100%}
 /* Calendario: los días con registros llevan fondo y punto; el día filtrado va en oliva */
 .calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -280,7 +288,23 @@ textarea:focus{outline:none;border-color:var(--olive)}
       <div class="sub">
         <div class="sechead">
           <h3>Actividades de hoy</h3>
+        </div>
+        <div class="barra">
           <button type="button" id="btnTodosH" class="mini">Seleccionar todas</button>
+          <button class="btn danger ico" id="btnBorrarH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
+          <button class="btn sec ico" id="btnCompartirH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
+        </div>
+        <div class="confirmbox" id="confirmBoxH" hidden>
+      <span id="confirmTxtH"></span>
+      <button class="btn danger" id="btnSiBorrarH" type="button">Sí, eliminar</button>
+      <button class="btn sec" id="btnNoBorrarH" type="button">Cancelar</button>
+        </div>
+        <div class="confirmbox share" id="shareBoxH" hidden>
+          <span id="shareTxtH"></span>
+          <button class="btn wa" id="btnShWaH" type="button">WhatsApp</button>
+          <button class="btn mail" id="btnShMailH" type="button">Email</button>
+          <button class="btn" id="btnShAmbosH" type="button">Ambos</button>
+          <button class="btn sec" id="btnShNoH" type="button">Cancelar</button>
         </div>
         <div class="vista" role="group" aria-label="Modo de vista">
           <button type="button" id="vistaListaH" aria-pressed="true">Listado</button>
@@ -291,26 +315,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <ul class="leyenda" id="leyendaH" hidden></ul>
         <p class="hint" id="mapaNotaH" hidden></p>
         <p class="empty" id="vacioListaH">No hay registros.</p>
-        <div class="acciones" id="accionesH">
-        <div class="row">
-      <button class="btn danger ico" id="btnBorrarH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
-      <button class="btn sec ico" id="btnCompartirH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
-        </div>
-        <div class="confirmbox" id="confirmBoxH" hidden>
-      <span id="confirmTxtH"></span>
-      <button class="btn danger" id="btnSiBorrarH" type="button">Sí, eliminar</button>
-      <button class="btn sec" id="btnNoBorrarH" type="button">Cancelar</button>
-        </div>
-      </div>
         <p class="status" id="statusListH" role="status" aria-live="polite"></p>
-      </div>
-      <div class="sub">
-        <h3>Enviar seleccionadas</h3>
-        <div class="send">
-          <button class="sendbtn wa" id="btnWhatsappSelH" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
-          <button class="sendbtn mail" id="btnEmailSelH" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
-        </div>
-        <p class="hint">WhatsApp y Email envían el texto con la ubicación. Para enviar el fichero usa <b>Compartir</b>.</p>
       </div>
       </div>
     </details>
@@ -329,7 +334,23 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <div class="filtro" id="filtro"></div>
         <div class="sechead">
           <h3>Actividades <span id="contador">0</span></h3>
+        </div>
+        <div class="barra">
           <button type="button" id="btnTodos" class="mini">Seleccionar todas</button>
+          <button class="btn danger ico" id="btnBorrar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
+          <button class="btn sec ico" id="btnCompartir" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
+        </div>
+        <div class="confirmbox" id="confirmBox" hidden>
+      <span id="confirmTxt"></span>
+      <button class="btn danger" id="btnSiBorrar" type="button">Sí, eliminar</button>
+      <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
+        </div>
+        <div class="confirmbox share" id="shareBox" hidden>
+          <span id="shareTxt"></span>
+          <button class="btn wa" id="btnShWa" type="button">WhatsApp</button>
+          <button class="btn mail" id="btnShMail" type="button">Email</button>
+          <button class="btn" id="btnShAmbos" type="button">Ambos</button>
+          <button class="btn sec" id="btnShNo" type="button">Cancelar</button>
         </div>
         <div class="vista" role="group" aria-label="Modo de vista">
           <button type="button" id="vistaLista" aria-pressed="true">Listado</button>
@@ -340,26 +361,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <ul class="leyenda" id="leyenda" hidden></ul>
         <p class="hint" id="mapaNota" hidden></p>
         <p class="empty" id="vacioLista">No hay registros.</p>
-        <div class="acciones" id="acciones">
-        <div class="row">
-      <button class="btn danger ico" id="btnBorrar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
-      <button class="btn sec ico" id="btnCompartir" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
-        </div>
-        <div class="confirmbox" id="confirmBox" hidden>
-      <span id="confirmTxt"></span>
-      <button class="btn danger" id="btnSiBorrar" type="button">Sí, eliminar</button>
-      <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
-        </div>
-      </div>
         <p class="status" id="statusList" role="status" aria-live="polite"></p>
-      </div>
-      <div class="sub">
-        <h3>Enviar seleccionadas</h3>
-        <div class="send">
-          <button class="sendbtn wa" id="btnWhatsappSel" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
-          <button class="sendbtn mail" id="btnEmailSel" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
-        </div>
-        <p class="hint">WhatsApp y Email envían el texto con la ubicación. Para enviar el fichero usa <b>Compartir</b>.</p>
       </div>
     </section>
   </div>
@@ -1080,10 +1082,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
         }else f.textContent='Todos los registros · toca un día marcado para filtrar';
       }
       const n=seleccionados().length, total=lista.length;
-      E('btnTodos').textContent=(n===total&&total>0)?'Quitar selección':'Seleccionar todas';
-      ['btnWhatsappSel','btnEmailSel','btnCompartir','btnBorrar'].forEach(id=>E(id).disabled=n===0);
+      E('btnTodos').textContent=(n===total&&total>0)?'Quitar todas':'Seleccionar todas';
+      ['btnCompartir','btnBorrar'].forEach(id=>E(id).disabled=n===0);
       ol.querySelectorAll('label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
-      E('confirmBox').hidden=true;
+      E('confirmBox').hidden=true;E('shareBox').hidden=true;
       // El mapa solo se pinta con el listado visible y desplegado (Leaflet necesita su tamaño real)
       const abierto=deHoy?$('detList').open:true;
       if(enMapa&&abierto&&!$(panel).hidden)
@@ -1098,17 +1100,28 @@ textarea:focus{outline:none;border-color:var(--olive)}
       seleccion=seleccionados().length===lista.length?new Set():new Set(lista.map(r=>r.id));
       pintarListado();
     });
-    E('btnWhatsappSel').addEventListener('click',()=>{if(hayMarcados())enviarWhatsapp(seleccionados())});
-    E('btnEmailSel').addEventListener('click',()=>{if(hayMarcados())enviarEmail(seleccionados())});
-    E('btnCompartir').addEventListener('click',async()=>{
+    // Compartir: se pregunta por dónde enviar las marcadas (WhatsApp, Email o ambos)
+    E('btnCompartir').addEventListener('click',()=>{
       if(!hayMarcados())return;
-      const file=new File([textoFichero(seleccionados())],nombreFichero(),{type:'text/plain'});
-      const res=await compartirArchivos([file],'Registros de jornada');
-      if(res!=='ok'&&res!=='cancelado')status(res,'err');
+      const n=seleccionados().length;
+      E('confirmBox').hidden=true;
+      E('shareTxt').textContent=`¿Cómo quieres compartir ${n===1?'la actividad marcada':`las ${n} actividades marcadas`}?`;
+      E('shareBox').hidden=false;
     });
+    const compartir=(wa,mail)=>{
+      const lista=seleccionados();if(!lista.length){E('shareBox').hidden=true;return}
+      E('shareBox').hidden=true;
+      if(wa)enviarWhatsapp(lista);
+      if(mail)enviarEmail(lista);
+    };
+    E('btnShWa').addEventListener('click',()=>compartir(true,false));
+    E('btnShMail').addEventListener('click',()=>compartir(false,true));
+    E('btnShAmbos').addEventListener('click',()=>compartir(true,true));
+    E('btnShNo').addEventListener('click',()=>{E('shareBox').hidden=true});
     E('btnBorrar').addEventListener('click',()=>{
       if(!hayMarcados())return;
       const n=seleccionados().length;
+      E('shareBox').hidden=true;
       E('confirmTxt').textContent=`¿Eliminar ${n} registro${n===1?'':'s'} del móvil? No se puede deshacer.`;
       E('confirmBox').hidden=false;
     });
