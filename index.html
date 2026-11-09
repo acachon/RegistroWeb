@@ -100,17 +100,12 @@ label.item{cursor:pointer}
 .item .fh .fecha{white-space:nowrap}
 .item .fh .ubic.sin{position:relative;display:inline-flex;padding:4px;margin:-4px 0;color:var(--muted);cursor:help}
 .item .fh .ubic.sin .tacha{position:absolute;inset:4px;width:20px;height:20px}
-.item .dur{font-size:1.05rem}
 .item .fh a.ubic{display:inline-flex;padding:4px;margin:-4px 0}
 .item.hoyitem.col{flex-direction:column;align-items:stretch;gap:6px}
 .item .itemfila{display:flex;gap:12px;align-items:flex-start;width:100%}
-.item .vel{color:var(--muted);white-space:nowrap;text-align:left;padding-left:38px} /* 38 = ancho de la columna de la casilla (26) + hueco (12): queda alineado con la fecha */
+.item .info{color:var(--muted);text-align:left;padding-left:38px} /* 38 = ancho de la columna de la casilla (26) + hueco (12): queda alineado con la fecha */
 /* Registros de hoy: datos a la izquierda, duración hh:mm hasta el siguiente a la derecha */
 .item.hoyitem{align-items:center}
-.dur{margin-left:auto;flex:none;text-align:right;font-family:var(--mono);font-size:1.2rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--fg)}
-.dur small{display:block;font-family:var(--display);font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.dur.vivo{color:var(--olive)}
-.dur.vivo small{color:var(--olive)}
 .tag{font-family:var(--display);font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--olive);margin-left:6px}
 .acciones{display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
 .acciones .row .btn{flex:1 1 0;min-width:0}
@@ -804,20 +799,48 @@ textarea:focus{outline:none;border-color:var(--olive)}
     return 2*R*Math.asin(Math.sqrt(h));
   };
   const coma1=n=>n.toFixed(1).replace('.',',');
-  // Texto «Dist 1,2 km · Vel 2,5 km/h». La velocidad usa el tiempo de la actividad: hasta el registro
-  // siguiente del mismo día, hasta ahora si es la última de hoy, o hasta su último punto si es de otro día.
+  // Envolvente convexa de unos puntos [lat,lon] (algoritmo de la cadena monótona): el polígono más sencillo que los contiene
+  function envolvente(pts){
+    const u=[...new Map(pts.map(q=>[q.join(),q])).values()].sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
+    if(u.length<3)return u;
+    const cruz=(o,a,b)=>(a[1]-o[1])*(b[0]-o[0])-(a[0]-o[0])*(b[1]-o[1]);
+    const medio=orden=>{const h=[];orden.forEach(q=>{while(h.length>1&&cruz(h[h.length-2],h[h.length-1],q)<=0)h.pop();h.push(q)});h.pop();return h};
+    return medio(u).concat(medio(u.slice().reverse()));
+  }
+  // Área cubierta (en m²; se muestra en Ha): la del polígono que dibuja el mapa, es decir, la envolvente del registro y sus puntos GPS
+  function areaM2(trazo){
+    const h=envolvente(trazo.map(x=>[x.lat,x.lon]));
+    if(h.length<3)return 0;
+    const kx=111320*Math.cos(h[0][0]*Math.PI/180), ky=110574;
+    let a=0;h.forEach((q,i)=>{const w=h[(i+1)%h.length];a+=(q[1]*kx)*(w[0]*ky)-(w[1]*kx)*(q[0]*ky)});
+    return Math.abs(a)/2;
+  }
+  // Datos de una actividad, los mismos en el listado y en el globo del mapa. La velocidad usa el tiempo de la actividad:
+  // hasta el registro siguiente del mismo día, hasta ahora si es la última de hoy, o hasta su último punto si es de otro día.
   function datosRecorrido(r){
     const trazo=[r,...puntosDe(r)].filter(conPosicion).sort((a,b)=>new Date(a.iso)-new Date(b.iso));
     let m=0;for(let i=1;i<trazo.length;i++)m+=metrosEntre(trazo[i-1],trazo[i]);
-    const sig=registros[registros.indexOf(r)+1], dia=diaDe(r);
-    const fin=sig&&diaDe(sig)===dia?new Date(sig.iso).getTime()
-      :dia===diaKey(new Date())?Date.now():trazo.length>1?new Date(trazo[trazo.length-1].iso).getTime():null;
+    const sig=registros[registros.indexOf(r)+1], dia=diaDe(r), esHoy=dia===diaKey(new Date()), mismoDia=sig&&diaDe(sig)===dia;
+    const fin=mismoDia?new Date(sig.iso).getTime()
+      :esHoy?Date.now():trazo.length>1?new Date(trazo[trazo.length-1].iso).getTime():null;
     const ms=fin==null?0:fin-new Date(r.iso).getTime();
-    const vel=ms>0?coma1(m/1000/(ms/3600000)):'–';
-    return {km:coma1(m/1000),vel};
+    const info=durRegistro(r,mismoDia?sig:null,esHoy);
+    return {km:coma1(m/1000),vel:ms>0?coma1(m/1000/(ms/3600000)):'–',
+      area:(areaM2(trazo)/10000).toFixed(2).replace('.',','), // en hectáreas
+      dur:info?(info.desde?durHHMM(Date.now()-new Date(info.desde)):info.texto):'--h:--m'};
   }
-  function textoRecorrido(r){const d=datosRecorrido(r);return `Dist ${d.km} km · Vel ${d.vel} km/h`}
+  // Las dos líneas de información de una actividad (listado y globo del mapa usan esta misma función)
+  function lineasInfo(r){
+    const d=datosRecorrido(r);
+    return [`Dist ${d.km} km · Área ${d.area} Ha`,`Dur. ${d.dur} · Vel. ${d.vel} km/h`];
+  }
+  const fechaRegistro=r=>{const d=new Date(r.iso);return `${pad(d.getDate())}/${pad(d.getMonth()+1)} - ${pad(d.getHours())}:${pad(d.getMinutes())}`};
   const SVG_UBIC='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+
+  function pintarInfo(el,r){
+    el.textContent='';
+    lineasInfo(r).forEach(t=>{const l=document.createElement('div');l.textContent=t;el.appendChild(l)});
+  }
 
   function contenidoRegistro(r){
     const txt=document.createElement('div');txt.className='txt';
@@ -827,9 +850,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(r===ultimo()){const t=document.createElement('span');t.className='tag';t.textContent='Último';b.appendChild(t)}
     txt.appendChild(b);
     // Fecha y hora sencillas (DD/MM - HH:MM) y, a su derecha, enlace a Google Maps
-    const d=new Date(r.iso), fila=document.createElement('div');fila.className='fh';
+    const fila=document.createElement('div');fila.className='fh';
     const fecha=document.createElement('span');fecha.className='fecha';
-    fecha.textContent=`${pad(d.getDate())}/${pad(d.getMonth()+1)} - ${pad(d.getHours())}:${pad(d.getMinutes())}`;fila.appendChild(fecha);
+    fecha.textContent=fechaRegistro(r);fila.appendChild(fecha);
     if(r.lat!=null){
       const a=document.createElement('a');a.className='ubic';a.href=`https://maps.google.com/?q=${r.lat},${r.lon}`;a.target='_blank';a.rel='noopener';
       a.title='Ver en Google Maps';a.setAttribute('aria-label','Ver en Google Maps');a.innerHTML=SVG_UBIC;fila.appendChild(a);
@@ -840,7 +863,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       fila.appendChild(m);
     }
     txt.appendChild(fila);
-    const v=document.createElement('div');v.className='vel';v.dataset.id=r.id;v.textContent=textoRecorrido(r);
+    const v=document.createElement('div');v.className='info';v.dataset.id=r.id;pintarInfo(v,r);
     txt.appendChild(v);
     return txt;
   }
@@ -884,19 +907,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(info.desde&&!enVivo)return r.actividad===INICIO?{texto:'--h:--m',nota:'sin fin'}:null;
     return info;
   }
-  function crearDur(info){
-    const dur=document.createElement('div');dur.className='dur';
-    const t=document.createElement('span');t.className='t';
-    if(info.desde){dur.classList.add('vivo');t.dataset.desde=info.desde}else t.textContent=info.texto;
-    dur.appendChild(t);
-    if(info.nota){const n=document.createElement('small');n.textContent=info.nota;dur.appendChild(n)}
-    return dur;
-  }
   // Refresca todos los contadores en vivo (lo llama el reloj cada segundo)
   function actualizarVivo(){
-    document.querySelectorAll('.vivo .t').forEach(t=>{t.textContent=durHHMM(Date.now()-new Date(t.dataset.desde))});
-    // La distancia y la velocidad de la actividad en curso crecen con cada punto nuevo
-    document.querySelectorAll('.item .vel').forEach(e=>{const r=registros.find(x=>x.id===e.dataset.id);if(r)e.textContent=textoRecorrido(r)});
+    // La duración, la distancia y la velocidad de la actividad en curso van cambiando
+    document.querySelectorAll('.item .info').forEach(e=>{const r=registros.find(x=>x.id===e.dataset.id);if(r)pintarInfo(e,r)});
   }
 
   // Pestaña Listado: calendario del mes en vista
@@ -994,14 +1008,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
       if(ver.recorrido)capaLin.addTo(mapa);else mapa.removeLayer(capaLin);
       if(ver.area)capaPol.addTo(mapa);else mapa.removeLayer(capaPol);
       ctlVista.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',ver[b.dataset.m]));
-    }
-    // Envolvente convexa de unos puntos [lat,lon] (algoritmo de la cadena monótona): el polígono más sencillo que los contiene
-    function envolvente(pts){
-      const u=[...new Map(pts.map(q=>[q.join(),q])).values()].sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
-      if(u.length<3)return u;
-      const cruz=(o,a,b)=>(a[1]-o[1])*(b[0]-o[0])-(a[0]-o[0])*(b[1]-o[1]);
-      const medio=orden=>{const h=[];orden.forEach(q=>{while(h.length>1&&cruz(h[h.length-2],h[h.length-1],q)<=0)h.pop();h.push(q)});h.pop();return h};
-      return medio(u).concat(medio(u.slice().reverse()));
     }
 
     // Centra el mapa en la posición actual del móvil y la marca con un punto azul y su margen de error
@@ -1102,12 +1108,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
         const pop=document.createElement('div');pop.className='popreg';
         const b=document.createElement('b');b.textContent=`${i+1}. ${r.actividad||'Registro'}`;
         pop.appendChild(b);
-        // Duración con las mismas reglas que en el Listado
-        const sigG=registros[registros.indexOf(r)+1], dia=diaDe(r);
-        const info=durRegistro(r,sigG&&diaDe(sigG)===dia?sigG:null,dia===diaKey(new Date()));
-        const dur=info?`Duración: ${info.desde?durHHMM(Date.now()-new Date(info.desde)):info.texto}${info.nota?` (${info.nota})`:''}`:null;
-        [r.nombre,r.fechaHora.slice(0,16),dur,`Velocidad media: ${datosRecorrido(r).vel} km/h`].filter(Boolean)
-          .forEach(t=>{pop.appendChild(document.createTextNode(t));pop.appendChild(document.createElement('br'))});
+        // Mismos datos, y en el mismo orden, que la tarjeta del listado
+        [r.nombre,fechaRegistro(r),...lineasInfo(r)].forEach(t=>{pop.appendChild(document.createTextNode(t));pop.appendChild(document.createElement('br'))});
         return pop;
       };
       L.marker([r.lat,r.lon],{icon:icono}).bindPopup(crearGlobo).addTo(capaMapa);
@@ -1151,11 +1153,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
         if(num.has(r.id)){const pin=crearPin(iconoDe(r),String(num.get(r.id)));pin.title=`Nº ${num.get(r.id)} en el mapa`;izq.appendChild(pin)}
         const cont=contenidoRegistro(r);
         const fila=document.createElement('div');fila.className='itemfila';fila.appendChild(izq);fila.appendChild(cont);lab.appendChild(fila);
-        // El «siguiente» para la duración es el próximo registro del mismo día
-        const sigG=registros[registros.indexOf(r)+1], dia=diaDe(r);
-        const info=durRegistro(r,sigG&&diaDe(sigG)===dia?sigG:null,dia===hoyK);
-        if(info)fila.appendChild(crearDur(info));
-        lab.appendChild(cont.querySelector('.vel')); // distancia y velocidad en una fila propia, a todo el ancho
+        lab.appendChild(cont.querySelector('.info')); // datos de la actividad en filas propias, a todo el ancho
         li.appendChild(lab);ol.appendChild(li);
       });
       actualizarVivo();
