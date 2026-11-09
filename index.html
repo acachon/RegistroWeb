@@ -45,8 +45,8 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:12p
 .engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
 h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
 .clock{font-family:var(--mono);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
-.tabs button{flex:1;padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.tabs button{padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
 .tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
 .panel{display:flex;flex-direction:column;gap:20px}
 .lbl{display:block;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -118,8 +118,8 @@ label.item{cursor:pointer}
 .hint{font-size:.82rem;color:var(--muted);margin:0}
 .field{display:flex;flex-direction:column;gap:4px}
 .field .hint.err{color:var(--err)}
-#confirmBox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;border:2px solid var(--err);border-radius:10px}
-#confirmBox span{flex:1 1 100%}
+.confirmbox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;border:2px solid var(--err);border-radius:10px}
+.confirmbox span{flex:1 1 100%}
 /* Calendario: los días con registros llevan fondo y punto; el día filtrado va en oliva */
 .calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .calhead h2{font-size:1.05rem}
@@ -147,7 +147,7 @@ label.item{cursor:pointer}
 .vista{display:flex;gap:4px;padding:3px;background:var(--bg);border:1px solid var(--line);border-radius:10px}
 .vista button{flex:1;padding:8px;font-size:.92rem;font-weight:700;background:transparent;color:var(--muted);border-radius:8px}
 .vista button[aria-pressed=true]{background:var(--olive);color:var(--olive-ink)}
-#mapa{height:340px;border:1px solid var(--line);border-radius:10px;z-index:0}
+#mapa,#mapaH{height:340px;border:1px solid var(--line);border-radius:10px;z-index:0}
 /* Controles del mapa siempre claros con texto oscuro: en modo oscuro heredarían el texto claro de la web
    y no se leerían (selector Mapa/Satélite, zoom, globos y créditos) */
 .leaflet-container .leaflet-control-layers,.leaflet-container .leaflet-bar a,
@@ -232,6 +232,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   <nav class="tabs" role="tablist">
     <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Actividad</button>
+    <button type="button" role="tab" id="tabList" aria-selected="false" aria-controls="panelList">Histórico</button>
     <button type="button" role="tab" id="tabInc" aria-selected="false" aria-controls="panelInc">Incidencias</button>
     <button type="button" role="tab" id="tabListInc" aria-selected="false" aria-controls="panelListInc">Listado Incidencias</button>
   </nav>
@@ -274,50 +275,90 @@ textarea:focus{outline:none;border-color:var(--olive)}
     </details>
 
     <details class="desp" id="detList" open>
-      <summary>Listado actividades <span id="contador">0</span></summary>
+      <summary>Listado actividades <span id="contadorH">0</span></summary>
       <div class="cuerpo">
         <div class="sub">
           <h3>Enviar actividades seleccionadas</h3>
           <div class="send">
-            <button class="sendbtn wa" id="btnWhatsappSel" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
-            <button class="sendbtn mail" id="btnEmailSel" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
+            <button class="sendbtn wa" id="btnWhatsappSelH" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
+            <button class="sendbtn mail" id="btnEmailSelH" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
           </div>
         </div>
         <div class="sub">
           <h3>Mapa de las actividades seleccionadas</h3>
-          <div id="mapa"></div>
-          <ul class="leyenda" id="leyenda"></ul>
-          <p class="hint" id="mapaNota"></p>
+          <div id="mapaH"></div>
+          <ul class="leyenda" id="leyendaH"></ul>
+          <p class="hint" id="mapaNotaH"></p>
         </div>
         <div class="sub">
           <div class="sechead">
-            <h3>Actividades</h3>
-            <button type="button" id="btnTodos" class="mini">Seleccionar todas</button>
+            <h3>Actividades de hoy</h3>
+            <button type="button" id="btnTodosH" class="mini">Seleccionar todas</button>
           </div>
-          <div class="calhead">
+          <div class="filtro" id="filtroH">Actividades de hoy</div>
+          <ol id="listaH"></ol>
+          <p class="empty" id="vacioListaH">No hay registros.</p>
+      <div class="acciones" id="accionesH">
+        <div class="row">
+          <button class="btn danger ico" id="btnBorrarH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
+          <button class="btn sec ico" id="btnCompartirH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
+        </div>
+        <div class="confirmbox" id="confirmBoxH" hidden>
+          <span id="confirmTxtH"></span>
+          <button class="btn danger" id="btnSiBorrarH" type="button">Sí, eliminar</button>
+          <button class="btn sec" id="btnNoBorrarH" type="button">Cancelar</button>
+        </div>
+      </div>
+          <p class="status" id="statusListH" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- PESTAÑA HISTÓRICO -->
+  <div class="panel" id="panelList" role="tabpanel" hidden>
+    <section>
+        <div class="sub">
+      <h3>Enviar actividades seleccionadas</h3>
+      <div class="send">
+        <button class="sendbtn wa" id="btnWhatsappSel" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
+        <button class="sendbtn mail" id="btnEmailSel" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
+      </div>
+        </div>
+        <div class="sub">
+      <h3>Mapa de las actividades seleccionadas</h3>
+      <div id="mapa"></div>
+      <ul class="leyenda" id="leyenda"></ul>
+      <p class="hint" id="mapaNota"></p>
+        </div>
+        <div class="sub">
+      <div class="sechead">
+        <h3>Actividades <span id="contador">0</span></h3>
+        <button type="button" id="btnTodos" class="mini">Seleccionar todas</button>
+      </div>
+      <div class="calhead">
         <button type="button" class="calnav" id="mesAnt" aria-label="Mes anterior">‹</button>
         <h2 id="mesLbl" aria-live="polite"></h2>
         <button type="button" class="calnav" id="mesSig" aria-label="Mes siguiente">›</button>
       </div>
       <div class="cal" id="cal"></div>
-          <div class="filtro" id="filtro"></div>
-          <ol id="lista"></ol>
-          <p class="empty" id="vacioLista">No hay registros.</p>
+      <div class="filtro" id="filtro"></div>
+      <ol id="lista"></ol>
+      <p class="empty" id="vacioLista">No hay registros.</p>
       <div class="acciones" id="acciones">
         <div class="row">
-          <button class="btn danger ico" id="btnBorrar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
-          <button class="btn sec ico" id="btnCompartir" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
+      <button class="btn danger ico" id="btnBorrar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
+      <button class="btn sec ico" id="btnCompartir" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
         </div>
-        <div id="confirmBox" hidden>
-          <span id="confirmTxt"></span>
-          <button class="btn danger" id="btnSiBorrar" type="button">Sí, eliminar</button>
-          <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
-        </div>
-      </div>
-          <p class="status" id="statusList" role="status" aria-live="polite"></p>
+        <div class="confirmbox" id="confirmBox" hidden>
+      <span id="confirmTxt"></span>
+      <button class="btn danger" id="btnSiBorrar" type="button">Sí, eliminar</button>
+      <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
         </div>
       </div>
-    </details>
+      <p class="status" id="statusList" role="status" aria-live="polite"></p>
+        </div>
+    </section>
   </div>
 
   <!-- PESTAÑA INCIDENCIAS -->
@@ -618,7 +659,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   let cfg={nombre:store.get(KEY_NOM,'')||'Angel',tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
 
   /* ---------- Pestañas ---------- */
-  const PESTANAS={reg:['tabReg','panelReg'],inc:['tabInc','panelInc'],listInc:['tabListInc','panelListInc'],cfg:['tabCfg','panelCfg']};
+  const PESTANAS={reg:['tabReg','panelReg'],list:['tabList','panelList'],inc:['tabInc','panelInc'],listInc:['tabListInc','panelListInc'],cfg:['tabCfg','panelCfg']};
   // pestanaAntes: la última pestaña que no era Configuración, para volver a ella al pulsar otra vez el engranaje
   let pestana='reg', pestanaAntes='reg';
   function abrir(tab){
@@ -629,7 +670,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(tab==='cfg'){$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
-    if(tab==='reg')pintarListado();
+    if(tab==='reg'||tab==='list')pintarListado();
     if(tab==='listInc')pintarIncidencias();
     window.scrollTo(0,0);
   }
@@ -692,7 +733,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   function avisar(id,msg,cls){const s=$(id);s.textContent=msg;s.className='status '+(cls||'')}
   const status=(msg,cls)=>avisar('status',msg,cls);
-  const statusList=(msg,cls)=>avisar('statusList',msg,cls);
 
   function linea(r){
     const pos=r.lat!=null?`${r.lat.toFixed(6)};${r.lon.toFixed(6)};${Math.round(r.precision)}`:'SIN POSICIÓN;;';
@@ -830,44 +870,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
   $('mesAnt').addEventListener('click',()=>{mesVista=new Date(mesVista.getFullYear(),mesVista.getMonth()-1,1);pintarCalendario()});
   $('mesSig').addEventListener('click',()=>{mesVista=new Date(mesVista.getFullYear(),mesVista.getMonth()+1,1);pintarCalendario()});
 
-  // Pestaña Listado: registros (todos o los del día marcado), del más reciente al más antiguo
-  const visibles=()=>filtroDia?registros.filter(r=>diaDe(r)===filtroDia):registros;
-  const seleccionados=()=>visibles().filter(r=>seleccion.has(r.id));
   // Marca todos los registros de un día (o ninguno si dia es null)
   function marcarDia(dia){seleccion=new Set(dia?registros.filter(r=>diaDe(r)===dia).map(r=>r.id):[])}
-
-  function pintarListado(){
-    const lista=visibles(), ol=$('lista');ol.textContent='';
-    const hoyK=diaKey(new Date());
-    lista.slice().reverse().forEach(r=>{
-      const li=document.createElement('li');
-      const lab=document.createElement('label');lab.className='item hoyitem';
-      const cb=document.createElement('input');
-      cb.type='checkbox';cb.id='chk_'+r.id;cb.checked=seleccion.has(r.id);
-      cb.addEventListener('change',()=>{cb.checked?seleccion.add(r.id):seleccion.delete(r.id);pintarSeleccion()});
-      lab.appendChild(cb);lab.appendChild(contenidoRegistro(r));
-      // Duración con las mismas reglas que en la pestaña Registro; el «siguiente» es el próximo registro del mismo día
-      const sigG=registros[registros.indexOf(r)+1], dia=diaDe(r);
-      const info=durRegistro(r,sigG&&diaDe(sigG)===dia?sigG:null,dia===hoyK);
-      if(info)lab.appendChild(crearDur(info));
-      li.appendChild(lab);ol.appendChild(li);
-    });
-    actualizarVivo();
-    $('contador').textContent=lista.length;
-    $('vacioLista').hidden=lista.length>0;
-    $('acciones').hidden=lista.length===0;
-    $('btnTodos').hidden=lista.length<2;
-
-    const f=$('filtro');f.textContent='';
-    if(filtroDia){
-      const [y,m,d]=filtroDia.split('-').map(Number);
-      const s=document.createElement('span');s.textContent=`Día ${fechaCorta(new Date(y,m-1,d))}`;
-      const b=document.createElement('button');b.type='button';b.className='mini';b.textContent='Ver todos';
-      b.addEventListener('click',()=>{filtroDia=null;seleccion.clear();pintarListado();pintarCalendario()});
-      f.appendChild(s);f.appendChild(b);
-    }else f.textContent='Todos los registros · toca un día marcado para filtrar';
-    pintarSeleccion();
-  }
 
   /* ---------- Vista Mapa ---------- */
   // Muestra en el mapa los registros visibles (todos o los del día filtrado) que tienen coordenadas,
@@ -881,7 +885,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const p=document.createElement('div');p.className='pin'+(ic.cuad?' cuad':'');
     p.style.background=ic.color;p.textContent=texto;return p;
   }
-  ['leyenda'].forEach(id=>Object.entries(ICONOS).forEach(([nom,ic])=>{
+  ['leyenda','leyendaH'].forEach(id=>Object.entries(ICONOS).forEach(([nom,ic])=>{
     const li=document.createElement('li');li.appendChild(crearPin(ic,''));li.appendChild(document.createTextNode(nom));
     $(id).appendChild(li);
   }));
@@ -1028,33 +1032,99 @@ textarea:focus{outline:none;border-color:var(--olive)}
     },0);
     }};
   }
-  const mapaListado=crearMapa('mapa','mapaNota','Satélite',true);
-  // Listado: solo los registros marcados; con un día filtrado se unen con una línea
-  function pintarMapa(lista){
-    mapaListado.pintar(lista.filter(r=>seleccion.has(r.id)),!!filtroDia,'No hay actividades marcadas. Márcalas en el listado para verlas en el mapa.');
+  // Listado de actividades. Hay dos con la misma estructura: el de la pestaña Actividad (solo las de hoy, sufijo «H»)
+  // y el del Histórico (todas, con calendario). La selección (casillas) es común: se marca por registro.
+  // En el mapa solo se ven los registros marcados; los envíos, Compartir y Eliminar usan solo los marcados.
+  function crearListado(sfx){
+    const deHoy=sfx==='H', E=id=>$(id+sfx);
+    const panel=deHoy?'panelReg':'panelList';
+    const visibles=()=>deHoy?registros.filter(r=>diaDe(r)===diaKey(new Date())):filtroDia?registros.filter(r=>diaDe(r)===filtroDia):registros;
+    const seleccionados=()=>visibles().filter(r=>seleccion.has(r.id));
+    const mapa=crearMapa('mapa'+sfx,'mapaNota'+sfx,'Satélite',true);
+    const status=(msg,cls)=>avisar('statusList'+sfx,msg,cls);
+    const hayMarcados=()=>{if(!seleccionados().length){status('Marca al menos un registro.','err');return false}return true};
+
+    function pintar(){
+      const lista=visibles(), ol=E('lista');ol.textContent='';
+      const hoyK=diaKey(new Date());
+      lista.slice().reverse().forEach(r=>{
+        const li=document.createElement('li');
+        const lab=document.createElement('label');lab.className='item hoyitem';
+        const cb=document.createElement('input');
+        cb.type='checkbox';cb.checked=seleccion.has(r.id);
+        cb.addEventListener('change',()=>{cb.checked?seleccion.add(r.id):seleccion.delete(r.id);pintarListado()});
+        lab.appendChild(cb);lab.appendChild(contenidoRegistro(r));
+        // El «siguiente» para la duración es el próximo registro del mismo día
+        const sigG=registros[registros.indexOf(r)+1], dia=diaDe(r);
+        const info=durRegistro(r,sigG&&diaDe(sigG)===dia?sigG:null,dia===hoyK);
+        if(info)lab.appendChild(crearDur(info));
+        li.appendChild(lab);ol.appendChild(li);
+      });
+      actualizarVivo();
+      E('contador').textContent=lista.length;
+      E('vacioLista').hidden=lista.length>0;
+      E('vacioLista').textContent=deHoy?'Hoy aún no hay actividades.':'No hay registros.';
+      E('acciones').hidden=lista.length===0;
+      E('btnTodos').hidden=lista.length<2;
+      if(!deHoy){
+        const f=E('filtro');f.textContent='';
+        if(filtroDia){
+          const [y,m,d]=filtroDia.split('-').map(Number);
+          const sp=document.createElement('span');sp.textContent=`Día ${fechaCorta(new Date(y,m-1,d))}`;
+          const b=document.createElement('button');b.type='button';b.className='mini';b.textContent='Ver todos';
+          b.addEventListener('click',()=>{filtroDia=null;seleccion.clear();pintarListado();pintarCalendario()});
+          f.appendChild(sp);f.appendChild(b);
+        }else f.textContent='Todos los registros · toca un día marcado para filtrar';
+      }
+      const n=seleccionados().length, total=lista.length;
+      E('btnTodos').textContent=(n===total&&total>0)?'Quitar selección':'Seleccionar todas';
+      ['btnWhatsappSel','btnEmailSel','btnCompartir','btnBorrar'].forEach(id=>E(id).disabled=n===0);
+      ol.querySelectorAll('label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
+      E('confirmBox').hidden=true;
+      // El mapa solo se pinta con el listado visible y desplegado (Leaflet necesita su tamaño real)
+      const abierto=deHoy?$('detList').open:true;
+      if(abierto&&!$(panel).hidden)
+        mapa.pintar(lista.filter(r=>seleccion.has(r.id)),deHoy||!!filtroDia,'No hay actividades marcadas. Márcalas en el listado para verlas en el mapa.');
+    }
+
+    E('btnTodos').addEventListener('click',()=>{
+      const lista=visibles();
+      seleccion=seleccionados().length===lista.length?new Set():new Set(lista.map(r=>r.id));
+      pintarListado();
+    });
+    E('btnWhatsappSel').addEventListener('click',()=>{if(hayMarcados())enviarWhatsapp(seleccionados())});
+    E('btnEmailSel').addEventListener('click',()=>{if(hayMarcados())enviarEmail(seleccionados())});
+    E('btnCompartir').addEventListener('click',async()=>{
+      if(!hayMarcados())return;
+      const file=new File([textoFichero(seleccionados())],nombreFichero(),{type:'text/plain'});
+      const res=await compartirArchivos([file],'Registros de jornada');
+      if(res!=='ok'&&res!=='cancelado')status(res,'err');
+    });
+    E('btnBorrar').addEventListener('click',()=>{
+      if(!hayMarcados())return;
+      const n=seleccionados().length;
+      E('confirmTxt').textContent=`¿Eliminar ${n} registro${n===1?'':'s'} del móvil? No se puede deshacer.`;
+      E('confirmBox').hidden=false;
+    });
+    E('btnNoBorrar').addEventListener('click',()=>{E('confirmBox').hidden=true});
+    E('btnSiBorrar').addEventListener('click',()=>{
+      const borrar=new Set(seleccionados().map(r=>r.id)), n=borrar.size;
+      registros=registros.filter(r=>!borrar.has(r.id));
+      guardarRegistros();seleccion.clear();
+      if(filtroDia&&!registros.some(r=>diaDe(r)===filtroDia))filtroDia=null;
+      pintarTodo();
+      status(`${n} registro${n===1?'':'s'} eliminado${n===1?'':'s'}.`,'ok');
+    });
+    return pintar;
   }
-  // Leaflet se carga con «defer», después de este código: pintar el mapa en cuanto esté
+  const pintarListados=[crearListado(''),crearListado('H')];
+  function pintarListado(){pintarListados.forEach(f=>f())}
+  // Leaflet se carga con «defer», después de este código: pintar los mapas en cuanto esté
   window.addEventListener('load',pintarListado);
-  // Al desplegar el listado se pinta el mapa, que no podía medirse mientras estaba plegado
+  // Al desplegar el listado se pinta su mapa, que no podía medirse mientras estaba plegado
   $('detList').addEventListener('toggle',pintarListado);
 
-  function pintarSeleccion(){
-    const n=seleccionados().length, total=visibles().length;
-    $('btnTodos').textContent=(n===total&&total>0)?'Quitar selección':'Seleccionar todas';
-    ['btnWhatsappSel','btnEmailSel','btnCompartir','btnBorrar'].forEach(id=>$(id).disabled=n===0);
-    document.querySelectorAll('#lista label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
-    $('confirmBox').hidden=true;
-    // El mapa solo se pinta con el listado desplegado y la pestaña visible (Leaflet necesita su tamaño real)
-    if($('detList').open&&!$('panelReg').hidden)pintarMapa(visibles());
-  }
-
   function pintarTodo(){pintarCalendario();pintarListado();actualizarActividades()}
-
-  $('btnTodos').addEventListener('click',()=>{
-    const lista=visibles();
-    seleccion=seleccionados().length===lista.length?new Set():new Set(lista.map(r=>r.id));
-    pintarListado();
-  });
 
   /* ---------- Ayuda de ubicación ---------- */
   // Una web no puede abrir los ajustes del navegador ni del móvil, así que se explican los pasos
@@ -1333,14 +1403,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const dest=cfg.mail.split(',').map(x=>x.trim()).filter(Boolean).join(',');
     location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cabecera+textoWhatsapp(lista,resumen))}`;
   }
-  function haySeleccion(){
-    if(!seleccionados().length){statusList('Marca al menos un registro.','err');return false}
-    return true;
-  }
-
-  $('btnWhatsappSel').addEventListener('click',()=>{if(haySeleccion())enviarWhatsapp(seleccionados())});
-  $('btnEmailSel').addEventListener('click',()=>{if(haySeleccion())enviarEmail(seleccionados())});
-
   /* ---------- Compartir archivos (web y app) ---------- */
   // En el navegador se usa el menú Compartir del sistema (Web Share). En la app de Android el WebView no lo
   // tiene: los archivos se escriben en la caché de la app y se comparten con el plugin Share.
@@ -1367,29 +1429,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
     }
     return 'Este navegador no permite compartir archivos. Usa WhatsApp o Email.';
   }
-
-  $('btnCompartir').addEventListener('click',async()=>{
-    if(!haySeleccion())return;
-    const file=new File([textoFichero(seleccionados())],nombreFichero(),{type:'text/plain'});
-    const res=await compartirArchivos([file],'Registros de jornada');
-    if(res!=='ok'&&res!=='cancelado')statusList(res,'err');
-  });
-
-  $('btnBorrar').addEventListener('click',()=>{
-    if(!haySeleccion())return;
-    const n=seleccionados().length;
-    $('confirmTxt').textContent=`¿Eliminar ${n} registro${n===1?'':'s'} del móvil? No se puede deshacer.`;
-    $('confirmBox').hidden=false;
-  });
-  $('btnNoBorrar').addEventListener('click',()=>{$('confirmBox').hidden=true});
-  $('btnSiBorrar').addEventListener('click',()=>{
-    const borrar=new Set(seleccionados().map(r=>r.id)), n=borrar.size;
-    registros=registros.filter(r=>!borrar.has(r.id));
-    guardarRegistros();seleccion.clear();
-    if(filtroDia&&!visibles().length)filtroDia=null;
-    pintarTodo();
-    statusList(`${n} registro${n===1?'':'s'} eliminado${n===1?'':'s'}.`,'ok');
-  });
 
   /* ---------- Incidencias ---------- */
   const statusInc=(msg,cls)=>avisar('statusInc',msg,cls);
