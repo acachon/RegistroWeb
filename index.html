@@ -466,7 +466,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       </div>
       <div class="field">
         <label class="lbl" for="syncClave">Clave</label>
-        <input id="syncClave" type="text" autocomplete="off" spellcheck="false" placeholder="Clave del fichero central">
+        <input id="syncClave" type="password" autocomplete="new-password" spellcheck="false" placeholder="Clave del fichero central">
       </div>
       <h2>Listas de opciones</h2>
       <div data-lista="tareas" data-titulo="Tipos de actividad" data-info="«Inicio Jornada» y «Fin Jornada» son fijos (de ellos dependen el seguimiento GPS y el resumen del día). Aquí editas las demás actividades.|Los cambios se aplican al pulsar «Guardar configuración». Los registros ya hechos conservan su actividad."></div>
@@ -1980,6 +1980,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     }finally{sincronizando=false;$('btnSync').classList.remove('girando');actualizarPendientes()}
   }
   $('btnSync').addEventListener('click',sincronizar);
+  // La clave se ve con asteriscos y no se puede copiar, cortar, pegar ni arrastrar (se escribe a mano o llega con el enlace de configuración)
+  ['copy','cut','paste','drop','dragstart','contextmenu'].forEach(ev=>$('syncClave').addEventListener(ev,e=>e.preventDefault()));
 
   /* ---------- Botones (i) ---------- */
   // Cada sección guarda su información complementaria (estado, avisos del mapa…) en un recuadro plegable.
