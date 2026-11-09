@@ -73,10 +73,11 @@ h2 span{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.85
 details.desp{background:var(--card);border:1px solid var(--line);border-radius:12px}
 details.desp>summary{list-style:none;cursor:pointer;padding:16px;font-size:1.05rem;font-weight:800;display:flex;align-items:center;gap:8px;border-radius:12px}
 details.desp>summary::-webkit-details-marker{display:none}
-details.desp>summary::after{content:'';margin-left:auto;width:9px;height:9px;border-right:2.5px solid var(--olive);border-bottom:2.5px solid var(--olive);transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+details.desp>summary::after{content:'';flex:none;margin-left:auto;width:9px;height:9px;border-right:2.5px solid var(--olive);border-bottom:2.5px solid var(--olive);transform:rotate(45deg) translateY(-2px);transition:transform .15s}
 details.desp[open]>summary::after{transform:rotate(-135deg)}
 details.desp>summary:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
 /* Botón (i) junto al título de cada sección: despliega la información complementaria (mensajes de estado, avisos del mapa…) */
+#panelCfg h2{justify-content:flex-start;gap:8px}
 .infobtn{flex:none;width:26px;height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;position:relative;background:transparent;border:2px solid var(--olive);color:var(--olive);border-radius:50%;font:italic 800 .9rem Georgia,serif;line-height:1}
 .infobtn[aria-expanded=true]{background:var(--olive);color:var(--olive-ink)}
 .infobtn[data-nuevo=true]::after{content:"";position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:var(--earth);border:2px solid var(--card)}
@@ -479,57 +480,68 @@ textarea:focus{outline:none;border-color:var(--olive)}
   <!-- PESTAÑA CONFIGURACIÓN -->
   <div class="panel" id="panelCfg" role="tabpanel" hidden>
     <section>
-      <h2>Empleado</h2>
+      <h2>Empleado <button type="button" class="infobtn" data-info="infoCfgEmp" aria-expanded="false" aria-controls="infoCfgEmp" aria-label="Información" title="Información">i</button></h2>
+      <div class="infobox" id="infoCfgEmp" hidden>
+        <p class="hint">El nombre se usa en todos los registros que se hagan desde este móvil.</p>
+      </div>
       <div class="field">
         <label class="lbl" for="nombre">Nombre del empleado de este móvil</label>
         <input id="nombre" type="text" autocomplete="name" placeholder="Nombre y apellidos">
-        <p class="hint">Se usa en todos los registros que se hagan desde este móvil.</p>
       </div>
-      <h2>Destinatarios</h2>
+      <h2>Destinatarios <button type="button" class="infobtn" data-info="infoCfgDest" aria-expanded="false" aria-controls="infoCfgDest" aria-label="Información" title="Información">i</button></h2>
+      <div class="infobox" id="infoCfgDest" hidden>
+        <p class="hint" id="telHint">Teléfono: con prefijo internacional. Si escribes 9 cifras se añade +34.</p>
+        <p class="hint" id="mailHint">Email: puedes poner varios separados por coma.</p>
+      </div>
+
       <div class="field">
         <label class="lbl" for="telefono">Teléfono para WhatsApp</label>
         <input id="telefono" type="tel" inputmode="tel" placeholder="+34 600 000 000">
-        <p class="hint" id="telHint">Con prefijo internacional. Si escribes 9 cifras se añade +34.</p>
       </div>
       <div class="field">
         <label class="lbl" for="email">Email para correo electrónico</label>
         <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="gestor@ejemplo.com">
-        <p class="hint" id="mailHint">Puedes poner varios separados por coma.</p>
       </div>
       <h2>Listas de opciones</h2>
       <details class="desp" id="detTiposAct">
-        <summary>Tipos de actividad</summary>
+        <summary>Tipos de actividad <button type="button" class="infobtn" data-info="infoCfgAct" aria-expanded="false" aria-controls="infoCfgAct" aria-label="Información" title="Información">i</button></summary>
         <div class="cuerpo">
-          <p class="hint">«Inicio Jornada» y «Fin Jornada» son fijos (de ellos dependen el seguimiento GPS y el resumen del día). Aquí editas las demás actividades.</p>
+          <div class="infobox" id="infoCfgAct" hidden>
+            <p class="hint">«Inicio Jornada» y «Fin Jornada» son fijos (de ellos dependen el seguimiento GPS y el resumen del día). Aquí editas las demás actividades.</p>
+            <p class="hint">Los cambios se aplican al pulsar «Guardar configuración». Los registros ya hechos conservan su actividad.</p>
+          </div>
           <ul class="tiposed" id="tareasLista"></ul>
           <div class="tiposbtn">
             <button type="button" class="mini" id="tareaNueva">+ Añadir actividad</button>
             <button type="button" class="mini" id="tareasDefecto">Restaurar las de serie</button>
           </div>
-          <p class="hint">Los cambios se aplican al pulsar «Guardar configuración». Los registros ya hechos conservan su actividad.</p>
         </div>
       </details>
       <details class="desp" id="detPausas">
-        <summary>Tiempos de pausa del GPS</summary>
+        <summary>Pausas del GPS <button type="button" class="infobtn" data-info="infoCfgPausas" aria-expanded="false" aria-controls="infoCfgPausas" aria-label="Información" title="Información">i</button></summary>
         <div class="cuerpo">
-          <p class="hint">Minutos entre los que eliges al pausar la toma de coordenadas de la actividad en curso.</p>
+          <div class="infobox" id="infoCfgPausas" hidden>
+            <p class="hint">Minutos entre los que eliges al pausar la toma de coordenadas de la actividad en curso.</p>
+            <p class="hint">Los cambios se aplican al pulsar «Guardar configuración».</p>
+          </div>
           <ul class="tiposed" id="pausasLista"></ul>
           <div class="tiposbtn">
             <button type="button" class="mini" id="pausaNueva">+ Añadir tiempo</button>
             <button type="button" class="mini" id="pausasDefecto">Restaurar los de serie</button>
           </div>
-          <p class="hint">Los cambios se aplican al pulsar «Guardar configuración».</p>
         </div>
       </details>
       <details class="desp" id="detTiposInc">
-        <summary>Tipos de incidencia</summary>
+        <summary>Tipos de incidencia <button type="button" class="infobtn" data-info="infoCfgInc" aria-expanded="false" aria-controls="infoCfgInc" aria-label="Información" title="Información">i</button></summary>
         <div class="cuerpo">
+          <div class="infobox" id="infoCfgInc" hidden>
+            <p class="hint">Los cambios se aplican al pulsar «Guardar configuración». Las incidencias ya registradas conservan su tipo.</p>
+          </div>
           <ul class="tiposed" id="tiposLista"></ul>
           <div class="tiposbtn">
             <button type="button" class="mini" id="tipoNuevo">+ Añadir tipo</button>
             <button type="button" class="mini" id="tiposDefecto">Restaurar los de serie</button>
           </div>
-          <p class="hint">Los cambios se aplican al pulsar «Guardar configuración». Las incidencias ya registradas conservan su tipo.</p>
         </div>
       </details>
       <button class="btn" id="btnGuardarCfg" type="button">Guardar configuración</button>
@@ -2183,7 +2195,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const box=$(btn.dataset.info);
     const textos=()=>[...box.querySelectorAll('.status,.hint:not(.infovacio),.seg')].filter(e=>!e.hidden).map(e=>e.textContent.trim()).filter(Boolean);
     const firma=()=>[...box.querySelectorAll('.status,.hint:not(.infovacio)')].filter(e=>!e.hidden).map(e=>e.textContent.trim()).filter(Boolean).join('|');
-    let vista='';
+    let vista=firma();
     const poner=abierto=>{box.hidden=!abierto;btn.setAttribute('aria-expanded',abierto);if(abierto)vista=firma();actualizar()};
     function actualizar(){
       box.classList.toggle('vacia',!textos().length);
