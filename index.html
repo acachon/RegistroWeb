@@ -81,7 +81,7 @@ details.desp>summary span{font-family:var(--mono);font-weight:400;color:var(--mu
 .sub{display:flex;flex-direction:column;gap:12px}
 .sub h3{margin:0;font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .fila-guardar{align-items:flex-end}
-.fila-guardar #btnRegistro{width:auto;flex:none;padding:0 20px;font-size:1.05rem}
+.fila-guardar #btnRegistro,.fila-guardar #btnIncidencia{width:auto;flex:none;padding:0 20px;font-size:1.05rem}
 .sechead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .sechead h2{justify-content:flex-start;gap:8px;white-space:nowrap}
 .mini{white-space:nowrap;flex:none;padding:6px 10px;font-size:.85rem;font-weight:700;background:transparent;color:var(--olive);border:2px solid var(--olive);border-radius:8px}
@@ -138,6 +138,11 @@ label.item{cursor:pointer}
 .izq{display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
 .confirmbox span{flex:1 1 100%}
 /* Calendario: los días con registros llevan fondo y punto; el día filtrado va en oliva */
+.tiposed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tiposed li{display:flex;gap:6px}
+.tiposed input{flex:1 1 0;min-width:0}
+.tiposed .quitar{flex:none;width:44px;background:transparent;border:2px solid var(--line);color:var(--err);border-radius:8px;font-size:1.1rem;line-height:1}
+.tiposbtn{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .calbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .calbtn{display:inline-flex;align-items:center;gap:6px}
 #calBox{margin:6px 0 10px}
@@ -357,22 +362,12 @@ textarea:focus{outline:none;border-color:var(--olive)}
   <div class="panel" id="panelInc" role="tabpanel" hidden>
     <section>
       <h2>Nueva incidencia</h2>
-      <div class="fila2">
+      <div class="fila2 fila-guardar">
         <div class="campo-act">
-          <label class="lbl" for="incTipo">Tipo</label>
-          <select id="incTipo">
-            <option>Árbol caído</option>
-            <option>Herramienta rota</option>
-            <option>Avería de riego</option>
-            <option>Vallado o puerta</option>
-            <option>Animales</option>
-            <option>Otros</option>
-          </select>
+          <label class="lbl" for="incTipo">Tipo de incidencia</label>
+          <select id="incTipo"></select>
         </div>
-      </div>
-      <div class="field">
-        <label class="lbl" for="incComentario">Comentario (opcional)</label>
-        <textarea id="incComentario" placeholder="Qué ha pasado y dónde exactamente"></textarea>
+        <button id="btnIncidencia" type="button">REGISTRAR</button>
       </div>
       <div class="field">
         <span class="lbl">Adjuntar</span>
@@ -388,7 +383,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <input type="file" id="fileGaleria" accept="image/*,video/*,audio/*" multiple hidden>
         <div class="adjs" id="incAdjNuevos"></div>
       </div>
-      <button id="btnIncidencia" type="button">REGISTRAR INCIDENCIA</button>
+      <div class="field">
+        <label class="lbl" for="incComentario">Comentario (opcional)</label>
+        <textarea id="incComentario" placeholder="Qué ha pasado y dónde exactamente"></textarea>
+      </div>
       <p class="status" id="statusInc" role="status" aria-live="polite"></p>
     </section>
 
@@ -458,6 +456,16 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <label class="lbl" for="email">Email para correo electrónico</label>
         <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="gestor@ejemplo.com">
         <p class="hint" id="mailHint">Puedes poner varios separados por coma.</p>
+      </div>
+      <h2>Tipos de incidencia</h2>
+      <div class="field">
+        <span class="lbl">Opciones del desplegable «Tipo de incidencia»</span>
+        <ul class="tiposed" id="tiposLista"></ul>
+        <div class="tiposbtn">
+          <button type="button" class="mini" id="tipoNuevo">+ Añadir tipo</button>
+          <button type="button" class="mini" id="tiposDefecto">Restaurar los de serie</button>
+        </div>
+        <p class="hint">Los cambios se aplican al pulsar «Guardar configuración». Las incidencias ya registradas conservan su tipo.</p>
       </div>
       <button class="btn" id="btnGuardarCfg" type="button">Guardar configuración</button>
       <p class="status" id="cfgStatus" role="status" aria-live="polite"></p>
@@ -663,7 +671,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     pestana=tab;
     // Configuración es el engranaje de la cabecera (aria-pressed); el resto son pestañas (aria-selected)
     Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute(k==='cfg'?'aria-pressed':'aria-selected',k===tab);$(p).hidden=k!==tab});
-    if(tab==='cfg'){$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
+    if(tab==='cfg'){pintarEditorTipos();$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
     if(tab==='reg')pintarListado();
@@ -680,12 +688,38 @@ textarea:focus{outline:none;border-color:var(--olive)}
   }
   const emailsValidos=v=>v.split(',').map(x=>x.trim()).filter(Boolean).every(x=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x));
 
+  // Tipos de incidencia: lista editable desde Configuración (por defecto, los de siempre)
+  const KEY_TIPOS='gea_tipos_incidencia';
+  const TIPOS_SERIE=['Árbol caído','Herramienta rota','Avería de riego','Vallado o puerta','Animales','Otros'];
+  let tiposInc=(()=>{const t=store.get(KEY_TIPOS,null);return Array.isArray(t)&&t.length?t:TIPOS_SERIE.slice()})();
+  function llenarTiposInc(){
+    const sel=$('incTipo'), actual=sel.value;
+    sel.textContent='';
+    tiposInc.forEach(v=>{const o=document.createElement('option');o.textContent=v;sel.appendChild(o)});
+    if(tiposInc.includes(actual))sel.value=actual;
+  }
+  function filaTipo(valor){
+    const li=document.createElement('li');
+    const i=document.createElement('input');i.type='text';i.value=valor;i.maxLength=40;i.placeholder='Tipo de incidencia';i.setAttribute('aria-label','Tipo de incidencia');
+    const q=document.createElement('button');q.type='button';q.className='quitar';q.textContent='✕';q.setAttribute('aria-label','Quitar este tipo');
+    q.addEventListener('click',()=>li.remove());
+    li.appendChild(i);li.appendChild(q);$('tiposLista').appendChild(li);return i;
+  }
+  function pintarEditorTipos(lista=tiposInc){$('tiposLista').textContent='';lista.forEach(filaTipo)}
+  $('tipoNuevo').addEventListener('click',()=>filaTipo('').focus());
+  $('tiposDefecto').addEventListener('click',()=>pintarEditorTipos(TIPOS_SERIE));
+  llenarTiposInc();
+
   $('btnGuardarCfg').addEventListener('click',()=>{
     const nombre=$('nombre').value.trim(), tel=$('telefono').value.trim(), mail=$('email').value.trim();
     const nomOk=!!nombre, telOk=!tel||telefonoLimpio(tel).length>=10, mailOk=!mail||emailsValidos(mail);
     $('nombre').classList.toggle('bad',!nomOk);$('telefono').classList.toggle('bad',!telOk);$('email').classList.toggle('bad',!mailOk);
     const s=$('cfgStatus');
+    // Tipos de incidencia: sin vacíos ni repetidos
+    const vistos=new Set(), tipos=[...$('tiposLista').querySelectorAll('input')].map(i=>i.value.trim()).filter(v=>v&&!vistos.has(v.toLowerCase())&&vistos.add(v.toLowerCase()));
+    if(nomOk&&telOk&&mailOk&&!tipos.length){s.className='status err';s.textContent='Debe haber al menos un tipo de incidencia.';return}
     if(!nomOk||!telOk||!mailOk){s.className='status err';s.textContent=!nomOk?'Escribe el nombre del empleado.':!telOk?'El teléfono no es válido.':'Revisa el email: debe tener la forma nombre@dominio.com.';return}
+    tiposInc=tipos;store.set(KEY_TIPOS,tipos);llenarTiposInc();pintarEditorTipos();
     cfg={nombre,tel,mail};store.set(KEY_NOM,nombre);store.set(KEY_TEL,tel);store.set(KEY_MAIL,mail);
     // Los registros de ejemplo van siempre a nombre del empleado configurado
     registros.forEach(r=>{if(r.ejemplo)r.nombre=nombre});
