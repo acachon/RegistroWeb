@@ -17,7 +17,7 @@ img{max-width:100%}
 :root{
   --bg:#f3f1e8; --card:#fffdf6; --fg:#1f2617; --muted:#5d6650; --line:#d8d4c2;
   --olive:#3f5a2a; --olive-ink:#ffffff; --olive-soft:#e3e9d6; --earth:#9a5b2e; --ok:#2f6b2f; --err:#a3341f;
-  --wa:#1f8f4e; --mail:#2d5a8a;
+  --wa:#1f8f4e; --mail:#2d5a8a; --warn:#b86e00;
   --display:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;
@@ -25,16 +25,22 @@ img{max-width:100%}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
   --olive:#8fb064; --olive-ink:#142008; --olive-soft:#2a331f; --earth:#d49a66; --ok:#7fc27a; --err:#ef8a74;
-  --wa:#2a9d5c; --mail:#3f74ad;
+  --wa:#2a9d5c; --mail:#3f74ad; --warn:#f0b45a;
   color-scheme:dark}}
+/* Tema elegido en Configuración: oscuro aunque el móvil esté en claro */
+:root[data-theme="dark"]{
+  --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
+  --olive:#8fb064; --olive-ink:#142008; --olive-soft:#2a331f; --earth:#d49a66; --ok:#7fc27a; --err:#ef8a74;
+  --wa:#2a9d5c; --mail:#3f74ad; --warn:#f0b45a;
+  color-scheme:dark}
 *{box-sizing:border-box}
 html{font-size:112.5%}
 html,body{margin:0;background:var(--bg);color:var(--fg)}
 body{font:1rem/1.45 var(--display);padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px);padding-inline:16px}
-main{max-width:480px;margin:0 auto;padding-block:16px 40px;display:flex;flex-direction:column;gap:20px}
-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+main{max-width:480px;margin:0 auto;padding-block:16px 40px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .titulo{min-width:0}
-.empleado{margin:2px 0 0;font-size:.95rem;font-weight:600;color:var(--olive);overflow-wrap:anywhere}
+.empleado{margin:0;font-size:.85rem;font-weight:600;color:var(--olive);overflow-wrap:anywhere}
 .cabder{display:flex;align-items:center;gap:8px;flex:none}
 /* Configuración y datos de prueba: botones cuadrados de la cabecera */
 .engranaje{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;padding:0;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px}
@@ -42,9 +48,10 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:12p
 .engranaje.peq{width:34px;height:34px;color:var(--muted)}
 .engranaje.peq svg{width:18px;height:18px}
 .engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
-h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
-.clock{font-family:var(--mono);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+h1{font-size:clamp(.95rem,5vw,1.2rem);font-weight:800;margin:0;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Pestañas fijas arriba al desplazarse; la franja de encima (zona del sistema) se pinta con el fondo */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:1001;background:var(--bg)}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:1000;box-shadow:0 4px 10px rgba(0,0,0,.08);display:grid;grid-template-columns:repeat(2,1fr);gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
 .tabs button{padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
 .tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
 .panel{display:flex;flex-direction:column;gap:20px}
@@ -73,6 +80,17 @@ details.desp>summary::after{content:'';flex:none;margin-left:auto;width:9px;heig
 details.desp[open]>summary::after{transform:rotate(-135deg)}
 details.desp>summary:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
 details.desp>summary span{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.85rem}
+/* Estado del GPS junto a «Nueva actividad»: activo, en pausa (con cuenta atrás), parado o con error */
+details.desp>summary .gps{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 45%,var(--card));background:color-mix(in srgb,var(--c) 12%,var(--card));color:var(--c);font:700 .72rem var(--display);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;font-variant-numeric:tabular-nums}
+.gps{--c:var(--muted)}
+.gps i{width:8px;height:8px;flex:none;border-radius:50%;background:var(--c)}
+.gps.on{--c:var(--ok)} .gps.on i{animation:latido 2s infinite}
+.gps.pausa{--c:var(--warn)} .gps.err{--c:var(--err)}
+#detNueva>summary{white-space:nowrap}
+#detNueva>summary::after{margin-left:8px}
+.gps b{font:inherit;white-space:pre}
+@media(max-width:360px){#detNueva>summary{font-size:.98rem;gap:6px}details.desp>summary .gps{padding:3px 8px;font-size:.66rem;letter-spacing:0;gap:5px}}
+@media(max-width:340px){.gps b{display:none}#detNueva>summary{font-size:.92rem}#detNueva>summary::after{margin-left:4px}}
 /* Botón (i) junto al título de cada sección: despliega la información complementaria (estado, avisos del mapa…) */
 #panelCfg h2{justify-content:flex-start;gap:8px}
 .infobtn{flex:none;width:26px;height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;position:relative;background:transparent;border:2px solid var(--olive);color:var(--olive);border-radius:50%;font:italic 800 .9rem Georgia,serif;line-height:1}
@@ -105,19 +123,29 @@ details.desp>summary span{font-family:var(--mono);font-weight:400;color:var(--mu
 #btnIncidencia.ocupado{cursor:wait}
 /* Listado: tarjetas con casilla, número en el mapa y datos */
 ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.item{display:flex;flex-direction:column;align-items:stretch;gap:6px;font-family:var(--mono);font-size:.82rem;padding:10px;border:2px solid transparent;border-left:3px solid var(--line);background:var(--bg);border-radius:6px;cursor:pointer}
+.item{display:flex;flex-direction:column;align-items:stretch;gap:6px;font-family:var(--display);font-size:.9rem;padding:10px;border:2px solid transparent;border-left:3px solid var(--line);background:var(--bg);border-radius:6px;cursor:pointer}
 .item.sel{border-color:var(--olive);background:var(--olive-soft)}
 .item input[type=checkbox]{width:24px;height:24px;flex:0 0 auto;margin:0;accent-color:var(--olive)}
 .item .txt{min-width:0;overflow-wrap:anywhere;text-align:left}
-.item b{font-family:var(--display);font-size:.95rem;display:block}
+.item b{font-family:var(--display);font-size:1.05rem;display:block}
 .item a{color:var(--earth)}
 .item .fh{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:0 4px;margin-top:2px}
-.item .fh .fecha{white-space:nowrap}
+.item .fh .fecha{white-space:nowrap;font:800 1.15rem var(--display);color:var(--fg);font-variant-numeric:tabular-nums}
 .item .fh .ubic{display:inline-flex;padding:4px;margin:-4px 0}
 .item .fh .ubic.sin{position:relative;color:var(--muted);cursor:help}
 .item .fh .ubic.sin .tacha{position:absolute;inset:4px;width:20px;height:20px}
 .item .itemfila{display:flex;gap:12px;align-items:flex-start;width:100%}
-.item .info{color:var(--muted);text-align:left;padding-left:38px} /* 38 = casilla (26) + hueco (12): alineado con la fecha */
+.item .info{color:var(--muted);text-align:left;padding-left:38px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 12px} /* 38 = casilla (26) + hueco (12): alineado con la hora */
+.item .info em{display:block;font-style:normal;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.item .info strong{color:var(--fg);font-weight:700;font-variant-numeric:tabular-nums}
+/* Actividad en curso: tarjeta del color de la actividad (--c) con cronómetro grande */
+.item.curso{border:2px solid var(--c);border-left:8px solid var(--c);background:color-mix(in srgb,var(--c) 10%,var(--card))}
+.item.curso.sel{background:color-mix(in srgb,var(--c) 17%,var(--card))}
+.crono{padding-left:38px;font:800 1.6rem/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--fg)}
+.crono small{display:block;font:700 .66rem var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+/* Varios días: un encabezado por día */
+.diahead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:10px 4px 2px;border-bottom:2px solid var(--line);font:800 .95rem var(--display);white-space:nowrap}
+.diahead small{font:600 .78rem var(--display);color:var(--muted)}
 .item .coment{display:block;margin-top:4px;font-family:var(--display);font-style:italic;color:var(--fg)}
 .item .adjs{margin-top:8px}
 .izq{display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
@@ -192,6 +220,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .vista button{flex:1;padding:8px;font-size:.92rem;font-weight:700;background:transparent;color:var(--muted);border-radius:8px}
 .vista button[aria-pressed=true]{background:var(--olive);color:var(--olive-ink)}
 .mapa{height:340px;border:1px solid var(--line);border-radius:10px;z-index:0}
+.mapa.completa{position:fixed!important;inset:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);height:auto;z-index:2500;border:0;border-radius:0}
+.leaflet-container .completo a{display:flex;align-items:center;justify-content:center;font:700 20px var(--display)}
 /* Controles del mapa siempre claros con texto oscuro (en modo oscuro heredarían el texto claro de la web) */
 .leaflet-container .leaflet-control-layers,.leaflet-container .leaflet-bar a,
 .leaflet-container .leaflet-popup-content-wrapper,.leaflet-container .leaflet-popup-tip{background:#fff;color:#1f2617;color-scheme:light}
@@ -249,6 +279,17 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .visor audio{width:100%;max-width:420px}
 .visor p{margin:0;color:#eef0e6;font-size:.9rem;text-align:center}
 .visor .btn{flex:none;background:#eef0e6;color:#1f2617}
+/* Aviso emergente abajo (registro hecho, elemento eliminado con DESHACER) */
+.toast{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:3000;max-width:448px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:#1f2617;color:#fff;font:600 1rem var(--display);box-shadow:0 6px 20px rgba(0,0,0,.35);cursor:pointer}
+.toast .marca{flex:none;width:28px;height:28px;border-radius:50%;background:#2f9e44;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.toast.err .marca{background:#c0392b}
+.toast div{min-width:0}
+.toast small{display:block;font:400 .8rem var(--mono);opacity:.8}
+.toast .deshacer{margin-left:auto;flex:none;background:transparent;color:#b5e48c;font:800 .95rem var(--display);letter-spacing:.06em;padding:8px}
+/* Tema: Automático / Claro / Oscuro */
+.tema{display:flex;gap:4px;padding:3px;background:var(--bg);border:1px solid var(--line);border-radius:10px}
+.tema button{flex:1;padding:9px 4px;font:700 .88rem var(--display);background:transparent;color:var(--muted);border-radius:8px}
+.tema button[aria-pressed=true]{background:var(--olive);color:var(--olive-ink)}
 @media (max-width:360px){.send{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -279,7 +320,6 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       <p class="empleado" id="empleadoSub"></p>
     </div>
     <div class="cabder">
-      <span class="clock" id="clock">--:--:--</span>
       <button type="button" class="engranaje peq" id="btnPrueba" aria-label="Cargar datos de prueba" title="Cargar datos de prueba"><svg aria-hidden="true"><use href="#i-flask"/></svg></button>
       <button type="button" class="engranaje" id="tabCfg" aria-pressed="false" aria-label="Configuración" title="Configuración"><svg aria-hidden="true"><use href="#i-gear"/></svg></button>
     </div>
@@ -298,7 +338,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   <!-- PESTAÑA ACTIVIDAD -->
   <div class="panel" id="panelReg" role="tabpanel">
     <details class="desp" id="detNueva" open>
-      <summary>Nueva actividad <button type="button" class="infobtn" data-info="infoNueva">i</button></summary>
+      <summary>Nueva actividad <button type="button" class="infobtn" data-info="infoNueva">i</button><span class="gps" id="gpsEstado" role="status"></span></summary>
       <div class="cuerpo">
         <div class="infobox" id="infoNueva" hidden>
           <p class="status" id="status" role="status" aria-live="polite"></p>
@@ -382,6 +422,12 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   <!-- CONFIGURACIÓN (botón de engranaje) -->
   <div class="panel" id="panelCfg" role="tabpanel" hidden>
     <section>
+      <h2>Apariencia</h2>
+      <div class="field">
+        <span class="lbl" id="temaLbl">Tema</span>
+        <div class="tema" role="group" aria-labelledby="temaLbl"><button type="button" id="temaAuto" data-tema="auto">Automático</button><button type="button" id="temaClaro" data-tema="claro">Claro</button><button type="button" id="temaOscuro" data-tema="oscuro">Oscuro</button></div>
+        <p class="hint">Claro: se lee mejor a pleno sol. Oscuro: gasta menos batería. Se aplica al momento.</p>
+      </div>
       <h2>Empleado <button type="button" class="infobtn" data-info="infoCfgEmp">i</button></h2>
       <div class="infobox" id="infoCfgEmp" hidden>
         <p class="hint">El nombre se usa en todos los registros que se hagan desde este móvil.</p>
@@ -440,7 +486,6 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
             <div class="barraizq"><button type="button" class="mini" id="btnTodos${s}">Selecciona Todo</button><button type="button" class="btn danger ico" id="btnBorrar${s}">${ico('trash')}Eliminar</button></div>
             <button type="button" class="btn ico cta" id="btnCompartir${s}">${ico('share')}Compartir</button>
           </div>
-          <div class="confirmbox" id="confirmBox${s}" hidden><span id="confirmTxt${s}"></span><button type="button" class="btn danger" id="btnSiBorrar${s}">Sí, eliminar</button><button type="button" class="btn sec" id="btnNoBorrar${s}">Cancelar</button></div>
           <div class="confirmbox share" id="shareBox${s}" hidden><span id="shareTxt${s}"></span>${chk('shWa','WhatsApp')}${chk('shMail','Email')}${d.hasAttribute('data-adjuntos')?chk('shAdj','Con fotos, vídeos y audios','(menú de compartir del móvil)'):''}
             <button type="button" class="btn sec" id="btnShNo${s}">Cancelar</button><button type="button" class="btn" id="btnShOk${s}">Confirmar</button></div>
           <div class="vista" role="group" aria-label="Modo de vista"><button type="button" id="vistaLista${s}" aria-pressed="true">Listado</button><button type="button" id="vistaMapa${s}" aria-pressed="false">Mapa</button></div>
@@ -459,6 +504,16 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         <ul class="tiposed" id="${k}Lista"></ul>
         <div class="tiposbtn"><button type="button" class="mini" id="${k}Anadir">Añadir</button><button type="button" class="mini" id="${k}Restaurar">Restaurar</button></div></div></details>`;
   });
+
+  // Tema elegido en Configuración (Automático sigue el modo del móvil)
+  const KEY_TEMA='gea_tema';
+  function ponerTema(t){
+    const raiz=document.documentElement;
+    if(t==='claro')raiz.dataset.theme='light';else if(t==='oscuro')raiz.dataset.theme='dark';else delete raiz.dataset.theme;
+    document.querySelectorAll('.tema button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tema===t));
+  }
+  ponerTema((()=>{try{return JSON.parse(localStorage.getItem(KEY_TEMA))||'auto'}catch(e){return 'auto'}})());
+  document.querySelectorAll('.tema button').forEach(b=>b.addEventListener('click',()=>{try{localStorage.setItem(KEY_TEMA,JSON.stringify(b.dataset.tema))}catch(e){}ponerTema(b.dataset.tema)}));
 
   const KEY_REG='gea_registros', KEY_NOM='gea_nombre', KEY_ACT='gea_actividad', KEY_TEL='gea_telefono', KEY_MAIL='gea_email',
     KEY_CAPA='gea_capa_mapa2', KEY_PTS='gea_puntos', KEY_INC='gea_incidencias', KEY_PAUSA='gea_pausa_gps',
@@ -743,14 +798,32 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     llenarSelect(sel,opciones,actual);
   }
 
-  // Reloj: cada segundo la hora, los datos en vivo de la actividad en curso y la cuenta atrás de la pausa
+  // Cada segundo: los datos en vivo y el cronómetro de la actividad en curso, y la cuenta atrás de la pausa
   let diaPintado=hoyKey();
   setInterval(()=>{
-    const d=new Date();$('clock').textContent=`${hhmm(d)}:${pad(d.getSeconds())}`;
+    const d=new Date();
     if(diaKey(d)!==diaPintado){diaPintado=diaKey(d);pintarTodo()}else actualizarVivo();
     if(pausa&&Date.now()>=pausa.hasta){actualizarSeguimiento();pintarListado()} // terminó la pausa: se reanuda sola, como con «reanudar»
-    else if(pausa)document.querySelectorAll('.pausacuenta').forEach(e=>{e.textContent=cuentaPausa()});
+    else if(pausa){document.querySelectorAll('.pausacuenta').forEach(e=>{e.textContent=cuentaPausa()});pintarGps()}
   },1000);
+
+  /* ---------- Aviso emergente ---------- */
+  // Abajo de la pantalla unos segundos; tocarlo lo cierra. accion: {texto,fn} añade un botón (DESHACER);
+  // alCerrar se ejecuta cuando el aviso se va sin pulsar ese botón.
+  let avisoEl=null, avisoT=null, avisoFin=null;
+  function aviso(texto,sub,{err=false,ms=3500,accion=null,alCerrar=null}={}){
+    cerrarAviso();
+    const t=el('div','toast'+(err?' err':''));t.setAttribute('role','status');
+    const d=el('div',null,texto);if(sub)d.appendChild(el('small',null,sub));
+    t.append(el('span','marca',err?'✕':'✓'),d);
+    if(accion){const b=boton('deshacer',accion.texto);b.addEventListener('click',e=>{e.stopPropagation();avisoFin=null;cerrarAviso();accion.fn()});t.appendChild(b)}
+    t.addEventListener('click',cerrarAviso);
+    document.body.appendChild(t);avisoEl=t;avisoFin=alCerrar;avisoT=setTimeout(cerrarAviso,ms);
+  }
+  function cerrarAviso(){
+    clearTimeout(avisoT);if(avisoEl){avisoEl.remove();avisoEl=null}
+    const f=avisoFin;avisoFin=null;if(f)f();
+  }
 
   function avisar(id,msg,cls){const s=$(id);s.textContent=msg;s.className='status '+(cls||'')}
   const status=(msg,cls)=>avisar('status',msg,cls);
@@ -793,16 +866,21 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     return {km:coma(m/1000),vel:ms>0?coma(m/1000/(ms/3600000)):'–',area:coma(areaM2(trazo)/10000,2),
       dur:info?(info.desde?durHHMM(Date.now()-new Date(info.desde)):info.texto):'--h:--m',vivo:(esHoy&&!mismoDia)||!!(info&&info.desde)};
   }
-  // Las dos líneas de información de una actividad
+  // Datos de una actividad en la tarjeta: cuadrícula con su nombre encima de cada valor
   function pintarInfo(e,r){
     const d=datosRecorrido(r);e.textContent='';e.dataset.vivo=d.vivo?1:0;
-    e.append(el('div',null,`Dist ${d.km} km · Área ${d.area} Ha`),el('div',null,`Dur. ${d.dur} · Vel. ${d.vel} km/h`));
+    [['Duración',d.dur],['Distancia',d.km+' km'],['Área',d.area+' ha'],['Velocidad',d.vel+' km/h']].forEach(([k,v])=>{
+      const c=el('span');c.append(el('em',null,k),el('strong',null,v));e.appendChild(c);
+    });
   }
   const lineasInfo=r=>{const d=datosRecorrido(r);return [`Dist ${d.km} km · Área ${d.area} Ha`,`Dur. ${d.dur} · Vel. ${d.vel} km/h`]};
   // Refresca cada segundo solo las tarjetas cuyos datos cambian con el tiempo
   function actualizarVivo(){
     document.querySelectorAll('.item .info[data-vivo="1"]').forEach(e=>{const r=registros.find(x=>x.id===e.dataset.id);if(r)pintarInfo(e,r)});
+    document.querySelectorAll('.crono b').forEach(e=>{e.textContent=cronometro(e.dataset.desde)});
   }
+  // Tiempo desde el inicio de la actividad en curso: hh:mm:ss
+  const cronometro=desde=>{const s=Math.max(0,Math.floor((Date.now()-new Date(desde))/1000));return `${pad(Math.floor(s/3600))}:${pad(Math.floor(s/60)%60)}:${pad(s%60)}`};
 
   /* ---------- Duraciones ---------- */
   const durHHMM=ms=>{const min=Math.max(0,Math.floor(ms/60000));return `${pad(Math.floor(min/60))}h:${pad(min%60)}m`};
@@ -837,16 +915,17 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 
   /* ---------- Tarjetas del listado (actividades e incidencias) ---------- */
   const fechaRegistro=r=>{const d=new Date(r.iso);return `${pad(d.getDate())}/${pad(d.getMonth()+1)} - ${hhmm(d)}`};
-  // Título en negrita con el empleado en la etiqueta verde y, detrás, las etiquetas (En curso, Último…)
+  // Título en negrita y, detrás, las etiquetas (En curso, Último…). El empleado solo aparece si no es el de este móvil.
   function titulo(texto,nombre,tags){
     const b=el('b',null,texto);
-    if(nombre)b.appendChild(el('span','act',nombre));
+    if(nombre&&nombre!==cfg.nombre)b.appendChild(el('span','act',nombre));
     tags.filter(Boolean).forEach(t=>b.appendChild(el('span','tag',t)));
     return b;
   }
-  // Fecha y hora (DD/MM - HH:MM) y, a su derecha, el enlace a Google Maps (icono tachado si no hay posición)
+  // Hora (el día ya lo dicen el título del listado o el encabezado de cada día) y, a su derecha,
+  // el enlace a Google Maps (icono tachado si no hay posición)
   function filaFecha(x){
-    const f=el('div','fh');f.appendChild(el('span','fecha',fechaRegistro(x)));
+    const f=el('div','fh'), h=el('span','fecha',hhmm(new Date(x.iso)));h.title=fechaRegistro(x);f.appendChild(h);
     if(x.lat!=null){
       const a=el('a','ubic');a.href=`https://maps.google.com/?q=${x.lat},${x.lon}`;a.target='_blank';a.rel='noopener';
       a.title='Ver en Google Maps';a.setAttribute('aria-label','Ver en Google Maps');a.innerHTML=ico('ubic');f.appendChild(a);
@@ -940,9 +1019,27 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       const C=L.Control.extend({options:{position:pos},onAdd(){const c=L.DomUtil.create('div',clase);crear(c);L.DomEvent.disableClickPropagation(c);return c}});
       new C().addTo(mapa);
     }
+    // Pantalla completa: el mapa ocupa toda la pantalla; ✕ (o Escape) lo devuelve a su sitio
+    let completo=false, btnCompleto=null;
+    function pantallaCompleta(v){
+      if(completo===v)return;
+      completo=v;$(idMapa).classList.toggle('completa',v);document.body.style.overflow=v?'hidden':'';
+      etiquetaCompleto();
+      if(mapa)setTimeout(()=>mapa.invalidateSize(),50);
+    }
+    function etiquetaCompleto(){
+      if(!btnCompleto)return;
+      btnCompleto.textContent=completo?'✕':'⤢';btnCompleto.title=completo?'Salir de pantalla completa':'Mapa a pantalla completa';btnCompleto.setAttribute('aria-label',btnCompleto.title);
+    }
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&completo)pantallaCompleta(false)});
     function iniciar(){
       // Sin botones + / −: el zoom se hace con los dedos (o la rueda del ratón)
       mapa=L.map(idMapa,{zoomControl:false});
+      control('topright','leaflet-bar completo',c=>{
+        const a=L.DomUtil.create('a','',c);a.href='#';a.setAttribute('role','button');btnCompleto=a;
+        L.DomEvent.on(a,'click',e=>{L.DomEvent.preventDefault(e);pantallaCompleta(!completo)});
+      });
+      etiquetaCompleto();
       ponerFondos(mapa,`${KEY_CAPA}_${idMapa}`,'Aérea');
       capas={};
       if(conVista){capas.pol=L.layerGroup().addTo(mapa);capas.lin=L.layerGroup().addTo(mapa)}
@@ -959,7 +1056,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         L.DomEvent.on(a,'click',e=>{L.DomEvent.preventDefault(e);accion()});
       }));
     }
-    return {dibujar(fn,reencuadrar=true){
+    return {salir:()=>pantallaCompleta(false),dibujar(fn,reencuadrar=true){
       if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';$(idMapa).hidden=true;return}
       if(!mapa)iniciar();
       Object.entries(capas).forEach(([k,c])=>{if(k!=='yo')c.clearLayers()});
@@ -974,6 +1071,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   }
 
   /* ---------- Calendario (selección de uno o varios días) ---------- */
+  const DIAS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   function crearCalendario(sfx,api,nombre){
     let mes=new Date();mes=new Date(mes.getFullYear(),mes.getMonth(),1);
@@ -1040,7 +1138,14 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       // Número de orden de cada marcada con posición: el mismo que lleva su marcador en el mapa
       const num=new Map();
       lista.filter(x=>api.sel.has(x.id)&&conPosicion(x)&&!ocultas.has(o.clave(x))).forEach((x,i)=>num.set(x.id,i+1));
+      // Con varios días a la vista, un encabezado por día con su número de elementos
+      const porDia={};lista.forEach(x=>{const k=diaDe(x);porDia[k]=(porDia[k]||0)+1});
+      const variosDias=Object.keys(porDia).length>1;let diaAnt='';
       lista.slice().reverse().forEach(x=>{
+        if(variosDias&&diaDe(x)!==diaAnt){
+          diaAnt=diaDe(x);const d=new Date(x.iso), n=porDia[diaAnt], h=el('li','diahead',`${DIAS[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`);
+          h.appendChild(el('small',null,`${n} ${plural(n,o.singular,o.plural)}`));ol.appendChild(h);
+        }
         const li=el('li'), lab=el('label','item'+(api.sel.has(x.id)?' sel':'')), cb=el('input');
         cb.type='checkbox';cb.checked=api.sel.has(x.id);
         cb.addEventListener('change',()=>{cb.checked?api.sel.add(x.id):api.sel.delete(x.id);api.pintar()});
@@ -1062,7 +1167,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       E('btnTodos').textContent=(n===lista.length&&n>0)?'Quitar Todo':'Selecciona Todo';
       ['btnCompartir','btnBorrar'].forEach(id=>E(id).disabled=n===0);
       ['btnCompartir','btnBorrar','btnTodos'].forEach(id=>E(id).hidden=enMapa); // en el mapa no tienen uso
-      E('confirmBox').hidden=E('shareBox').hidden=true;
+      E('shareBox').hidden=true;
+      if(!enMapa||$(o.panel).hidden)mapa.salir(); // sin mapa a la vista no puede quedar a pantalla completa
       cal.pintar();
       // Leyenda seleccionable: cada actividad o tipo presente se muestra u oculta en el mapa (selección múltiple)
       const ley=E('leyenda');ley.textContent='';
@@ -1093,7 +1199,6 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     E('btnCompartir').addEventListener('click',()=>{
       if(!hayMarcadas())return;
       const lista=api.marcadas(), n=lista.length;
-      E('confirmBox').hidden=true;
       E('shareTxt').textContent=`¿Cómo quieres compartir ${n===1?`la ${o.singular} marcada`:`las ${n} ${o.plural} marcadas`}?`;
       E('shWa').checked=E('shMail').checked=true;
       if(E('shAdj')){E('shAdj').checked=false;E('shAdj').closest('label').hidden=!lista.some(x=>(x.adjuntos||[]).length)}
@@ -1105,19 +1210,20 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       o.compartir(lista,E('shWa').checked,E('shMail').checked,!!E('shAdj')&&E('shAdj').checked);
     });
     E('btnShNo').addEventListener('click',()=>{E('shareBox').hidden=true});
+    // Eliminar: se quitan al momento y un aviso ofrece DESHACER durante 8 segundos
     E('btnBorrar').addEventListener('click',()=>{
       if(!hayMarcadas())return;
       E('shareBox').hidden=true;
-      E('confirmTxt').textContent=o.textoBorrar(api.marcadas().length);
-      E('confirmBox').hidden=false;
-    });
-    E('btnNoBorrar').addEventListener('click',()=>{E('confirmBox').hidden=true});
-    E('btnSiBorrar').addEventListener('click',async()=>{
-      const borrar=api.marcadas(), msg=await o.borrar(borrar,new Set(borrar.map(x=>x.id)));
+      const borrar=api.marcadas(), ids=new Set(borrar.map(x=>x.id)), n=ids.size, diasAntes=new Set(api.dias), selAntes=new Set(api.sel);
+      const b=o.borrar(borrar,ids);
       api.dias=new Set([...api.dias].filter(k=>o.datos().some(x=>diaDe(x)===k)));
       api.sel=new Set();
       o.trasBorrar();
-      api.status(msg,'ok');
+      const txt=o.textoBorrado(n);api.status(txt+'.','ok');
+      aviso(txt,'Se borra del todo en 8 s',{err:true,ms:8000,alCerrar:b.alFinal,accion:{texto:'DESHACER',fn:()=>{
+        b.deshacer();api.dias=diasAntes;api.sel=selAntes;o.trasBorrar();
+        api.status(`${n} ${plural(n,'recuperado','recuperados')}.`,'ok');
+      }}});
     });
     return api;
   }
@@ -1132,6 +1238,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       // Actividad en curso (la que recibe los puntos GPS): botón pausar/reanudar a la derecha de la tarjeta
       const curso=actividadEnCurso(), esCurso=!!curso&&curso.id===r.id;
       if(esCurso){
+        lab.classList.add('curso');lab.style.setProperty('--c',iconoDe(r).color);
+        const c=el('div','crono'), b=el('b',null,cronometro(r.iso));b.dataset.desde=r.iso;
+        c.append(el('small',null,`En curso desde las ${hhmm(new Date(r.iso))}`),b);lab.appendChild(c);
         const pausada=enPausa(), ctl=el('div','pausa'), bt=boton('pausabtn');bt.setAttribute('aria-pressed',pausada);
         bt.title=pausada?'Reanudar la toma de coordenadas':'Pausar la toma de coordenadas';
         bt.innerHTML=ico(pausada?'play':'pause',24)+`<span>${pausada?'reanudar':'pausar'}</span>`+(pausada?`<small class="pausacuenta">${cuentaPausa()}</small>`:'');
@@ -1177,9 +1286,17 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       return {nota,encuadre};
     },
     compartir(lista,wa,mail){if(wa)enviarWhatsapp(lista);if(mail)enviarEmail(lista)},
-    textoBorrar:n=>`¿Eliminar ${n} ${plural(n,'registro')} del móvil? No se puede deshacer.`,
-    borrar(lista,ids){registros=registros.filter(r=>!ids.has(r.id));guardarRegistros();return `${ids.size} ${plural(ids.size,'registro')} ${plural(ids.size,'eliminado')}.`},
-    trasBorrar:()=>pintarTodo()
+    textoBorrado:n=>`${n} ${plural(n,'registro')} ${plural(n,'eliminado')}`,
+    // Quita los registros (y sus puntos GPS) y devuelve cómo recuperarlos
+    borrar(lista,ids){
+      const quitados=registros.filter(r=>ids.has(r.id)), pts=puntos.filter(p=>ids.has(p.registroId));
+      registros=registros.filter(r=>!ids.has(r.id));guardarRegistros();
+      return {deshacer(){
+        registros=registros.concat(quitados).sort(porHora);puntos=puntos.concat(pts.filter(p=>!puntos.includes(p))).sort(porHora);
+        guardarRegistros();guardarPuntos();
+      }};
+    },
+    trasBorrar(){pintarTodo();actualizarSeguimiento()}
   });
   function pintarListado(){LA.pintar()}
   function pintarTodo(){pintarListado();actualizarActividades()}
@@ -1246,8 +1363,13 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     pintarTodo();$('btnRegistro').disabled=false;
     actualizarSeguimiento();
     if(r.actividad===FIN)sugerirEnvioDia(r);
-    if(pos.error){status(sinGps?'Registrado sin posición: este navegador no da GPS.':'Registrado sin posición: '+r.error+'.','err');ayudaUbicacion(pos.codigo)}
-    else{status(`Registrado ${r.fechaHora.slice(11,19)} · precisión ±${Math.round(r.precision)} m`,'ok');if(navigator.vibrate)navigator.vibrate(120)}
+    if(pos.error){
+      status(sinGps?'Registrado sin posición: este navegador no da GPS.':'Registrado sin posición: '+r.error+'.','err');ayudaUbicacion(pos.codigo);
+      aviso(`Actividad registrada sin posición: ${r.actividad}`,sinGps?'Este navegador no da GPS':`GPS: ${r.error}. Mira la ayuda para activarlo.`,{err:true,ms:5000});
+    }else{
+      status(`Registrado ${r.fechaHora.slice(11,19)} · precisión ±${Math.round(r.precision)} m`,'ok');if(navigator.vibrate)navigator.vibrate(120);
+      aviso(`Actividad registrada: ${r.actividad}`,`${hhmm(ahora)} · GPS ±${Math.round(r.precision)} m`+(r.actividad===FIN?' · seguimiento parado':' · seguimiento activo'));
+    }
   });
 
   /* ---------- Seguimiento GPS cada 5 minutos ---------- */
@@ -1359,7 +1481,17 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     if(reg&&!pausa)iniciarSeguimiento();else detenerSeguimiento();
     pintarSeguimiento();
   }
+  // Píldora junto a «Nueva actividad»
+  function pintarGps(){
+    const reg=actividadEnCurso(), g=$('gpsEstado');
+    const [cls,txt,tit]=!reg?['','parado','Se pone en marcha con Inicio Jornada']
+      :segError?['err','error',`Seguimiento GPS sin funcionar: ${segError}`]
+      :enPausa()?['pausa','pausa '+cuentaPausa(),'Toma de coordenadas en pausa; se reanuda sola al acabar la cuenta atrás']
+      :['on','activo','Guardando la posición cada 5 minutos'];
+    g.className='gps '+cls;g.innerHTML='<i></i><b>GPS </b>';g.append(txt);g.title=tit;
+  }
   function pintarSeguimiento(){
+    pintarGps();
     const reg=actividadEnCurso(), box=$('seg'), txt=$('segTxt');
     if(!reg){box.className='seg';txt.textContent='Seguimiento GPS parado. Arranca con Inicio Jornada y se para con Fin Jornada.';return}
     if(segError){box.className='seg err';txt.textContent=`Seguimiento GPS sin funcionar: ${segError}.`;return}
@@ -1654,9 +1786,14 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     LI.dias=new Set();LI.sel=new Set([x.id]);
     incOcupada=false;actualizarBtnInc();
     pintarIncidencias();pintarListado();
-    if(!pos.error){statusInc(`Incidencia guardada ${x.fechaHora.slice(11,19)} · precisión ±${Math.round(x.precision)} m. Envíala desde el listado.`,'ok');if(navigator.vibrate)navigator.vibrate(120)}
-    else if(pos.codigo===0)statusInc('Incidencia guardada sin posición: este navegador no da GPS.','err');
-    else{statusInc('Incidencia guardada sin posición: '+x.error+'.','err');abrir('reg');ayudaUbicacion(pos.codigo)}
+    if(!pos.error){
+      statusInc(`Incidencia guardada ${x.fechaHora.slice(11,19)} · precisión ±${Math.round(x.precision)} m. Envíala desde el listado.`,'ok');if(navigator.vibrate)navigator.vibrate(120);
+      aviso(`Incidencia registrada: ${x.tipo}`,`${hhmm(ahora)} · GPS ±${Math.round(x.precision)} m · envíala desde el listado`);
+    }else{
+      aviso(`Incidencia registrada sin posición: ${x.tipo}`,pos.codigo===0?'Este navegador no da GPS':`GPS: ${x.error}`,{err:true,ms:5000});
+      if(pos.codigo===0)statusInc('Incidencia guardada sin posición: este navegador no da GPS.','err');
+      else{statusInc('Incidencia guardada sin posición: '+x.error+'.','err');abrir('reg');ayudaUbicacion(pos.codigo)}
+    }
   });
 
   /* ---------- Listado de incidencias ---------- */
@@ -1708,11 +1845,14 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       if(mail)abrirEmail(['Incidencia',sinRepetir(lista.map(x=>x.tipo)),sinRepetir(lista.map(x=>x.nombre)),rango(lista)].join(' '),textoIncidencias(lista));
       if(adj)compartirIncConAdjuntos(lista);
     },
-    textoBorrar:n=>`¿Eliminar ${n} ${plural(n,'incidencia')} y sus adjuntos del móvil? No se puede deshacer.`,
-    async borrar(lista,ids){
-      for(const x of lista)for(const a of x.adjuntos||[])await media.borrar(a.id);
+    textoBorrado:n=>`${n} ${plural(n,'incidencia')} ${plural(n,'eliminada')}`,
+    // Quita las incidencias; sus fotos, vídeos y audios se borran cuando ya no se puede deshacer
+    borrar(lista,ids){
       incidencias=incidencias.filter(x=>!ids.has(x.id));guardarIncidencias();
-      return `${ids.size} ${plural(ids.size,'incidencia')} ${plural(ids.size,'eliminada')}.`;
+      return {
+        deshacer(){incidencias=incidencias.concat(lista).sort(porHora);guardarIncidencias()},
+        alFinal(){lista.forEach(x=>(x.adjuntos||[]).forEach(a=>media.borrar(a.id)))}
+      };
     },
     trasBorrar(){pintarIncidencias();pintarListado()}
   });
