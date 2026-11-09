@@ -533,7 +533,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     // Aleatorio con semilla por día: cada día tiene siempre los mismos datos aunque se recargue la página
     const azarDe=semilla=>()=>{semilla|=0;semilla=semilla+0x6D2B79F5|0;let t=Math.imul(semilla^semilla>>>15,1|semilla);
       t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
-    // Una jornada completa: Inicio Jornada, entre 2 y 5 tareas (Poda, Riego, Otros) y Fin Jornada.
+    // Una jornada completa: Inicio Jornada, entre 2 y 5 tareas (Poda, Riego, Recolección, Otros) y Fin Jornada.
     // Posiciones en ±0,0006° lat y ±0,0008° lon de un centro (≈ ±67 × ±70 m): todas a menos de 200 m entre sí.
     function jornadaEjemplo(n){
       const d0=dia(n,0,0), azar=azarDe(d0.getFullYear()*1000+d0.getMonth()*40+d0.getDate());
@@ -547,7 +547,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       const libre=fin-inicio-15*(nTareas+1);
       let tAc=inicio;
       const horas=pesos.slice(0,-1).map(p=>(tAc+=15+Math.round(p/sumaP*libre)));
-      const acts=[INICIO_EJ,...horas.map(()=>['Poda','Riego','Otros'][Math.floor(azar()*3)]),FIN_EJ];
+      const acts=[INICIO_EJ,...horas.map(()=>['Poda','Riego','Recolección','Otros'][Math.floor(azar()*4)]),FIN_EJ];
       return [inicio,...horas,fin].map((min,i)=>[empleado,cLat+entre(-0.0006,0.0006),cLon+entre(-0.0008,0.0008),
         Math.round(entre(4,12)),dia(n,Math.floor(min/60),min%60),acts[i]]);
     }
@@ -635,10 +635,11 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const base=new Date(), dia=(n,h,m)=>new Date(base.getFullYear(),base.getMonth(),base.getDate()+n,h,m);
     const empleado=store.get(KEY_NOM,'')||'Angel';
     const ej=[
-      [-3,9,35,'Avería de riego','Fuga en un gotero de la línea 4, se encharca el pie del olivo.',0.00041,0.00052,7,[]],
-      [-2,10,48,'Árbol caído','Olivo partido por el viento, bloquea el camino de la parcela norte.',-0.00033,-0.00061,5,['foto']],
-      [-1,12,15,'Herramienta rota','La tijera eléctrica de poda no carga. Dejo nota de voz.',0.00012,0.00071,9,['audio']],
-      [0,9,30,'Vallado o puerta','Puerta de acceso desde la carretera sin cerrar bien.',-0.00052,0.00018,6,['foto','audio']]
+      [-4,11,20,'Producto','Quedan solo 3 sacos de abono en la nave, hay que reponer.',-0.00020,-0.00045,6,[]],
+      [-3,9,35,'Riego','Fuga en un gotero de la línea 4, se encharca el pie del olivo.',0.00041,0.00052,7,[]],
+      [-2,10,48,'Olivo','Olivo partido por el viento, bloquea el camino de la parcela norte.',-0.00033,-0.00061,5,['foto']],
+      [-1,12,15,'Vehículo/Herramienta','La tijera eléctrica de poda no carga. Dejo nota de voz.',0.00012,0.00071,9,['audio']],
+      [0,9,30,'Acceso/Nave','Puerta de acceso desde la carretera sin cerrar bien.',-0.00052,0.00018,6,['foto','audio']]
     ].filter(x=>dia(x[0],x[1],x[2])<base);
     ej.forEach(([n,h,m,tipo,comentario,dLat,dLon,prec,adj])=>{
       const d=new Date(dia(n,h,m));
@@ -712,8 +713,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   // Listas editables desde Configuración: actividades (además de Inicio y Fin Jornada) y tipos de incidencia
   const KEY_TIPOS='gea_tipos_incidencia', KEY_TAREAS='gea_tipos_actividad';
-  const TIPOS_SERIE=['Árbol caído','Herramienta rota','Avería de riego','Vallado o puerta','Animales','Otros'];
-  const TAREAS_SERIE=['Poda','Riego','Otros'];
+  const TIPOS_SERIE=['Olivo','Vehículo/Herramienta','Acceso/Nave','Riego','Producto','Otros'];
+  const TAREAS_SERIE=['Poda','Riego','Recolección','Otros'];
   const ACT_FIJAS=['Inicio Jornada','Fin Jornada'];
   const leerLista=(k,serie)=>{const t=store.get(k,null);return Array.isArray(t)&&t.length?t:serie.slice()};
   let tiposInc=leerLista(KEY_TIPOS,TIPOS_SERIE), tareasAct=leerLista(KEY_TAREAS,TAREAS_SERIE);
@@ -995,7 +996,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   // numerados por orden cronológico; con un día filtrado se unen con una línea en ese orden.
   // Forma y color de cada actividad en el mapa (y en su leyenda)
   const ICONOS={'Inicio Jornada':{color:'#d62828',cuad:true},'Fin Jornada':{color:'#111111',cuad:true},
-    'Poda':{color:'#2a9d3f'},'Riego':{color:'#1f6fd1'},'Otros':{color:'#e08a00'}};
+    'Poda':{color:'#2a9d3f'},'Riego':{color:'#1f6fd1'},'Recolección':{color:'#8a4fd0'},'Otros':{color:'#e08a00'}};
   const ICONO_OTRO={color:'#6b7280'};
   const iconoDe=r=>ICONOS[r.actividad]||ICONO_OTRO;
   function crearPin(ic,texto){
@@ -1488,15 +1489,15 @@ textarea:focus{outline:none;border-color:var(--olive)}
   $('sugCerrar').addEventListener('click',()=>{$('sugFin').hidden=true});
 
   /* ---------- Datos de prueba ---------- */
-  // Jornada abierta del empleado configurado: Inicio Jornada, Poda, Riego y Otros, cada actividad de unos 90 minutos
+  // Jornada abierta del empleado configurado: Inicio Jornada, Poda, Riego, Recolección y Otros, cada actividad de unos 90 minutos
   // (la última llega hasta ahora), con un punto GPS cada 5 minutos. Cada actividad se concentra en una zona de la
   // finca (la caminata no se aleja más de ≈35 m de su centro) y todo queda a menos de 500 m. Solo Poda y Otros
-  // comparten zona; Inicio Jornada y Riego tienen zonas propias. Se guardan como registros reales (marcados «prueba»).
+  // comparten zona; Inicio Jornada, Riego y Recolección tienen zonas propias. Se guardan como registros reales (marcados «prueba»).
   $('btnPrueba').hidden=!MOSTRAR_EJEMPLOS;
   const ZONAS_PRUEBA={ // desplazamiento en grados respecto a FINCA (0,001° ≈ 111 m en latitud, ≈ 88 m en longitud)
-    [INICIO]:[0,0], 'Poda':[0.0013,-0.0014], 'Riego':[-0.0012,0.0017], 'Otros':[0.0015,-0.0011]};
+    [INICIO]:[0,0], 'Poda':[0.0013,-0.0014], 'Riego':[-0.0012,0.0017], 'Recolección':[-0.0016,-0.0012], 'Otros':[0.0015,-0.0011]};
   function cargarPrueba(){
-    const pasos=[INICIO,'Poda','Riego','Otros'];
+    const pasos=[INICIO,'Poda','Riego','Recolección','Otros'];
     // 90 min por actividad; si es de madrugada se acortan para que todo caiga en el día de hoy
     const medianoche=new Date().setHours(0,0,0,0);
     const dur=Math.max(5,Math.min(90,Math.floor((Date.now()-medianoche)/60000/pasos.length)-1));
@@ -1532,9 +1533,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
     // El Listado queda filtrado en el día de hoy, donde solo están los registros de prueba recién cargados
     // Incidencias de prueba en la zona de El Caimbo, de hoy, tras el inicio de la jornada de prueba
     incidencias=incidencias.filter(x=>!x.prueba);
-    [['Árbol caído','Olivo caído por el viento junto al camino principal.',0.00045,-0.00050,25],
-     ['Avería de riego','Tubería de goteo rota en la línea 7, sale agua.',-0.00040,0.00060,15],
-     ['Herramienta rota','Se ha roto la tijera de poda, hay que sustituirla.',0.00010,0.00020,8]].forEach(([tipo,comentario,dLa,dLo,hace])=>{
+    [['Olivo','Olivo caído por el viento junto al camino principal.',0.00045,-0.00050,25],
+     ['Riego','Tubería de goteo rota en la línea 7, sale agua.',-0.00040,0.00060,15],
+     ['Vehículo/Herramienta','Se ha roto la tijera de poda, hay que sustituirla.',0.00010,0.00020,8]].forEach(([tipo,comentario,dLa,dLo,hace])=>{
       const d=new Date(Date.now()-hace*60000);
       incidencias.push({id:nuevoId(),nombre:cfg.nombre,tipo,comentario,fechaHora:fechaHora(d),iso:d.toISOString(),
         lat:FINCA.lat+dLa,lon:FINCA.lon+dLo,precision:5+Math.round(Math.random()*7),adjuntos:[],prueba:true});
