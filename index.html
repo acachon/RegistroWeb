@@ -430,6 +430,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
         </div>
         <ol id="listaInc"></ol>
         <div id="mapaInc" hidden></div>
+        <ul class="leyenda" id="leyendaInc" hidden></ul>
         <p class="hint" id="mapaNotaInc" hidden></p>
         <p class="empty" id="vacioListaInc">No hay incidencias.</p>
         <p class="status" id="statusListInc" role="status" aria-live="polite"></p>
@@ -1007,9 +1008,13 @@ textarea:focus{outline:none;border-color:var(--olive)}
   }));
   // Incidencia: triángulo de aviso ámbar con su número
   const SVG_TRI='<svg viewBox="0 0 30 28" aria-hidden="true"><path d="M15 2 L28.5 26 H1.5 Z" fill="#f2b600" stroke="#1f2617" stroke-width="2" stroke-linejoin="round"/></svg>';
-  function crearPinInc(texto){
-    const p=document.createElement('div');p.className='pin inc';p.innerHTML=SVG_TRI;
-    const s=document.createElement('span');s.textContent=texto;p.appendChild(s);return p;
+  // Color de cada tipo de incidencia según su posición en la lista de Configuración; los tipos que ya no están salen en gris
+  const PALETA_INC=['#f2b600','#d62828','#1d6fd6','#2e9e4f','#8a4fd0','#e8590c','#0ea5a4','#c2185b','#6d4c41','#7a8b00'];
+  const colorInc=tipo=>{const i=tiposInc.indexOf(tipo);return i<0?'#9aa0a6':PALETA_INC[i%PALETA_INC.length]};
+  const textoSobre=hex=>{const n=parseInt(hex.slice(1),16),l=.299*(n>>16)+.587*(n>>8&255)+.114*(n&255);return l>150?'#111':'#fff'};
+  function crearPinInc(texto,color='#f2b600'){
+    const p=document.createElement('div');p.className='pin inc';p.innerHTML=SVG_TRI.replace('#f2b600',color);
+    const s=document.createElement('span');s.textContent=texto;s.style.color=textoSobre(color);p.appendChild(s);return p;
   }
   // Globo de una incidencia (con textContent: tipo y comentario vienen de lo que escribe el usuario)
   function globoIncidencia(x,num){
@@ -1021,7 +1026,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     return pop;
   }
   function marcadorIncidencia(x,num,capa){
-    const icono=L.divIcon({className:'',html:crearPinInc(num?String(num):'!').outerHTML,iconSize:[30,28],iconAnchor:[15,24]});
+    const icono=L.divIcon({className:'',html:crearPinInc(num?String(num):'!',colorInc(x.tipo)).outerHTML,iconSize:[30,28],iconAnchor:[15,24]});
     return L.marker([x.lat,x.lon],{icon:icono,zIndexOffset:500}).bindPopup(()=>globoIncidencia(x,num)).addTo(capa);
   }
   // Fondos de mapa a elegir (Mapa / Satélite); cada mapa recuerda el último usado en este móvil
@@ -1817,11 +1822,11 @@ textarea:focus{outline:none;border-color:var(--olive)}
     lista.slice().reverse().forEach(x=>{
       const li=document.createElement('li');
       const lab=document.createElement('label');lab.className='item hoyitem col'+(selInc.has(x.id)?' sel':'');
-      lab.style.borderLeftColor='#f2b600';
+      lab.style.borderLeftColor=colorInc(x.tipo);
       const cb=document.createElement('input');cb.type='checkbox';cb.id='inc_'+x.id;cb.checked=selInc.has(x.id);
       cb.addEventListener('change',()=>{cb.checked?selInc.add(x.id):selInc.delete(x.id);pintarIncidencias()});
       const izq=document.createElement('div');izq.className='izq';izq.appendChild(cb);
-      if(num.has(x.id)){const pin=crearPinInc(String(num.get(x.id)));pin.title=`Nº ${num.get(x.id)} en el mapa`;izq.appendChild(pin)}
+      if(num.has(x.id)){const pin=crearPinInc(String(num.get(x.id)),colorInc(x.tipo));pin.title=`Nº ${num.get(x.id)} en el mapa`;izq.appendChild(pin)}
       const fila=document.createElement('div');fila.className='itemfila';fila.appendChild(izq);fila.appendChild(contenidoIncidencia(x));
       lab.appendChild(fila);li.appendChild(lab);ol.appendChild(li);
     });
@@ -1834,7 +1839,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     $('contadorInc').textContent=lista.length;
     $('vacioListaInc').hidden=lista.length>0;
     $('vacioListaInc').textContent=diasSelInc.size?'No hay incidencias en los días elegidos.':'Hoy no hay incidencias.';
-    ol.hidden=vistaMapaInc;$('mapaInc').hidden=!vistaMapaInc;$('mapaNotaInc').hidden=!vistaMapaInc;
+    ol.hidden=vistaMapaInc;$('mapaInc').hidden=$('leyendaInc').hidden=!vistaMapaInc;$('mapaNotaInc').hidden=!vistaMapaInc;
     const n=incSeleccionadas().length, total=lista.length;
     $('btnTodosInc').textContent=(n===total&&total>0)?'Quitar todas':'Seleccionar todas';
     ['btnCompartirInc','btnBorrarInc'].forEach(id=>$(id).disabled=n===0);
@@ -1909,6 +1914,12 @@ textarea:focus{outline:none;border-color:var(--olive)}
       :sin?`${sin} incidencia${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
     conPos.forEach((x,i)=>{
       marcadorIncidencia(x,i+1,capaI);
+    });
+    // Leyenda: solo los tipos que se están mostrando
+    const ley=$('leyendaInc');ley.textContent='';
+    const orden=t=>{const i=tiposInc.indexOf(t);return i<0?999:i};
+    [...new Set(conPos.map(x=>x.tipo))].sort((a,b)=>orden(a)-orden(b)).forEach(t=>{
+      const li=document.createElement('li');li.appendChild(crearPinInc('',colorInc(t)));li.appendChild(document.createTextNode(t));ley.appendChild(li);
     });
     setTimeout(()=>{
       mapaI.invalidateSize();
