@@ -1359,19 +1359,23 @@ textarea:focus{outline:none;border-color:var(--olive)}
   $('sugCerrar').addEventListener('click',()=>{$('sugFin').hidden=true});
 
   /* ---------- Datos de prueba ---------- */
-  // Jornada abierta del empleado configurado: Inicio y luego Poda, Riego y Otros a +10, +15 y +20 min del anterior,
-  // terminando hace 5 min. Posiciones al azar en ±0,0003° (≈ ±33 m) de un punto: todas a menos de 100 m.
-  // Se guardan como registros reales (marcados «prueba»).
+  // Jornada abierta del empleado configurado: Inicio Jornada, Poda, Riego y Otros, cada actividad de unos 90 minutos
+  // (la última llega hasta ahora), con un punto GPS cada 5 minutos. Cada actividad se concentra en una zona de la
+  // finca (la caminata no se aleja más de ≈35 m de su centro) y todo queda a menos de 500 m. Solo Poda y Otros
+  // comparten zona; Inicio Jornada y Riego tienen zonas propias. Se guardan como registros reales (marcados «prueba»).
   $('btnPrueba').hidden=!MOSTRAR_EJEMPLOS;
+  const ZONAS_PRUEBA={ // desplazamiento en grados respecto a FINCA (0,001° ≈ 111 m en latitud, ≈ 88 m en longitud)
+    [INICIO]:[0,0], 'Poda':[0.0013,-0.0014], 'Riego':[-0.0012,0.0017], 'Otros':[0.0015,-0.0011]};
   $('btnPrueba').addEventListener('click',()=>{
-    const pasos=[[INICIO,0],['Poda',10],['Riego',15],['Otros',20]];
-    const total=pasos.reduce((s,p)=>s+p[1],0);
-    let t=Date.now()-(total+5)*60000;
-    const azar=()=>(Math.random()*2-1)*0.0003;
-    const nuevos=pasos.map(([actividad,min])=>{
-      t+=min*60000;const d=new Date(t);
+    const pasos=[INICIO,'Poda','Riego','Otros'];
+    // 90 min por actividad; si es de madrugada se acortan para que todo caiga en el día de hoy
+    const medianoche=new Date().setHours(0,0,0,0);
+    const dur=Math.max(5,Math.min(90,Math.floor((Date.now()-medianoche)/60000/pasos.length)-1));
+    const azar=()=>Math.random()*2-1;
+    const nuevos=pasos.map((actividad,i)=>{
+      const d=new Date(Date.now()-(pasos.length-i)*dur*60000), [zLa,zLo]=ZONAS_PRUEBA[actividad];
       return {id:nuevoId(),nombre:cfg.nombre,actividad,fechaHora:fechaHora(d),iso:d.toISOString(),
-        lat:FINCA.lat+azar(),lon:FINCA.lon+azar(),precision:5+Math.round(Math.random()*7),prueba:true};
+        lat:FINCA.lat+zLa+azar()*0.00012,lon:FINCA.lon+zLo+azar()*0.00015,precision:5+Math.round(Math.random()*7),prueba:true};
     });
     // Se borran todos los registros guardados y quedan solo estos de prueba (más los ejemplos de la
     // semana anterior, que nunca se guardan). Si había registros reales se pide confirmación.
@@ -1386,10 +1390,15 @@ textarea:focus{outline:none;border-color:var(--olive)}
     puntos=puntos.filter(p=>p.ejemplo&&idsQuedan.has(p.registroId));
     nuevos.forEach((r,i)=>{
       const hasta=i+1<nuevos.length?new Date(nuevos[i+1].iso).getTime():Date.now();
+      const [zLa,zLo]=ZONAS_PRUEBA[r.actividad];
+      // Paseo al azar alrededor del centro de la zona (≈ ±33 m en latitud, ±35 m en longitud)
+      let dLa=r.lat-FINCA.lat-zLa, dLo=r.lon-FINCA.lon-zLo;
       for(let tp=new Date(r.iso).getTime()+INTERVALO_MS;tp<hasta;tp+=INTERVALO_MS){
+        dLa=Math.max(-0.0003,Math.min(0.0003,dLa+azar()*0.00012));
+        dLo=Math.max(-0.0004,Math.min(0.0004,dLo+azar()*0.00015));
         const d=new Date(tp);
         puntos.push({id:nuevoId(),registroId:r.id,nombre:r.nombre,actividad:r.actividad,fechaHora:fechaHora(d),iso:d.toISOString(),
-          lat:FINCA.lat+azar(),lon:FINCA.lon+azar(),precision:5+Math.round(Math.random()*7),prueba:true});
+          lat:FINCA.lat+zLa+dLa,lon:FINCA.lon+zLo+dLo,precision:5+Math.round(Math.random()*7),prueba:true});
       }
     });
     guardarPuntos();
@@ -1409,7 +1418,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const hoyD=new Date();mesVista=new Date(hoyD.getFullYear(),hoyD.getMonth(),1);
     pintarTodo();actualizarSeguimiento();
     abrir('reg');$('detNueva').open=true;
-    status(`Cargados ${nuevos.length} registros y 3 incidencias de prueba de ${cfg.nombre} (jornada sin terminar).`,'ok');
+    status(`Cargados ${nuevos.length} registros (de ~${dur} min), sus puntos GPS y 3 incidencias de prueba de ${cfg.nombre} (jornada sin terminar).`,'ok');
   });
 
   /* ---------- Envíos ---------- */
