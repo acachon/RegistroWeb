@@ -111,6 +111,11 @@ label.item{cursor:pointer}
 .item .fh .ubic.sin .tacha{position:absolute;inset:4px;width:20px;height:20px}
 .item .fh a.ubic{display:inline-flex;padding:4px;margin:-4px 0}
 .item.hoyitem.col{flex-direction:column;align-items:stretch;gap:6px}
+.pausa{flex:none;margin-left:auto}
+.pausabtn{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px;padding:6px 8px;background:transparent;border:2px solid var(--olive);color:var(--olive);border-radius:10px;font:700 .72rem var(--display)}
+.pausabtn svg{width:24px;height:24px}
+.pausabtn[aria-pressed=true]{background:var(--olive);color:var(--olive-ink)}
+.pausaopc{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:.85rem;color:var(--muted)}
 .item .itemfila{display:flex;gap:12px;align-items:flex-start;width:100%}
 .item .info{color:var(--muted);text-align:left;padding-left:38px} /* 38 = ancho de la columna de la casilla (26) + hueco (12): queda alineado con la fecha */
 /* Registros de hoy: datos a la izquierda, duración hh:mm hasta el siguiente a la derecha */
@@ -503,6 +508,18 @@ textarea:focus{outline:none;border-color:var(--olive)}
           <p class="hint">Los cambios se aplican al pulsar «Guardar configuración». Los registros ya hechos conservan su actividad.</p>
         </div>
       </details>
+      <details class="desp" id="detPausas">
+        <summary>Tiempos de pausa del GPS</summary>
+        <div class="cuerpo">
+          <p class="hint">Minutos entre los que eliges al pausar la toma de coordenadas de la actividad en curso.</p>
+          <ul class="tiposed" id="pausasLista"></ul>
+          <div class="tiposbtn">
+            <button type="button" class="mini" id="pausaNueva">+ Añadir tiempo</button>
+            <button type="button" class="mini" id="pausasDefecto">Restaurar los de serie</button>
+          </div>
+          <p class="hint">Los cambios se aplican al pulsar «Guardar configuración».</p>
+        </div>
+      </details>
       <details class="desp" id="detTiposInc">
         <summary>Tipos de incidencia</summary>
         <div class="cuerpo">
@@ -522,6 +539,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
 <script>
 (function(){
+  const KEY_PAUSA='gea_pausa_gps';
+  let pausa=null; // {regId,hasta,min}: la toma de coordenadas de esa actividad está en pausa hasta ese momento
+  let menuPausa=false; // se está eligiendo cuánto pausar
   const KEY_REG='gea_registros', KEY_NOM='gea_nombre', KEY_ACT='gea_actividad', KEY_TEL='gea_telefono', KEY_MAIL='gea_email', KEY_CAPA='gea_capa_mapa2';
   const $=id=>document.getElementById(id);
   const store={
@@ -742,7 +762,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
   const TAREAS_SERIE=['Poda','Riego','Recolección','Otros'];
   const ACT_FIJAS=['Inicio Jornada','Fin Jornada'];
   const leerLista=(k,serie)=>{const t=store.get(k,null);return Array.isArray(t)&&t.length?t:serie.slice()};
+  const KEY_PAUSAS='gea_pausas_min', PAUSAS_SERIE=[15,30,60];
   let tiposInc=leerLista(KEY_TIPOS,TIPOS_SERIE), tareasAct=leerLista(KEY_TAREAS,TAREAS_SERIE);
+  let pausasMin=(()=>{const t=store.get(KEY_PAUSAS,null);return Array.isArray(t)&&t.length?t:PAUSAS_SERIE.slice()})();
   function llenarTiposInc(){
     const sel=$('incTipo'), actual=sel.value;
     sel.textContent='';
@@ -750,11 +772,11 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(tiposInc.includes(actual))sel.value=actual;
   }
   // Editor de una lista: filas con campo de texto y ✕, «Añadir» y «Restaurar». valores() devuelve la lista sin vacíos ni repetidos.
-  function editorLista(idUl,idNuevo,idSerie,serie,actual,reservados=[]){
+  function editorLista(idUl,idNuevo,idSerie,serie,actual,reservados=[],numerico=false){
     const ul=$(idUl);
     const fila=valor=>{
       const li=document.createElement('li');
-      const i=document.createElement('input');i.type='text';i.value=valor;i.maxLength=40;i.placeholder='Nombre';i.setAttribute('aria-label','Nombre de la opción');
+      const i=document.createElement('input');i.type='text';i.value=valor;i.maxLength=40;i.placeholder=numerico?'Minutos':'Nombre';i.setAttribute('aria-label',numerico?'Minutos de pausa':'Nombre de la opción');if(numerico)i.inputMode='numeric';
       const q=document.createElement('button');q.type='button';q.className='quitar';q.textContent='✕';q.setAttribute('aria-label','Quitar esta opción');
       q.addEventListener('click',()=>li.remove());
       li.appendChild(i);li.appendChild(q);ul.appendChild(li);return i;
@@ -770,7 +792,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
   }
   const edTipos=editorLista('tiposLista','tipoNuevo','tiposDefecto',TIPOS_SERIE,()=>tiposInc);
   const edTareas=editorLista('tareasLista','tareaNueva','tareasDefecto',TAREAS_SERIE,()=>tareasAct,ACT_FIJAS);
-  const pintarEditorTipos=()=>{edTipos.pintar();edTareas.pintar()};
+  const edPausas=editorLista('pausasLista','pausaNueva','pausasDefecto',PAUSAS_SERIE,()=>pausasMin,[],true);
+  const pintarEditorTipos=()=>{edTipos.pintar();edTareas.pintar();edPausas.pintar()};
   llenarTiposInc();
 
   $('btnGuardarCfg').addEventListener('click',()=>{
@@ -780,11 +803,15 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const s=$('cfgStatus');
     // Listas de opciones: sin vacíos ni repetidos
     const tipos=edTipos.valores(), tareas=edTareas.valores();
+    // Tiempos de pausa: minutos enteros entre 1 y 480, sin repetir y de menor a mayor
+    const pausas=[...new Set(edPausas.valores().map(v=>parseInt(v,10)).filter(n=>n>=1&&n<=480))].sort((a,b)=>a-b);
+    if(nomOk&&telOk&&mailOk&&!pausas.length){s.className='status err';s.textContent='Escribe al menos un tiempo de pausa en minutos (entre 1 y 480).';return}
     if(nomOk&&telOk&&mailOk&&!tipos.length){s.className='status err';s.textContent='Debe haber al menos un tipo de incidencia.';return}
     if(nomOk&&telOk&&mailOk&&!tareas.length){s.className='status err';s.textContent='Debe haber al menos una actividad además de Inicio y Fin Jornada.';return}
     if(!nomOk||!telOk||!mailOk){s.className='status err';s.textContent=!nomOk?'Escribe el nombre del empleado.':!telOk?'El teléfono no es válido.':'Revisa el email: debe tener la forma nombre@dominio.com.';return}
     tiposInc=tipos;store.set(KEY_TIPOS,tipos);llenarTiposInc();
-    tareasAct=tareas;store.set(KEY_TAREAS,tareas);actualizarActividades();pintarEditorTipos();
+    tareasAct=tareas;store.set(KEY_TAREAS,tareas);actualizarActividades();
+    pausasMin=pausas;store.set(KEY_PAUSAS,pausas);pintarEditorTipos();pintarListado();
     cfg={nombre,tel,mail};store.set(KEY_NOM,nombre);store.set(KEY_TEL,tel);store.set(KEY_MAIL,mail);
     // Los registros de ejemplo van siempre a nombre del empleado configurado
     registros.forEach(r=>{if(r.ejemplo)r.nombre=nombre});
@@ -825,6 +852,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   setInterval(()=>{
     const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     if(diaKey(d)!==diaPintado){diaPintado=diaKey(d);pintarTodo()}else actualizarVivo();
+    if(pausa&&Date.now()>=pausa.hasta){actualizarSeguimiento();pintarListado()} // terminó el tiempo de pausa
   },1000);
 
   function avisar(id,msg,cls){const s=$(id);s.textContent=msg;s.className='status '+(cls||'')}
@@ -1244,8 +1272,34 @@ textarea:focus{outline:none;border-color:var(--olive)}
         const izq=document.createElement('div');izq.className='izq';izq.appendChild(cb);
         if(num.has(r.id)){const pin=crearPin(iconoDe(r),String(num.get(r.id)));pin.title=`Nº ${num.get(r.id)} en el mapa`;izq.appendChild(pin)}
         const cont=contenidoRegistro(r);
-        const fila=document.createElement('div');fila.className='itemfila';fila.appendChild(izq);fila.appendChild(cont);lab.appendChild(fila);
+        const fila=document.createElement('div');fila.className='itemfila';fila.appendChild(izq);fila.appendChild(cont);
+        // Actividad en curso (la que recibe los puntos GPS): botón pausar/reanudar a la derecha de la tarjeta
+        const curso=actividadEnCurso(), esCurso=!!curso&&curso.id===r.id;
+        if(esCurso){
+          const pausada=enPausa();
+          const ctl=document.createElement('div');ctl.className='pausa';
+          const bt=document.createElement('button');bt.type='button';bt.className='pausabtn';bt.setAttribute('aria-pressed',pausada);
+          bt.title=pausada?'Reanudar la toma de coordenadas':'Pausar la toma de coordenadas';
+          bt.innerHTML=(pausada
+            ?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>'
+            :'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></svg>')
+            +`<span>${pausada?'reanudar':'pausar'}</span>`;
+          bt.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(pausada)reanudar();else{menuPausa=!menuPausa;pintarListado()}});
+          ctl.appendChild(bt);fila.appendChild(ctl);
+        }
+        lab.appendChild(fila);
         lab.appendChild(cont.querySelector('.info')); // datos de la actividad en filas propias, a todo el ancho
+        if(esCurso&&menuPausa&&!enPausa()){ // elegir cuánto tiempo pausar
+          const m=document.createElement('div');m.className='pausaopc';
+          const t=document.createElement('span');t.textContent='Pausar durante:';m.appendChild(t);
+          pausasMin.forEach(min=>{
+            const b=document.createElement('button');b.type='button';b.className='mini';b.textContent=`${min} min`;
+            b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();pausar(min)});m.appendChild(b);
+          });
+          const c=document.createElement('button');c.type='button';c.className='mini cancel';c.textContent='Cancelar';
+          c.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();menuPausa=false;pintarListado()});m.appendChild(c);
+          lab.appendChild(m);
+        }
         li.appendChild(lab);ol.appendChild(li);
       });
       actualizarVivo();
@@ -1509,8 +1563,19 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(bloqueo){bloqueo.release().catch(()=>{});bloqueo=null}
     pintarSeguimiento();
   }
+  // Pausa de la toma de coordenadas de la actividad en curso: dura lo elegido y termina sola, o antes con «reanudar».
+  // Al registrar otra actividad (o Fin Jornada) la pausa deja de valer.
+  const enPausa=()=>{const r=actividadEnCurso();return !!(r&&pausa&&pausa.regId===r.id&&Date.now()<pausa.hasta)};
+  function pausar(min){
+    const r=actividadEnCurso();if(!r)return;
+    pausa={regId:r.id,hasta:Date.now()+min*60000,min};store.set(KEY_PAUSA,pausa);menuPausa=false;
+    actualizarSeguimiento();pintarListado();
+  }
+  function reanudar(){pausa=null;store.set(KEY_PAUSA,null);menuPausa=false;actualizarSeguimiento();pintarListado()}
   function actualizarSeguimiento(){
-    if(actividadEnCurso())iniciarSeguimiento();else detenerSeguimiento();
+    const reg=actividadEnCurso();
+    if(pausa&&(!reg||pausa.regId!==reg.id||Date.now()>=pausa.hasta)){pausa=null;store.set(KEY_PAUSA,null);menuPausa=false}
+    if(reg&&!pausa)iniciarSeguimiento();else detenerSeguimiento();
     pintarSeguimiento();
   }
   function pintarSeguimiento(){
@@ -1518,6 +1583,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(!reg){box.className='seg';txt.textContent='Seguimiento GPS parado. Arranca con Inicio Jornada y se para con Fin Jornada.';return}
     if(segError){box.className='seg err';txt.textContent=`Seguimiento GPS sin funcionar: ${segError}.`;return}
     const pts=puntosDe(reg), ult=pts[pts.length-1];
+    if(enPausa()){const d=new Date(pausa.hasta);box.className='seg';txt.textContent=`GPS en pausa hasta las ${pad(d.getHours())}:${pad(d.getMinutes())} · ${reg.actividad}. Pulsa «reanudar» en la actividad para volver a grabar antes.`;return}
     box.className='seg on';
     const hm=x=>{const d=new Date(x.iso);return `${pad(d.getHours())}:${pad(d.getMinutes())}`};
     txt.textContent=`GPS cada 5 min · ${reg.actividad} · ${pts.length} punto${pts.length===1?'':'s'}`+
@@ -2123,6 +2189,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     actualizar();
   });
 
+  pausa=store.get(KEY_PAUSA,null); // la pausa del GPS sobrevive a recargar la página
   pintarDestinos();
   pintarEmpleado();
   if(ultimo())seleccion=new Set([ultimo().id]);
