@@ -47,6 +47,9 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .engranaje svg{width:22px;height:22px}
 .engranaje.peq{width:34px;height:34px;color:var(--muted)}
 .engranaje.peq svg{width:18px;height:18px}
+.engranaje.nube{position:relative;color:var(--olive)}
+.engranaje.nube.girando svg{animation:latido 1s infinite}
+.insignia{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--earth);color:#fff;font:700 .68rem/18px var(--display);text-align:center;border:2px solid var(--bg)}
 .engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
 h1{font-size:clamp(.95rem,5vw,1.2rem);font-weight:800;margin:0;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Pestañas fijas arriba al desplazarse; la franja de encima (zona del sistema) se pinta con el fondo */
@@ -310,6 +313,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   <symbol id="i-tacha" viewBox="0 0 24 24"><path d="M4 4 L20 20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
   <symbol id="i-yo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/></symbol>
   <symbol id="i-todo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-nube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1-.6-9.96A6 6 0 0 1 18 9a4.5 4.5 0 0 1 .5 8.97"/><path d="M12 12v9M8.5 15.5 12 12l3.5 3.5"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></symbol>
 </svg>
@@ -320,6 +324,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       <p class="empleado" id="empleadoSub"></p>
     </div>
     <div class="cabder">
+      <button type="button" class="engranaje peq nube" id="btnSync" aria-label="Sincronizar con el fichero central" title="Sincronizar con el fichero central"><svg aria-hidden="true"><use href="#i-nube"/></svg><b class="insignia" id="syncPend" hidden></b></button>
       <button type="button" class="engranaje peq" id="btnPrueba" aria-label="Cargar datos de prueba" title="Cargar datos de prueba"><svg aria-hidden="true"><use href="#i-flask"/></svg></button>
       <button type="button" class="engranaje" id="tabCfg" aria-pressed="false" aria-label="Configuración" title="Configuración"><svg aria-hidden="true"><use href="#i-gear"/></svg></button>
     </div>
@@ -448,6 +453,20 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       <div class="field">
         <label class="lbl" for="email">Email para correo electrónico</label>
         <input id="email" type="email" inputmode="email" autocomplete="email" placeholder="gestor@ejemplo.com">
+      </div>
+      <h2>Fichero central <button type="button" class="infobtn" data-info="infoCfgSync">i</button></h2>
+      <div class="infobox" id="infoCfgSync" hidden>
+        <p class="hint">Con el botón de la nube (arriba) se envían las actividades, incidencias, puntos GPS y adjuntos de este móvil a la Hoja «GEA - Registro central» de Google Drive, común a todos los empleados. Lo ya enviado no se duplica.</p>
+        <p class="hint">La dirección y la clave te las da el responsable de la finca (o un enlace de configuración que las rellena solo).</p>
+        <p class="status" id="syncEstado" role="status"></p>
+      </div>
+      <div class="field">
+        <label class="lbl" for="syncUrl">Dirección del servicio</label>
+        <input id="syncUrl" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://script.google.com/macros/s/…/exec">
+      </div>
+      <div class="field">
+        <label class="lbl" for="syncClave">Clave</label>
+        <input id="syncClave" type="text" autocomplete="off" spellcheck="false" placeholder="Clave del fichero central">
       </div>
       <h2>Listas de opciones</h2>
       <div data-lista="tareas" data-titulo="Tipos de actividad" data-info="«Inicio Jornada» y «Fin Jornada» son fijos (de ellos dependen el seguimiento GPS y el resumen del día). Aquí editas las demás actividades.|Los cambios se aplican al pulsar «Guardar configuración». Los registros ya hechos conservan su actividad."></div>
@@ -691,6 +710,13 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 
   // Empleado y destinatarios por defecto hasta que se guarde otra configuración
   let cfg={nombre:store.get(KEY_NOM,'')||'Angel',tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
+  // Fichero central: dirección del servicio, clave y lo ya enviado (para no reenviar ni duplicar)
+  const KEY_SYNC_URL='gea_sync_url', KEY_SYNC_CLAVE='gea_sync_clave', KEY_SYNC='gea_sync';
+  const sync={url:store.get(KEY_SYNC_URL,''),clave:store.get(KEY_SYNC_CLAVE,''),hecho:Object.assign({act:{},inc:{},pts:{},adj:{}},store.get(KEY_SYNC,{}))};
+  // Enlace de configuración: …/?servicio=URL&clave=CLAVE rellena los dos campos y se quita de la dirección
+  (()=>{try{const q=new URLSearchParams(location.search);if(q.get('servicio')){sync.url=q.get('servicio');store.set(KEY_SYNC_URL,sync.url)}
+    if(q.get('clave')){sync.clave=q.get('clave');store.set(KEY_SYNC_CLAVE,sync.clave)}
+    if(q.has('servicio')||q.has('clave'))history.replaceState(null,'',location.pathname+location.hash)}catch(e){}})();
   let pausa=null; // {regId,hasta,min}: la toma de coordenadas de esa actividad está en pausa hasta ese momento
   let menuPausa=false; // se está eligiendo cuánto pausar
 
@@ -703,7 +729,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     pestana=tab;
     // Configuración es el engranaje de la cabecera (aria-pressed); el resto son pestañas (aria-selected)
     Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute(k==='cfg'?'aria-pressed':'aria-selected',k===tab);$(p).hidden=k!==tab});
-    if(tab==='cfg'){editores.forEach(e=>e.pintar());$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
+    if(tab==='cfg'){editores.forEach(e=>e.pintar());$('syncUrl').value=sync.url;$('syncClave').value=sync.clave;$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
     if(tab==='reg')pintarListado();
@@ -755,6 +781,10 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 
   $('btnGuardarCfg').addEventListener('click',()=>{
     const nombre=$('nombre').value.trim(), tel=$('telefono').value.trim(), mail=$('email').value.trim();
+    const sUrl=$('syncUrl').value.trim(), sClave=$('syncClave').value.trim(), urlOk=!sUrl||/^https:\/\/\S+$/.test(sUrl);
+    $('syncUrl').classList.toggle('bad',!urlOk);
+    if(!urlOk){$('cfgStatus').className='status err';$('cfgStatus').textContent='La dirección del servicio debe empezar por https://';return}
+    sync.url=sUrl;sync.clave=sClave;store.set(KEY_SYNC_URL,sUrl);store.set(KEY_SYNC_CLAVE,sClave);actualizarPendientes();
     const nomOk=!!nombre, telOk=!tel||telefonoLimpio(tel).length>=10, mailOk=!mail||emailsValidos(mail);
     $('nombre').classList.toggle('bad',!nomOk);$('telefono').classList.toggle('bad',!telOk);$('email').classList.toggle('bad',!mailOk);
     const s=$('cfgStatus'), mal=t=>{s.className='status err';s.textContent=t};
@@ -864,7 +894,10 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     const ms=fin==null?0:fin-new Date(r.iso).getTime();
     const info=durRegistro(r,mismoDia?sig:null,esHoy);
     return {km:coma(m/1000),vel:ms>0?coma(m/1000/(ms/3600000)):'–',area:coma(areaM2(trazo)/10000,2),
-      dur:info?(info.desde?durHHMM(Date.now()-new Date(info.desde)):info.texto):'--h:--m',vivo:(esHoy&&!mismoDia)||!!(info&&info.desde)};
+      dur:info?(info.desde?durHHMM(Date.now()-new Date(info.desde)):info.texto):'--h:--m',vivo:(esHoy&&!mismoDia)||!!(info&&info.desde),
+      // Valores numéricos para el fichero central
+      n:{km:+(m/1000).toFixed(3),ha:+(areaM2(trazo)/10000).toFixed(4),vel:ms>0?+(m/1000/(ms/3600000)).toFixed(2):'',
+        min:info?(info.desde?Math.floor((Date.now()-new Date(info.desde))/60000):info.ms!=null?Math.floor(info.ms/60000):''):'',pts:trazo.length-1}};
   }
   // Datos de una actividad en la tarjeta: cuadrícula con su nombre encima de cada valor
   function pintarInfo(e,r){
@@ -904,11 +937,11 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     let info;
     if(r.actividad===INICIO){
       const fin=finDe(r);
-      info=fin?{texto:durHHMM(t(fin)-t(r)),nota:'jornada'}:{desde:r.iso,nota:'en curso'};
+      info=fin?{texto:durHHMM(t(fin)-t(r)),ms:t(fin)-t(r),nota:'jornada'}:{desde:r.iso,nota:'en curso'};
     }else if(r.actividad===FIN){
       const ini=inicioDe(r);
-      info=ini?{texto:durHHMM(t(r)-t(ini)),nota:'jornada'}:{texto:'--h:--m',nota:'sin inicio'};
-    }else info=sig?{texto:durHHMM(t(sig)-t(r))}:{desde:r.iso,nota:'en curso'};
+      info=ini?{texto:durHHMM(t(r)-t(ini)),ms:t(r)-t(ini),nota:'jornada'}:{texto:'--h:--m',nota:'sin inicio'};
+    }else info=sig?{texto:durHHMM(t(sig)-t(r)),ms:t(sig)-t(r)}:{desde:r.iso,nota:'en curso'};
     if(info.desde&&!enVivo)return r.actividad===INICIO?{texto:'--h:--m',nota:'sin fin'}:null;
     return info;
   }
@@ -1298,7 +1331,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     },
     trasBorrar(){pintarTodo();actualizarSeguimiento()}
   });
-  function pintarListado(){LA.pintar()}
+  function pintarListado(){LA.pintar();if(typeof actualizarPendientes==='function')actualizarPendientes()}
   function pintarTodo(){pintarListado();actualizarActividades()}
   // Leaflet se carga con «defer», después de este código: pintar los mapas en cuanto esté
   window.addEventListener('load',pintarListado);
@@ -1856,7 +1889,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     },
     trasBorrar(){pintarIncidencias();pintarListado()}
   });
-  function pintarIncidencias(){LI.pintar()}
+  function pintarIncidencias(){LI.pintar();if(typeof actualizarPendientes==='function')actualizarPendientes()}
   // Marcador de una incidencia y su globo (tipo, empleado, fecha, comentario e iconos de los adjuntos)
   function marcadorIncidencia(x,num,capa){
     return L.marker([x.lat,x.lon],{icon:divIcon(crearPinInc(String(num),colorInc(x.tipo)),30,28,15,24),zIndexOffset:500}).bindPopup(()=>{
@@ -1865,6 +1898,86 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       return pop;
     }).addTo(capa);
   }
+
+  /* ---------- Fichero central (Hoja de Google común a todos los empleados) ---------- */
+  // Una fila por actividad, incidencia o punto GPS. Se envía solo lo nuevo o lo que ha cambiado (p. ej. la duración de la
+  // actividad que estaba en curso); el servicio actualiza por ID, así que nunca hay duplicados. Los ejemplos no se envían.
+  const DIAS_S=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const comun=x=>{const d=new Date(x.iso);return {ID:x.id,Empleado:x.nombre,Fecha:diaKey(d),Hora:hhmm(d),'Día semana':DIAS_S[d.getDay()],
+    Mes:diaKey(d).slice(0,7),Latitud:x.lat!=null?+x.lat.toFixed(6):'',Longitud:x.lon!=null?+x.lon.toFixed(6):'',
+    'Precisión (m)':x.precision!=null?Math.round(x.precision):'','Sin posición (motivo)':x.lat==null?(x.error||'no disponible'):'',
+    'Ver en mapa':x.lat!=null?urlMapa(x):'','Fecha y hora ISO':x.iso,'Datos de prueba':x.prueba?'Sí':'No'}};
+  const filaActividad=r=>{const t=datosRecorrido(r);return Object.assign(comun(r),{Actividad:r.actividad||'',Estado:t.vivo?'En curso':'Cerrada',
+    'Duración':t.n.min,'Distancia (km)':t.n.km,'Área (ha)':t.n.ha,'Velocidad (km/h)':t.n.vel,'Puntos GPS':t.n.pts})};
+  const filaIncidencia=x=>{const c={foto:0,video:0,audio:0};(x.adjuntos||[]).forEach(a=>c[a.tipo]++);
+    return Object.assign(comun(x),{Tipo:x.tipo,Comentario:x.comentario||'',Fotos:c.foto,'Vídeos':c.video,Audios:c.audio,
+      'Archivos adjuntos':(x.adjuntos||[]).map(a=>nombreAdjunto(x,a)).join('\n'),'Enlaces adjuntos':(x.adjuntos||[]).map(a=>sync.hecho.adj[a.id]||'').filter(Boolean).join('\n')})};
+  const filaPunto=p=>{const d=new Date(p.iso);return {ID:p.id,'ID actividad':p.registroId,Empleado:p.nombre,Actividad:p.actividad,Fecha:diaKey(d),Hora:hhmm(d),
+    Latitud:+p.lat.toFixed(6),Longitud:+p.lon.toFixed(6),'Precisión (m)':p.precision!=null?Math.round(p.precision):'','Fecha y hora ISO':p.iso,'Datos de prueba':p.prueba?'Sí':'No'}};
+  // Nombre del adjunto en la carpeta Incidencias: fecha_hora_empleado_tipoIncidencia_tipoAdjunto (con número si hay varios del mismo tipo)
+  const limpio=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  function nombreAdjunto(x,a){
+    const d=new Date(x.iso), mismos=(x.adjuntos||[]).filter(b=>b.tipo===a.tipo), n=mismos.length>1?mismos.indexOf(a)+1:'';
+    return `${diaKey(d)}_${pad(d.getHours())}${pad(d.getMinutes())}_${limpio(x.nombre)}_${limpio(x.tipo)}_${a.tipo}${n}.${extDe(a.mime||'',a.nombre)}`;
+  }
+  const firma=f=>JSON.stringify(f);
+  function pendientes(){
+    const act=registros.filter(r=>!r.ejemplo).map(filaActividad).filter(f=>sync.hecho.act[f.ID]!==firma(f));
+    const adj=incidencias.filter(x=>!x.ejemplo).flatMap(x=>(x.adjuntos||[]).filter(a=>!sync.hecho.adj[a.id]).map(a=>({x,a})));
+    const inc=incidencias.filter(x=>!x.ejemplo).map(filaIncidencia).filter(f=>sync.hecho.inc[f.ID]!==firma(f));
+    const pts=puntos.filter(p=>!p.ejemplo&&conPosicion(p)&&!sync.hecho.pts[p.id]).map(filaPunto);
+    return {act,inc,pts,adj};
+  }
+  // Insignia del botón de la nube: actividades e incidencias por enviar
+  function actualizarPendientes(){
+    let n=0;try{const p=pendientes();n=p.act.length+p.inc.length}catch(e){}
+    const b=$('syncPend');b.hidden=!n;b.textContent=n>99?'99+':n;
+  }
+  async function enviar(datos){
+    const res=await fetch(sync.url,{method:'POST',body:JSON.stringify(Object.assign({clave:sync.clave},datos))});
+    if(!res.ok)throw new Error(`el servicio respondió ${res.status}`);
+    const j=await res.json();if(!j.ok)throw new Error(j.error||'error del servicio');
+    return j;
+  }
+  let sincronizando=false;
+  async function sincronizar(){
+    if(sincronizando)return;
+    if(!sync.url||!sync.clave){
+      abrir('cfg');$('syncUrl').focus();$('cfgStatus').className='status err';
+      $('cfgStatus').textContent='Escribe la dirección del servicio y la clave del fichero central y guarda.';return;
+    }
+    if(!navigator.onLine){aviso('Sin conexión','Sincroniza cuando tengas cobertura',{err:true});return}
+    sincronizando=true;$('btnSync').classList.add('girando');
+    const guardarHecho=()=>store.set(KEY_SYNC,sync.hecho);
+    try{
+      let p=pendientes();
+      // 1. Adjuntos, uno a uno (pueden ser grandes); su enlace en Drive va después en la fila de la incidencia
+      for(const [i,{x,a}] of p.adj.entries()){
+        aviso('Sincronizando…',`Adjunto ${i+1} de ${p.adj.length}`,{ms:60000});
+        const bl=await media.leer(a.id);if(!bl)continue;
+        const j=await enviar({tipo:'adjunto',nombre:nombreAdjunto(x,a),mime:a.mime||bl.type,datos:await aBase64(bl)});
+        sync.hecho.adj[a.id]=j.url;guardarHecho();
+      }
+      // 2. Filas de las tres pestañas, en tandas para no mandar envíos enormes
+      p=pendientes();
+      const total=p.act.length+p.inc.length+p.pts.length;
+      for(let i=0;i<Math.max(p.act.length,p.inc.length,p.pts.length,1);i+=400){
+        if(total)aviso('Sincronizando…',`${Math.min(total,i+400)} de ${total} filas`,{ms:60000});
+        const t={actividades:p.act.slice(i,i+400),incidencias:p.inc.slice(i,i+400),puntos:p.pts.slice(i,i+400)};
+        if(!t.actividades.length&&!t.incidencias.length&&!t.puntos.length)break;
+        await enviar(t);
+        t.actividades.forEach(f=>{sync.hecho.act[f.ID]=firma(f)});t.incidencias.forEach(f=>{sync.hecho.inc[f.ID]=firma(f)});t.puntos.forEach(f=>{sync.hecho.pts[f.ID]=1});
+        guardarHecho();
+      }
+      const txt=total||p.adj.length?`${p.act.length} ${plural(p.act.length,'actividad','actividades')}, ${p.inc.length} ${plural(p.inc.length,'incidencia')}, ${p.pts.length} ${plural(p.pts.length,'punto')} GPS`+(p.adj.length?` y ${p.adj.length} ${plural(p.adj.length,'adjunto')}`:''):'No había nada nuevo';
+      aviso('Fichero central al día',txt);
+      avisar('syncEstado',`Última sincronización: ${fechaCorta(new Date())} ${hhmm(new Date())}. ${txt}.`,'ok');
+    }catch(e){
+      aviso('No se pudo sincronizar',String(e.message||e).replace(/^Failed to fetch$/,'sin conexión con el servicio'),{err:true,ms:6000});
+      avisar('syncEstado','Error al sincronizar: '+(e.message||e),'err');
+    }finally{sincronizando=false;$('btnSync').classList.remove('girando');actualizarPendientes()}
+  }
+  $('btnSync').addEventListener('click',sincronizar);
 
   /* ---------- Botones (i) ---------- */
   // Cada sección guarda su información complementaria (estado, avisos del mapa…) en un recuadro plegable.
