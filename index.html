@@ -76,6 +76,15 @@ details.desp>summary::-webkit-details-marker{display:none}
 details.desp>summary::after{content:'';margin-left:auto;width:9px;height:9px;border-right:2.5px solid var(--olive);border-bottom:2.5px solid var(--olive);transform:rotate(45deg) translateY(-2px);transition:transform .15s}
 details.desp[open]>summary::after{transform:rotate(-135deg)}
 details.desp>summary:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
+/* Botón (i) junto al título de cada sección: despliega la información complementaria (mensajes de estado, avisos del mapa…) */
+.infobtn{flex:none;width:26px;height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;position:relative;background:transparent;border:2px solid var(--olive);color:var(--olive);border-radius:50%;font:italic 800 .9rem Georgia,serif;line-height:1}
+.infobtn[aria-expanded=true]{background:var(--olive);color:var(--olive-ink)}
+.infobtn[data-nuevo=true]::after{content:"";position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:var(--earth);border:2px solid var(--card)}
+.infobox{margin:0 0 12px;padding:10px 12px;border:1px dashed var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;gap:6px}
+.infobox[hidden]{display:none}
+.infobox .status,.infobox .hint{margin:0}
+.infobox .infovacio{display:none}
+.infobox.vacia .infovacio{display:block}
 details.desp>summary span{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.85rem}
 .cuerpo{padding:0 16px 16px;display:flex;flex-direction:column;gap:18px}
 .sub{display:flex;flex-direction:column;gap:12px}
@@ -279,8 +288,13 @@ textarea:focus{outline:none;border-color:var(--olive)}
   <!-- PESTAÑA PRINCIPAL -->
   <div class="panel" id="panelReg" role="tabpanel">
     <details class="desp" id="detNueva" open>
-      <summary>Nueva actividad</summary>
+      <summary>Nueva actividad <button type="button" class="infobtn" data-info="infoNueva" aria-expanded="false" aria-controls="infoNueva" aria-label="Información" title="Información">i</button></summary>
       <div class="cuerpo">
+        <div class="infobox" id="infoNueva" hidden>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+          <div class="seg" id="seg" role="status" aria-live="polite"><span class="luz"></span><span id="segTxt"></span></div>
+          <p class="hint infovacio">Sin novedades por ahora.</p>
+        </div>
         <div class="fila2 fila-guardar">
           <div class="campo-act">
             <label class="lbl" for="actividad">Tipo de actividad</label>
@@ -288,9 +302,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
           </div>
           <button id="btnRegistro" type="button">REGISTRAR</button>
         </div>
-        <p class="status" id="status" role="status" aria-live="polite"></p>
-        <div class="seg" id="seg" role="status" aria-live="polite"><span class="luz"></span><span id="segTxt"></span></div>
-        <div class="ayuda" id="ayudaGps" hidden>
+                        <div class="ayuda" id="ayudaGps" hidden>
           <strong id="ayudaTitulo"></strong>
           <ol id="ayudaPasos"></ol>
           <button type="button" class="mini" id="ayudaCerrar">Entendido</button>
@@ -308,8 +320,13 @@ textarea:focus{outline:none;border-color:var(--olive)}
     </details>
 
     <details class="desp" id="detList" open>
-      <summary>Listado actividades <span id="contadorH">0</span></summary>
+      <summary>Listado actividades <span id="contadorH">0</span> <button type="button" class="infobtn" data-info="infoList" aria-expanded="false" aria-controls="infoList" aria-label="Información" title="Información">i</button></summary>
       <div class="cuerpo">
+        <div class="infobox" id="infoList" hidden>
+          <p class="hint" id="mapaNotaH" hidden></p>
+          <p class="status" id="statusListH" role="status" aria-live="polite"></p>
+          <p class="hint infovacio">Sin novedades por ahora.</p>
+        </div>
       <div class="sub">
         <div class="sechead">
           <h3 id="tituloDia">Actividades de hoy</h3>
@@ -348,10 +365,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <ol id="listaH"></ol>
         <div id="mapaH" hidden></div>
         <ul class="leyenda" id="leyendaH" hidden></ul>
-        <p class="hint" id="mapaNotaH" hidden></p>
-        <p class="empty" id="vacioListaH">No hay registros.</p>
-        <p class="status" id="statusListH" role="status" aria-live="polite"></p>
-      </div>
+                <p class="empty" id="vacioListaH">No hay registros.</p>
+              </div>
       </div>
     </details>
   </div>
@@ -359,8 +374,12 @@ textarea:focus{outline:none;border-color:var(--olive)}
   <!-- PESTAÑA INCIDENCIAS -->
   <div class="panel" id="panelInc" role="tabpanel" hidden>
     <details class="desp" id="detNuevaInc" open>
-      <summary>Nueva incidencia</summary>
+      <summary>Nueva incidencia <button type="button" class="infobtn" data-info="infoNuevaInc" aria-expanded="false" aria-controls="infoNuevaInc" aria-label="Información" title="Información">i</button></summary>
       <div class="cuerpo">
+        <div class="infobox" id="infoNuevaInc" hidden>
+          <p class="status" id="statusInc" role="status" aria-live="polite"></p>
+          <p class="hint infovacio">Sin novedades por ahora.</p>
+        </div>
       <div class="fila2 fila-guardar">
         <div class="campo-act">
           <label class="lbl" for="incTipo">Tipo de incidencia</label>
@@ -389,13 +408,17 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <label class="lbl" for="incComentario">Comentario (opcional)</label>
         <textarea id="incComentario" placeholder="Qué ha pasado y dónde exactamente"></textarea>
       </div>
-      <p class="status" id="statusInc" role="status" aria-live="polite"></p>
-      </div>
+            </div>
     </details>
 
     <details class="desp" id="detListInc" open>
-      <summary>Listado incidencias <span id="contadorInc">0</span></summary>
+      <summary>Listado incidencias <span id="contadorInc">0</span> <button type="button" class="infobtn" data-info="infoListInc" aria-expanded="false" aria-controls="infoListInc" aria-label="Información" title="Información">i</button></summary>
       <div class="cuerpo">
+        <div class="infobox" id="infoListInc" hidden>
+          <p class="hint" id="mapaNotaInc" hidden></p>
+          <p class="status" id="statusListInc" role="status" aria-live="polite"></p>
+          <p class="hint infovacio">Sin novedades por ahora.</p>
+        </div>
       <div class="sub">
         <div class="sechead">
           <h3 id="tituloDiaInc">Incidencias de hoy</h3>
@@ -435,10 +458,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <ol id="listaInc"></ol>
         <div id="mapaInc" hidden></div>
         <ul class="leyenda" id="leyendaInc" hidden></ul>
-        <p class="hint" id="mapaNotaInc" hidden></p>
-        <p class="empty" id="vacioListaInc">No hay incidencias.</p>
-        <p class="status" id="statusListInc" role="status" aria-live="polite"></p>
-      </div>
+                <p class="empty" id="vacioListaInc">No hay incidencias.</p>
+              </div>
       </div>
     </details>
   </div>
@@ -2064,6 +2085,26 @@ textarea:focus{outline:none;border-color:var(--olive)}
     selInc=new Set();
     pintarIncidencias();pintarListado();
     statusListInc(`${n} incidencia${n===1?'':'s'} eliminada${n===1?'':'s'}.`,'ok');
+  });
+
+
+  // Botones (i): cada sección guarda su información complementaria (estado, avisos del mapa…) en un recuadro plegable.
+  // Un punto en el botón avisa de que hay información nueva sin leer; los errores abren el recuadro solos.
+  document.querySelectorAll('.infobtn').forEach(btn=>{
+    const box=$(btn.dataset.info);
+    const textos=()=>[...box.querySelectorAll('.status,.hint:not(.infovacio),.seg')].filter(e=>!e.hidden).map(e=>e.textContent.trim()).filter(Boolean);
+    const firma=()=>[...box.querySelectorAll('.status,.hint:not(.infovacio)')].filter(e=>!e.hidden).map(e=>e.textContent.trim()).filter(Boolean).join('|');
+    let vista='';
+    const poner=abierto=>{box.hidden=!abierto;btn.setAttribute('aria-expanded',abierto);if(abierto)vista=firma();actualizar()};
+    function actualizar(){
+      box.classList.toggle('vacia',!textos().length);
+      const err=box.querySelector('.status.err');
+      if(box.hidden&&err&&err.textContent.trim()&&!err.hidden){poner(true);return}
+      btn.dataset.nuevo=box.hidden&&firma()!==''&&firma()!==vista;
+    }
+    btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();poner(box.hidden)});
+    new MutationObserver(actualizar).observe(box,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','hidden']});
+    actualizar();
   });
 
   pintarDestinos();
