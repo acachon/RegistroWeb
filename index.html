@@ -39,6 +39,9 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:12p
 /* Configuración: botón de engranaje en la cabecera en lugar de una pestaña */
 .engranaje{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;padding:0;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px}
 .engranaje svg{width:22px;height:22px}
+.engranaje.peq{width:34px;height:34px;color:var(--muted)}
+.engranaje.peq svg{width:18px;height:18px}
+.engranaje[hidden]{display:none}
 .engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
 h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
 .clock{font-family:var(--mono);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -222,6 +225,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     </div>
     <div class="cabder">
       <span class="clock" id="clock">--:--:--</span>
+      <button type="button" class="engranaje peq" id="btnPrueba" aria-label="Cargar datos de prueba" title="Cargar datos de prueba"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2.2h12.4a1.5 1.5 0 0 0 1.3-2.2L14 9V3M7.5 15h9"/></svg></button>
       <button type="button" class="engranaje" id="tabCfg" aria-pressed="false" aria-label="Configuración" title="Configuración"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   </header>
@@ -314,12 +318,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
         </div>
       </div>
     </details>
-
-    <section id="secPrueba">
-      <h2>Datos de prueba</h2>
-      <p class="hint">Borra todos los registros guardados y crea una jornada sin terminar del empleado configurado: Inicio Jornada y, 10, 15 y 20 minutos después, Poda, Riego y Otros, con sus puntos GPS cada 5 minutos, todo a menos de 100 m. Añade además 3 incidencias de prueba en la zona de la finca El Caimbo (sustituyen a las de pruebas anteriores).</p>
-      <button class="btn sec" id="btnPrueba" type="button">Cargar datos de prueba</button>
-    </section>
   </div>
 
   <!-- PESTAÑA INCIDENCIAS -->
@@ -1265,7 +1263,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   // Jornada abierta del empleado configurado: Inicio y luego Poda, Riego y Otros a +10, +15 y +20 min del anterior,
   // terminando hace 5 min. Posiciones al azar en ±0,0003° (≈ ±33 m) de un punto: todas a menos de 100 m.
   // Se guardan como registros reales (marcados «prueba»).
-  $('secPrueba').hidden=!MOSTRAR_EJEMPLOS;
+  $('btnPrueba').hidden=!MOSTRAR_EJEMPLOS;
   $('btnPrueba').addEventListener('click',()=>{
     const pasos=[[INICIO,0],['Poda',10],['Riego',15],['Otros',20]];
     const total=pasos.reduce((s,p)=>s+p[1],0);
@@ -1311,6 +1309,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     guardarRegistros();filtroDia=hoyK;marcarDia(hoyK);
     const hoyD=new Date();mesVista=new Date(hoyD.getFullYear(),hoyD.getMonth(),1);
     pintarTodo();actualizarSeguimiento();
+    abrir('reg');$('detNueva').open=true;
     status(`Cargados ${nuevos.length} registros y 3 incidencias de prueba de ${cfg.nombre} (jornada sin terminar).`,'ok');
   });
 
