@@ -467,7 +467,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
 <script>
 (function(){
-  const KEY_REG='gea_registros', KEY_NOM='gea_nombre', KEY_ACT='gea_actividad', KEY_TEL='gea_telefono', KEY_MAIL='gea_email', KEY_CAPA='gea_capa_mapa';
+  const KEY_REG='gea_registros', KEY_NOM='gea_nombre', KEY_ACT='gea_actividad', KEY_TEL='gea_telefono', KEY_MAIL='gea_email', KEY_CAPA='gea_capa_mapa2';
   const $=id=>document.getElementById(id);
   const store={
     get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
@@ -961,6 +961,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
     // Satélite: Esri World Imagery (sin clave); en zonas rurales solo hay imagen hasta el zoom 18, más allá se amplía.
     const fondos={
       'Mapa':L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}),
+      // Aérea: ortofoto del PNOA (IGN España), sin nubes y con detalle de 25 cm; es el fondo por defecto
+      'Aérea':L.tileLayer.wms('https://www.ign.es/wms-inspire/pnoa-ma',{layers:'OI.OrthoimageCoverage',format:'image/jpeg',version:'1.3.0',maxZoom:21,maxNativeZoom:20,
+        attribution:'PNOA &copy; <a href="https://www.scne.es/" target="_blank" rel="noopener">IGN</a> (CC BY 4.0)'}),
       'Satélite':L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         {maxZoom:19,maxNativeZoom:18,attribution:'Imágenes &copy; Esri, Maxar, Earthstar Geographics'})
     };
@@ -1108,7 +1111,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const panel='panelReg';
     const visibles=()=>{const ds=diasEf();return registros.filter(r=>ds.has(diaDe(r)))};
     const seleccionados=()=>visibles().filter(r=>seleccion.has(r.id));
-    const mapa=crearMapa('mapa'+sfx,'mapaNota'+sfx,'Satélite',true);
+    const mapa=crearMapa('mapa'+sfx,'mapaNota'+sfx,'Aérea',true);
     const status=(msg,cls)=>avisar('statusList'+sfx,msg,cls);
     let enMapa=false;
     const hayMarcados=()=>{if(!seleccionados().length){status('Marca al menos un registro.','err');return false}return true};
@@ -1765,7 +1768,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';return}
     if(!mapaI){
       mapaI=L.map('mapaInc',{zoomControl:false});
-      ponerFondos(mapaI,`${KEY_CAPA}_mapaInc`,'Satélite');
+      ponerFondos(mapaI,`${KEY_CAPA}_mapaInc`,'Aérea');
       capaI=L.layerGroup().addTo(mapaI);
     }
     capaI.clearLayers();
