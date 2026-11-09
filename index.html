@@ -1899,7 +1899,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   $('mesSigInc').addEventListener('click',()=>{mesVistaInc=new Date(mesVistaInc.getFullYear(),mesVistaInc.getMonth()+1,1);pintarCalendarioInc()});
 
   // Mapa de incidencias: las marcadas, numeradas por orden de hora
-  let mapaI=null, capaI=null;
+  let mapaI=null, capaI=null, capaYoI=null, encuadreInc=[];
   function pintarMapaInc(){
     const nota=$('mapaNotaInc');
     if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';return}
@@ -1907,6 +1907,37 @@ textarea:focus{outline:none;border-color:var(--olive)}
       mapaI=L.map('mapaInc',{zoomControl:false});
       ponerFondos(mapaI,`${KEY_CAPA}_mapaInc`,'Aérea');
       capaI=L.layerGroup().addTo(mapaI);
+      capaYoI=L.layerGroup().addTo(mapaI);
+      // Mismos botones que el mapa de actividades: ir a mi ubicación y ver todas las marcadas
+      const irAMiUbicacionInc=()=>{
+        const nota=$('mapaNotaInc');
+        if(!('geolocation' in navigator)){nota.textContent='Este navegador no puede dar tu ubicación.';return}
+        nota.textContent='Buscando tu ubicación…';
+        navigator.geolocation.getCurrentPosition(p=>{
+          const pos=[p.coords.latitude,p.coords.longitude];
+          capaYoI.clearLayers();
+          if(p.coords.accuracy<=100)L.circle(pos,{radius:p.coords.accuracy,color:'#1a73e8',weight:1,fillOpacity:.12}).addTo(capaYoI);
+          L.circleMarker(pos,{radius:8,color:'#fff',weight:2,fillColor:'#1a73e8',fillOpacity:1})
+            .bindTooltip(`Estás aquí (±${Math.round(p.coords.accuracy)} m)`).addTo(capaYoI);
+          mapaI.setView(pos,Math.max(mapaI.getZoom(),17));
+          nota.textContent='';
+        },e=>{nota.textContent='No se ha podido obtener tu ubicación.';ayudaUbicacion(e.code)},{enableHighAccuracy:true,timeout:15000,maximumAge:30000});
+      };
+      const verTodoInc=()=>{
+        if(!encuadreInc.length){$('mapaNotaInc').textContent='No hay incidencias marcadas con ubicación.';return}
+        mapaI.fitBounds(L.latLngBounds(encuadreInc).pad(0.3),{maxZoom:18});
+      };
+      const BotonesInc=L.Control.extend({options:{position:'topleft'},onAdd(){
+        const caja=L.DomUtil.create('div','leaflet-bar ubic');
+        [[SVG_YO,'Ir a mi ubicación actual',irAMiUbicacionInc],[SVG_ULT,'Ver todas las incidencias seleccionadas',verTodoInc]].forEach(([svg,titulo,accion])=>{
+          const a=L.DomUtil.create('a','',caja);a.href='#';a.setAttribute('role','button');
+          a.title=titulo;a.setAttribute('aria-label',titulo);a.innerHTML=svg;
+          L.DomEvent.on(a,'click',e=>{L.DomEvent.preventDefault(e);accion()});
+        });
+        L.DomEvent.disableClickPropagation(caja);
+        return caja;
+      }});
+      new BotonesInc().addTo(mapaI);
     }
     capaI.clearLayers();
     const lista=incSeleccionadas(), conPos=lista.filter(conPosicion), sin=lista.length-conPos.length;
@@ -1915,6 +1946,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     conPos.forEach((x,i)=>{
       marcadorIncidencia(x,i+1,capaI);
     });
+    encuadreInc=conPos.map(x=>[x.lat,x.lon]);
     // Leyenda: solo los tipos que se están mostrando
     const ley=$('leyendaInc');ley.textContent='';
     const orden=t=>{const i=tiposInc.indexOf(t);return i<0?999:i};
