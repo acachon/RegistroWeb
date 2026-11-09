@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#3f5a2a">
-<title>Registro de Jornada</title>
+<title>GEA - Registro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
 <!-- Mapas: Leaflet incluido en la app (lo copia «npm run sync») + teselas de OpenStreetMap (sin clave) -->
@@ -316,7 +316,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 <main>
   <header>
     <div class="titulo">
-      <h1>Registro de Jornada</h1>
+      <h1>GEA - Registro</h1>
       <p class="empleado" id="empleadoSub"></p>
     </div>
     <div class="cabder">
@@ -1433,7 +1433,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       let id;
       try{
         id=await BG.addWatcher({
-          backgroundTitle:'Registro de Jornada',
+          backgroundTitle:'GEA - Registro',
           backgroundMessage:'Guardando tu posición cada 5 minutos hasta Fin Jornada.',
           requestPermissions:true,stale:false,distanceFilter:0
         },(loc,err)=>{
