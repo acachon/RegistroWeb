@@ -997,7 +997,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       navigator.geolocation.getCurrentPosition(p=>{
         const pos=[p.coords.latitude,p.coords.longitude];
         capaYo.clearLayers();
-        L.circle(pos,{radius:p.coords.accuracy,color:'#1a73e8',weight:1,fillOpacity:.12}).addTo(capaYo);
+        if(p.coords.accuracy<=100)L.circle(pos,{radius:p.coords.accuracy,color:'#1a73e8',weight:1,fillOpacity:.12}).addTo(capaYo); // un círculo de precisión grande taparía la imagen
         L.circleMarker(pos,{radius:8,color:'#fff',weight:2,fillColor:'#1a73e8',fillOpacity:1})
           .bindTooltip(`Estás aquí (±${Math.round(p.coords.accuracy)} m)`).addTo(capaYo);
         mapa.setView(pos,Math.max(mapa.getZoom(),17));
@@ -1079,7 +1079,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
         .bindTooltip(`${p.actividad} · ${pad(d.getHours())}:${pad(d.getMinutes())} · ±${Math.round(p.precision)} m`).addTo(capaLin); // los puntos forman parte del recorrido
     });
     conPos.forEach((r,i)=>{
-      L.circle([r.lat,r.lon],{radius:r.precision||0,color:'#3f5a2a',weight:1,fillOpacity:.08}).addTo(capaMapa);
       const icono=L.divIcon({className:'',html:crearPin(iconoDe(r),String(i+1)).outerHTML,iconSize:[26,26],iconAnchor:[13,13]});
       // Contenido del globo con textContent: nombre y actividad vienen de lo que escribe el usuario.
       // Se genera al abrirlo para que una duración «en curso» salga actualizada.
@@ -1776,7 +1775,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
     nota.textContent=!lista.length?'No hay incidencias marcadas. Márcalas en el listado para verlas en el mapa.'
       :sin?`${sin} incidencia${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
     conPos.forEach((x,i)=>{
-      L.circle([x.lat,x.lon],{radius:x.precision||0,color:'#b07d00',weight:1,fillOpacity:.08}).addTo(capaI);
       marcadorIncidencia(x,i+1,capaI);
     });
     setTimeout(()=>{
