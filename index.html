@@ -222,6 +222,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
 .adjs:empty{display:none}
 .adj{position:relative;width:60px;height:60px;flex:none;display:flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--card) center/cover no-repeat;color:var(--fg)}
 .adj svg{width:24px;height:24px}
+.popreg .adjs{margin-top:6px}
+.popreg .adj{width:40px;height:40px}
 .adj .dura{position:absolute;bottom:2px;right:3px;font:600 .62rem var(--mono);color:var(--fg)}
 .adj .quitar{position:absolute;top:-7px;right:-7px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;padding:0;background:var(--err);color:#fff;font-size:.8rem;font-weight:800;border-radius:50%;border:2px solid var(--card)}
 .item .coment{display:block;margin-top:4px;font-family:var(--display);font-style:italic;color:var(--fg)}
@@ -1021,9 +1023,22 @@ textarea:focus{outline:none;border-color:var(--olive)}
   function globoIncidencia(x,num){
     const pop=document.createElement('div');pop.className='popreg';
     const b=document.createElement('b');b.textContent=`${num?num+'. ':''}⚠ ${x.tipo}`;pop.appendChild(b);
-    const n=(x.adjuntos||[]).length;
-    [x.nombre,x.fechaHora.slice(0,16),x.comentario||null,n?`${n} adjunto${n===1?'':'s'}`:null,x.precision!=null?`Precisión ±${Math.round(x.precision)} m`:null]
+    [x.nombre,x.fechaHora.slice(0,16),x.comentario||null]
       .filter(Boolean).forEach(t=>{pop.appendChild(document.createTextNode(t));pop.appendChild(document.createElement('br'))});
+    // Adjuntos: un icono por foto, vídeo o audio; al pulsarlo se abre en el visor
+    if((x.adjuntos||[]).length){
+      const fila=document.createElement('div');fila.className='adjs';
+      x.adjuntos.forEach(ad=>{
+        const m=document.createElement('button');m.type='button';m.className='adj';
+        m.setAttribute('aria-label',ad.tipo==='foto'?'Ver foto':ad.tipo==='video'?'Ver vídeo':'Escuchar audio');
+        m.title=ad.tipo==='foto'?'Foto':ad.tipo==='video'?'Vídeo':'Audio';
+        m.innerHTML=ICO_MEDIO[ad.tipo]+(ad.dur?`<span class="dura">${mmss(ad.dur)}</span>`:'');
+        m.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();
+          abrirVisor(ad.tipo,await media.leer(ad.id),`${x.tipo} · ${x.fechaHora.slice(0,16)}${ad.size?' · '+tamano(ad.size):''}`)});
+        fila.appendChild(m);
+      });
+      pop.appendChild(fila);
+    }
     return pop;
   }
   function marcadorIncidencia(x,num,capa){
@@ -1619,6 +1634,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   const statusInc=(msg,cls)=>avisar('statusInc',msg,cls);
   const statusListInc=(msg,cls)=>avisar('statusListInc',msg,cls);
   const ICO_MEDIO={
+    foto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h3l2-3h6l2 3h3v13H4z"/><circle cx="12" cy="13" r="4"/></svg>',
     video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>',
     audio:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4"/></svg>'
   };
