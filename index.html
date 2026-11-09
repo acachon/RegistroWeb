@@ -45,7 +45,7 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:12p
 .engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
 h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
 .clock{font-family:var(--mono);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
 .tabs button{padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
 .tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
 .panel{display:flex;flex-direction:column;gap:20px}
@@ -138,6 +138,8 @@ label.item{cursor:pointer}
 .izq{display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
 .confirmbox span{flex:1 1 100%}
 /* Calendario: los días con registros llevan fondo y punto; el día filtrado va en oliva */
+.calbtn{display:inline-flex;align-items:center;gap:6px}
+#calBox{margin:6px 0 10px}
 .calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .calhead h2{font-size:1.05rem}
 .calnav{width:40px;height:40px;flex:none;background:transparent;border:2px solid var(--line);color:var(--fg);font-size:1.3rem;line-height:1;border-radius:8px}
@@ -198,6 +200,7 @@ label.item{cursor:pointer}
 .seg.err .luz{background:var(--err)}
 @keyframes latido{50%{opacity:.3}}
 .pts{font-family:var(--display);font-size:.78rem;color:var(--muted)}
+.filtro[hidden]{display:none}
 .filtro{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.88rem;color:var(--muted);min-height:32px}
 /* Incidencias: aviso en ámbar, miniaturas de fotos, vídeos y audios, y visor a pantalla completa */
 textarea{width:100%;min-height:76px;resize:vertical;font:500 1rem/1.4 var(--display);padding:12px 14px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
@@ -259,7 +262,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   <nav class="tabs" role="tablist">
     <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Actividad</button>
-    <button type="button" role="tab" id="tabList" aria-selected="false" aria-controls="panelList">Histórico</button>
     <button type="button" role="tab" id="tabInc" aria-selected="false" aria-controls="panelInc">Incidencias</button>
     <button type="button" role="tab" id="tabListInc" aria-selected="false" aria-controls="panelListInc">Listado Incidencias</button>
   </nav>
@@ -280,7 +282,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
               <option>Otros</option>
             </select>
           </div>
-          <button id="btnRegistro" type="button">GUARDAR</button>
+          <button id="btnRegistro" type="button">REGISTRAR</button>
         </div>
         <p class="status" id="status" role="status" aria-live="polite"></p>
         <div class="seg" id="seg" role="status" aria-live="polite"><span class="luz"></span><span id="segTxt"></span></div>
@@ -306,8 +308,18 @@ textarea:focus{outline:none;border-color:var(--olive)}
       <div class="cuerpo">
       <div class="sub">
         <div class="sechead">
-          <h3>Actividades de hoy</h3>
+          <h3 id="tituloDia">Actividades de hoy</h3>
+          <button type="button" class="mini calbtn" id="btnCal" aria-expanded="false" aria-controls="calBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Otros días</button>
         </div>
+        <div id="calBox" hidden>
+          <div class="calhead">
+            <button type="button" class="calnav" id="mesAnt" aria-label="Mes anterior">‹</button>
+            <h2 id="mesLbl" aria-live="polite"></h2>
+            <button type="button" class="calnav" id="mesSig" aria-label="Mes siguiente">›</button>
+          </div>
+          <div class="cal" id="cal"></div>
+        </div>
+        <div class="filtro" id="filtroH" hidden></div>
         <div class="barra">
           <button type="button" id="btnTodosH" class="mini">Seleccionar todas</button>
           <button class="btn danger ico" id="btnBorrarH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
@@ -338,51 +350,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
       </div>
       </div>
     </details>
-  </div>
-
-  <!-- PESTAÑA HISTÓRICO -->
-  <div class="panel" id="panelList" role="tabpanel" hidden>
-    <section>
-      <div class="sub">
-        <div class="calhead">
-        <button type="button" class="calnav" id="mesAnt" aria-label="Mes anterior">‹</button>
-        <h2 id="mesLbl" aria-live="polite"></h2>
-        <button type="button" class="calnav" id="mesSig" aria-label="Mes siguiente">›</button>
-      </div>
-      <div class="cal" id="cal"></div>
-        <div class="filtro" id="filtro"></div>
-        <div class="sechead">
-          <h3>Actividades <span id="contador">0</span></h3>
-        </div>
-        <div class="barra">
-          <button type="button" id="btnTodos" class="mini">Seleccionar todas</button>
-          <button class="btn danger ico" id="btnBorrar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
-          <button class="btn sec ico" id="btnCompartir" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
-        </div>
-        <div class="confirmbox" id="confirmBox" hidden>
-      <span id="confirmTxt"></span>
-      <button class="btn danger" id="btnSiBorrar" type="button">Sí, eliminar</button>
-      <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
-        </div>
-        <div class="confirmbox share" id="shareBox" hidden>
-          <span id="shareTxt"></span>
-          <label class="chk"><input type="checkbox" id="shWa" checked>WhatsApp <small class="destTel">Sin teléfono</small></label>
-          <label class="chk"><input type="checkbox" id="shMail" checked>Email <small class="destMail">Sin email</small></label>
-          <button class="btn sec" id="btnShNo" type="button">Cancelar</button>
-          <button class="btn" id="btnShOk" type="button">Confirmar</button>
-        </div>
-        <div class="vista" role="group" aria-label="Modo de vista">
-          <button type="button" id="vistaLista" aria-pressed="true">Listado</button>
-          <button type="button" id="vistaMapa" aria-pressed="false">Mapa</button>
-        </div>
-        <ol id="lista"></ol>
-        <div id="mapa" hidden></div>
-        <ul class="leyenda" id="leyenda" hidden></ul>
-        <p class="hint" id="mapaNota" hidden></p>
-        <p class="empty" id="vacioLista">No hay registros.</p>
-        <p class="status" id="statusList" role="status" aria-live="polite"></p>
-      </div>
-    </section>
   </div>
 
   <!-- PESTAÑA INCIDENCIAS -->
@@ -685,7 +652,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   let cfg={nombre:store.get(KEY_NOM,'')||'Angel',tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
 
   /* ---------- Pestañas ---------- */
-  const PESTANAS={reg:['tabReg','panelReg'],list:['tabList','panelList'],inc:['tabInc','panelInc'],listInc:['tabListInc','panelListInc'],cfg:['tabCfg','panelCfg']};
+  const PESTANAS={reg:['tabReg','panelReg'],inc:['tabInc','panelInc'],listInc:['tabListInc','panelListInc'],cfg:['tabCfg','panelCfg']};
   // pestanaAntes: la última pestaña que no era Configuración, para volver a ella al pulsar otra vez el engranaje
   let pestana='reg', pestanaAntes='reg';
   function abrir(tab){
@@ -696,7 +663,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(tab==='cfg'){$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
-    if(tab==='reg'||tab==='list')pintarListado();
+    if(tab==='reg')pintarListado();
     if(tab==='listInc')pintarIncidencias();
     window.scrollTo(0,0);
   }
@@ -931,19 +898,20 @@ textarea:focus{outline:none;border-color:var(--olive)}
       if(n){
         b.classList.add('con');
         b.setAttribute('aria-label',`${d} de ${MESES[m]}: ${n} registro${n===1?'':'s'}`);
-        b.setAttribute('aria-pressed',k===filtroDia);
-        if(k===filtroDia)b.classList.add('act');
+        b.setAttribute('aria-pressed',k===(filtroDia||kHoy));
+        if(k===(filtroDia||kHoy))b.classList.add('act');
         // Al elegir un día quedan marcados todos sus registros; al quitar el filtro se desmarca todo
-        b.addEventListener('click',()=>{filtroDia=filtroDia===k?null:k;marcarDia(filtroDia);pintarListado();pintarCalendario()});
+        b.addEventListener('click',()=>{filtroDia=(filtroDia===k||k===kHoy)?null:k;marcarDia(filtroDia);pintarListado();pintarCalendario()});
       }else b.disabled=true;
       cal.appendChild(b);
     }
   }
+  $('btnCal').addEventListener('click',()=>{const a=$('calBox').hidden;$('calBox').hidden=!a;$('btnCal').setAttribute('aria-expanded',a);if(a){const d=filtroDia?filtroDia.split('-').map(Number):null;mesVista=d?new Date(d[0],d[1]-1,1):new Date(hoy.getFullYear(),hoy.getMonth(),1);pintarCalendario()}});
   $('mesAnt').addEventListener('click',()=>{mesVista=new Date(mesVista.getFullYear(),mesVista.getMonth()-1,1);pintarCalendario()});
   $('mesSig').addEventListener('click',()=>{mesVista=new Date(mesVista.getFullYear(),mesVista.getMonth()+1,1);pintarCalendario()});
 
   // Marca todos los registros de un día (o ninguno si dia es null)
-  function marcarDia(dia){seleccion=new Set(dia?registros.filter(r=>diaDe(r)===dia).map(r=>r.id):[])}
+  function marcarDia(dia){const k=dia||diaKey(new Date());seleccion=new Set(registros.filter(r=>diaDe(r)===k).map(r=>r.id))}
 
   /* ---------- Vista Mapa ---------- */
   // Muestra en el mapa los registros visibles (todos o los del día filtrado) que tienen coordenadas,
@@ -957,7 +925,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const p=document.createElement('div');p.className='pin'+(ic.cuad?' cuad':'');
     p.style.background=ic.color;p.textContent=texto;return p;
   }
-  ['leyenda','leyendaH'].forEach(id=>Object.entries(ICONOS).forEach(([nom,ic])=>{
+  ['leyendaH'].forEach(id=>Object.entries(ICONOS).forEach(([nom,ic])=>{
     const li=document.createElement('li');li.appendChild(crearPin(ic,''));li.appendChild(document.createTextNode(nom));
     $(id).appendChild(li);
   }));
@@ -1128,9 +1096,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
   // y el del Histórico (todas, con calendario). La selección (casillas) es común: se marca por registro.
   // En el mapa solo se ven los registros marcados; los envíos, Compartir y Eliminar usan solo los marcados.
   function crearListado(sfx){
-    const deHoy=sfx==='H', E=id=>$(id+sfx);
-    const panel=deHoy?'panelReg':'panelList';
-    const visibles=()=>deHoy?registros.filter(r=>diaDe(r)===diaKey(new Date())):filtroDia?registros.filter(r=>diaDe(r)===filtroDia):registros;
+    const deHoy=true, E=id=>$(id+sfx);
+    const panel='panelReg';
+    const diaActual=()=>filtroDia||diaKey(new Date());
+    const visibles=()=>registros.filter(r=>diaDe(r)===diaActual());
     const seleccionados=()=>visibles().filter(r=>seleccion.has(r.id));
     const mapa=crearMapa('mapa'+sfx,'mapaNota'+sfx,'Satélite',true);
     const status=(msg,cls)=>avisar('statusList'+sfx,msg,cls);
@@ -1138,6 +1107,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const hayMarcados=()=>{if(!seleccionados().length){status('Marca al menos un registro.','err');return false}return true};
 
     function pintar(){
+      if(filtroDia===diaKey(new Date()))filtroDia=null; // hoy es siempre la opción por defecto
       const lista=visibles(), ol=E('lista');ol.textContent='';
       const hoyK=diaKey(new Date());
       // Número de orden de cada registro marcado: el mismo que lleva su marcador en el mapa
@@ -1157,27 +1127,26 @@ textarea:focus{outline:none;border-color:var(--olive)}
         li.appendChild(lab);ol.appendChild(li);
       });
       actualizarVivo();
-      (deHoy?$('contadorH'):$('contador')).textContent=lista.length;
+      $('contadorH').textContent=lista.length;
       E('vacioLista').hidden=lista.length>0;
-      E('vacioLista').textContent=deHoy?'Hoy aún no hay actividades.':'No hay registros.';
+      E('vacioLista').textContent=filtroDia?'No hay actividades este día.':'Hoy aún no hay actividades.';
       E('lista').hidden=enMapa;E('mapa').hidden=E('leyenda').hidden=E('mapaNota').hidden=!enMapa;
-      if(!deHoy){
-        const f=E('filtro');f.textContent='';
-        if(filtroDia){
-          const [y,m,d]=filtroDia.split('-').map(Number);
-          const sp=document.createElement('span');sp.textContent=`Día ${fechaCorta(new Date(y,m-1,d))}`;
-          const b=document.createElement('button');b.type='button';b.className='mini';b.textContent='Ver todos';
-          b.addEventListener('click',()=>{filtroDia=null;seleccion.clear();pintarListado();pintarCalendario()});
-          f.appendChild(sp);f.appendChild(b);
-        }else f.textContent='Todos los registros · toca un día marcado para filtrar';
-      }
+      // Título y aviso: por defecto «hoy»; al elegir otro día en el calendario se indica y se ofrece volver
+      const f=E('filtro');f.textContent='';f.hidden=!filtroDia;
+      if(filtroDia){
+        const [y,m,d]=filtroDia.split('-').map(Number);
+        $('tituloDia').textContent=`Actividades del ${fechaCorta(new Date(y,m-1,d))}`;
+        const b=document.createElement('button');b.type='button';b.className='mini';b.textContent='Volver a hoy';
+        b.addEventListener('click',()=>{filtroDia=null;marcarDia(null);pintarListado();pintarCalendario()});
+        f.appendChild(b);
+      }else $('tituloDia').textContent='Actividades de hoy';
       const n=seleccionados().length, total=lista.length;
       E('btnTodos').textContent=(n===total&&total>0)?'Quitar todas':'Seleccionar todas';
       ['btnCompartir','btnBorrar'].forEach(id=>E(id).disabled=n===0);
       ol.querySelectorAll('label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
       E('confirmBox').hidden=true;E('shareBox').hidden=true;
       // El mapa solo se pinta con el listado visible y desplegado (Leaflet necesita su tamaño real)
-      const abierto=deHoy?$('detList').open:true;
+      const abierto=$('detList').open;
       if(enMapa&&abierto&&!$(panel).hidden)
         mapa.pintar(lista.filter(r=>seleccion.has(r.id)),deHoy||!!filtroDia,'No hay actividades marcadas. Márcalas en el listado para verlas en el mapa.');
     }
@@ -1227,7 +1196,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     });
     return pintar;
   }
-  const pintarListados=[crearListado(''),crearListado('H')];
+  const pintarListados=[crearListado('H')];
   function pintarListado(){pintarListados.forEach(f=>f())}
   // Leaflet se carga con «defer», después de este código: pintar los mapas en cuanto esté
   window.addEventListener('load',pintarListado);
@@ -1250,21 +1219,21 @@ textarea:focus{outline:none;border-color:var(--olive)}
       titulo='Permite la ubicación para esta web';
       pasos=ios?['Abre Ajustes → Privacidad y seguridad → Localización y comprueba que está activada.',
                  'Safari: en Ajustes → Apps → Safari → Ubicación, elige «Preguntar» o «Permitir». Chrome: en Ajustes → Apps → Chrome → Ubicación, elige «Al usar la app».',
-                 'Vuelve aquí, recarga la página y pulsa GUARDAR.']
+                 'Vuelve aquí, recarga la página y pulsa REGISTRAR.']
         :android?['Toca el icono que hay a la izquierda de la dirección web (candado o ajustes).',
                   'Entra en Permisos → Ubicación y elige «Permitir».',
-                  'Recarga la página y pulsa GUARDAR.']
+                  'Recarga la página y pulsa REGISTRAR.']
         :['Haz clic en el icono que hay a la izquierda de la dirección web (candado o ajustes).',
           'En Ubicación elige «Permitir».',
-          'Recarga la página y pulsa GUARDAR.'];
+          'Recarga la página y pulsa REGISTRAR.'];
     }else if(codigo===2){
       titulo='La ubicación del dispositivo está apagada';
-      pasos=ios?['Abre Ajustes → Privacidad y seguridad → Localización y actívala.','Vuelve aquí y pulsa GUARDAR.']
-        :android?['Desliza desde arriba de la pantalla y activa «Ubicación».','Vuelve aquí y pulsa GUARDAR.']
-        :['Activa la ubicación en la configuración del sistema.','Vuelve aquí y pulsa GUARDAR.'];
+      pasos=ios?['Abre Ajustes → Privacidad y seguridad → Localización y actívala.','Vuelve aquí y pulsa REGISTRAR.']
+        :android?['Desliza desde arriba de la pantalla y activa «Ubicación».','Vuelve aquí y pulsa REGISTRAR.']
+        :['Activa la ubicación en la configuración del sistema.','Vuelve aquí y pulsa REGISTRAR.'];
     }else if(codigo===3){
       titulo='La posición ha tardado demasiado';
-      pasos=['Sal al exterior o acércate a una ventana.','Pulsa GUARDAR otra vez.'];
+      pasos=['Sal al exterior o acércate a una ventana.','Pulsa REGISTRAR otra vez.'];
     }else{
       titulo='Este navegador no puede dar la posición';
       pasos=['Abre la web con Chrome o Safari.'];
