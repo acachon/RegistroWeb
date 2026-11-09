@@ -245,8 +245,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
 .pin.inc svg{position:absolute;inset:0;z-index:0!important;width:100%;height:100%;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
 .pin.inc span{position:relative;z-index:1;top:4px;font-size:.72rem;font-weight:800}
 .leyenda .pin.inc{width:16px;height:15px}
-#leyendaInc .ley{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 6px;background:transparent;border:1px solid var(--line);border-radius:999px;font:600 .82rem var(--display);color:var(--fg)}
-#leyendaInc .ley[aria-pressed=false]{opacity:.45;text-decoration:line-through}
+.leyenda .ley{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 6px;background:transparent;border:1px solid var(--line);border-radius:999px;font:600 .82rem var(--display);color:var(--fg)}
+.leyenda .ley[aria-pressed=false]{opacity:.45;text-decoration:line-through}
 .visor{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(10,12,8,.92)}
 .visor img,.visor video{max-width:100%;max-height:78vh;border-radius:8px;background:#000}
 .visor audio{width:100%;max-width:420px}
@@ -1028,10 +1028,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const p=document.createElement('div');p.className='pin'+(ic.cuad?' cuad':'');
     p.style.background=ic.color;p.textContent=texto;return p;
   }
-  ['leyendaH'].forEach(id=>Object.entries(ICONOS).forEach(([nom,ic])=>{
-    const li=document.createElement('li');li.appendChild(crearPin(ic,''));li.appendChild(document.createTextNode(nom));
-    $(id).appendChild(li);
-  }));
   // Incidencia: triángulo de aviso ámbar con su número
   const SVG_TRI='<svg viewBox="0 0 30 28" aria-hidden="true"><path d="M15 2 L28.5 26 H1.5 Z" fill="#f2b600" stroke="#1f2617" stroke-width="2" stroke-linejoin="round"/></svg>';
   // Color de cada tipo de incidencia según su posición en la lista de Configuración
@@ -1128,7 +1124,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     }
 
     // incs: incidencias que se añaden al mapa como triángulos de aviso (pestaña Registro: las de hoy)
-    return {pintar(lista,conLinea,avisoVacio,incs=[]){
+    return {pintar(lista,conLinea,avisoVacio,incs=[],reencuadrar=true){
     const conPos=lista.filter(conPosicion), sin=lista.length-conPos.length, nota=$(idNota);
     const incsPos=incs.filter(conPosicion);
     nota.textContent=!lista.length&&!incsPos.length?avisoVacio
@@ -1211,6 +1207,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     // El contenedor acaba de mostrarse: recalcular tamaño antes de encuadrar
     setTimeout(()=>{
       mapa.invalidateSize();
+      if(!reencuadrar)return; // al marcar o desmarcar tipos en la leyenda no se mueve el mapa
       if(encuadre.length)mapa.fitBounds(L.latLngBounds(encuadre).pad(0.3),{maxZoom:18});
       else mapa.setView([FINCA.lat,FINCA.lon],16);
     },0);
@@ -1227,6 +1224,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const mapa=crearMapa('mapa'+sfx,'mapaNota'+sfx,'Aérea',true);
     const status=(msg,cls)=>avisar('statusList'+sfx,msg,cls);
     let enMapa=false;
+    const actOcultas=new Set(); // actividades desmarcadas en la leyenda del mapa
+    let sinReencuadrar=false;
     const hayMarcados=()=>{if(!seleccionados().length){status('Marca al menos un registro.','err');return false}return true};
 
     function pintar(){
@@ -1235,7 +1234,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       const hoyK=diaKey(new Date());
       // Número de orden de cada registro marcado: el mismo que lleva su marcador en el mapa
       const num=new Map();
-      lista.filter(r=>seleccion.has(r.id)&&conPosicion(r)).forEach((r,i)=>num.set(r.id,i+1));
+      lista.filter(r=>seleccion.has(r.id)&&conPosicion(r)&&!actOcultas.has(r.actividad)).forEach((r,i)=>num.set(r.id,i+1));
       lista.slice().reverse().forEach(r=>{
         const li=document.createElement('li');
         const lab=document.createElement('label');lab.className='item hoyitem col';
@@ -1267,8 +1266,25 @@ textarea:focus{outline:none;border-color:var(--olive)}
       E('confirmBox').hidden=true;E('shareBox').hidden=true;
       // El mapa solo se pinta con el listado visible y desplegado (Leaflet necesita su tamaño real)
       const abierto=$('detList').open;
+      // Leyenda seleccionable: cada actividad presente se muestra u oculta en el mapa (selección múltiple)
+      const ley=E('leyenda');ley.textContent='';
+      const conPosSel=lista.filter(r=>seleccion.has(r.id)&&conPosicion(r));
+      const orden=[...Object.keys(ICONOS),...actividades()];
+      [...new Set(conPosSel.map(r=>r.actividad))].sort((a,b)=>orden.indexOf(a)-orden.indexOf(b)).forEach(nom=>{
+        const li=document.createElement('li');
+        const bt=document.createElement('button');bt.type='button';bt.className='ley';
+        bt.setAttribute('aria-pressed',!actOcultas.has(nom));
+        bt.title=actOcultas.has(nom)?'Mostrar esta actividad en el mapa':'Ocultar esta actividad del mapa';
+        bt.appendChild(crearPin(ICONOS[nom]||ICONO_OTRO,''));bt.appendChild(document.createTextNode(nom||'Sin actividad'));
+        bt.addEventListener('click',()=>{
+          actOcultas.has(nom)?actOcultas.delete(nom):actOcultas.add(nom);
+          sinReencuadrar=true;pintarListado();
+        });
+        li.appendChild(bt);ley.appendChild(li);
+      });
+      const reencuadrar=!sinReencuadrar;sinReencuadrar=false;
       if(enMapa&&abierto&&!$(panel).hidden)
-        mapa.pintar(lista.filter(r=>seleccion.has(r.id)),true,'No hay actividades marcadas. Márcalas en el listado para verlas en el mapa.');
+        mapa.pintar(lista.filter(r=>seleccion.has(r.id)&&!actOcultas.has(r.actividad)),true,'No hay actividades marcadas. Márcalas en el listado para verlas en el mapa.',[],reencuadrar);
     }
 
     const vista=m=>{enMapa=m;E('vistaLista').setAttribute('aria-pressed',!m);E('vistaMapa').setAttribute('aria-pressed',m);pintarListado()};
