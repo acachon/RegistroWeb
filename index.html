@@ -236,6 +236,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
 .pin.inc svg{position:absolute;inset:0;z-index:0!important;width:100%;height:100%;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
 .pin.inc span{position:relative;z-index:1;top:4px;font-size:.72rem;font-weight:800}
 .leyenda .pin.inc{width:16px;height:15px}
+#leyendaInc .ley{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 6px;background:transparent;border:1px solid var(--line);border-radius:999px;font:600 .82rem var(--display);color:var(--fg)}
+#leyendaInc .ley[aria-pressed=false]{opacity:.45;text-decoration:line-through}
 .visor{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:rgba(10,12,8,.92)}
 .visor img,.visor video{max-width:100%;max-height:78vh;border-radius:8px;background:#000}
 .visor audio{width:100%;max-width:420px}
@@ -1011,9 +1013,11 @@ textarea:focus{outline:none;border-color:var(--olive)}
   }));
   // Incidencia: triángulo de aviso ámbar con su número
   const SVG_TRI='<svg viewBox="0 0 30 28" aria-hidden="true"><path d="M15 2 L28.5 26 H1.5 Z" fill="#f2b600" stroke="#1f2617" stroke-width="2" stroke-linejoin="round"/></svg>';
-  // Color de cada tipo de incidencia según su posición en la lista de Configuración; los tipos que ya no están salen en gris
+  // Color de cada tipo de incidencia según su posición en la lista de Configuración
   const PALETA_INC=['#f2b600','#d62828','#1d6fd6','#2e9e4f','#8a4fd0','#e8590c','#0ea5a4','#c2185b','#6d4c41','#7a8b00'];
-  const colorInc=tipo=>{const i=tiposInc.indexOf(tipo);return i<0?'#9aa0a6':PALETA_INC[i%PALETA_INC.length]};
+  // Orden de los tipos: primero los de Configuración y después, por orden de aparición, los que solo existen en incidencias ya guardadas
+  const ordenTiposInc=()=>[...new Set([...tiposInc,...incidencias.map(x=>x.tipo)])];
+  const colorInc=tipo=>{const i=ordenTiposInc().indexOf(tipo);return PALETA_INC[(i<0?0:i)%PALETA_INC.length]};
   const textoSobre=hex=>{const n=parseInt(hex.slice(1),16),l=.299*(n>>16)+.587*(n>>8&255)+.114*(n&255);return l>150?'#111':'#fff'};
   function crearPinInc(texto,color='#f2b600'){
     const p=document.createElement('div');p.className='pin inc';p.innerHTML=SVG_TRI.replace('#f2b600',color);
@@ -1835,7 +1839,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const lista=incVisibles(), ol=$('listaInc');ol.textContent='';
     // Número de orden de cada incidencia marcada con posición: el mismo que lleva su marcador en el mapa
     const num=new Map();
-    lista.filter(x=>selInc.has(x.id)&&conPosicion(x)).forEach((x,i)=>num.set(x.id,i+1));
+    lista.filter(x=>selInc.has(x.id)&&conPosicion(x)&&!tiposOcultosInc.has(x.tipo)).forEach((x,i)=>num.set(x.id,i+1));
     lista.slice().reverse().forEach(x=>{
       const li=document.createElement('li');
       const lab=document.createElement('label');lab.className='item hoyitem col'+(selInc.has(x.id)?' sel':'');
@@ -1917,6 +1921,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   // Mapa de incidencias: las marcadas, numeradas por orden de hora
   let mapaI=null, capaI=null, capaYoI=null, encuadreInc=[];
+  const tiposOcultosInc=new Set(); // tipos desmarcados en la leyenda del mapa
+  let sinReencuadrarInc=false;
   function pintarMapaInc(){
     const nota=$('mapaNotaInc');
     if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';return}
@@ -1957,21 +1963,33 @@ textarea:focus{outline:none;border-color:var(--olive)}
       new BotonesInc().addTo(mapaI);
     }
     capaI.clearLayers();
-    const lista=incSeleccionadas(), conPos=lista.filter(conPosicion), sin=lista.length-conPos.length;
+    const lista=incSeleccionadas(), conPosTodas=lista.filter(conPosicion), sin=lista.length-conPosTodas.length;
+    const conPos=conPosTodas.filter(x=>!tiposOcultosInc.has(x.tipo));
     nota.textContent=!lista.length?'No hay incidencias marcadas. Márcalas en el listado para verlas en el mapa.'
       :sin?`${sin} incidencia${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
     conPos.forEach((x,i)=>{
       marcadorIncidencia(x,i+1,capaI);
     });
     encuadreInc=conPos.map(x=>[x.lat,x.lon]);
-    // Leyenda: solo los tipos que se están mostrando
+    // Leyenda seleccionable: cada tipo presente se muestra u oculta en el mapa (selección múltiple)
     const ley=$('leyendaInc');ley.textContent='';
-    const orden=t=>{const i=tiposInc.indexOf(t);return i<0?999:i};
-    [...new Set(conPos.map(x=>x.tipo))].sort((a,b)=>orden(a)-orden(b)).forEach(t=>{
-      const li=document.createElement('li');li.appendChild(crearPinInc('',colorInc(t)));li.appendChild(document.createTextNode(t));ley.appendChild(li);
+    const orden=ordenTiposInc();
+    [...new Set(conPosTodas.map(x=>x.tipo))].sort((p,q)=>orden.indexOf(p)-orden.indexOf(q)).forEach(t=>{
+      const li=document.createElement('li');
+      const bt=document.createElement('button');bt.type='button';bt.className='ley';
+      bt.setAttribute('aria-pressed',!tiposOcultosInc.has(t));
+      bt.title=tiposOcultosInc.has(t)?'Mostrar este tipo en el mapa':'Ocultar este tipo del mapa';
+      bt.appendChild(crearPinInc('',colorInc(t)));bt.appendChild(document.createTextNode(t));
+      bt.addEventListener('click',()=>{
+        tiposOcultosInc.has(t)?tiposOcultosInc.delete(t):tiposOcultosInc.add(t);
+        sinReencuadrarInc=true;pintarIncidencias();
+      });
+      li.appendChild(bt);ley.appendChild(li);
     });
+    const reencuadrar=!sinReencuadrarInc;sinReencuadrarInc=false;
     setTimeout(()=>{
       mapaI.invalidateSize();
+      if(!reencuadrar)return;
       if(conPos.length)mapaI.fitBounds(L.latLngBounds(conPos.map(x=>[x.lat,x.lon])).pad(0.3),{maxZoom:18});
       else mapaI.setView([FINCA.lat,FINCA.lon],16);
     },0);
