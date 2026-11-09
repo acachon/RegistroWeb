@@ -45,7 +45,7 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:12p
 .engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
 h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
 .clock{font-family:var(--mono);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
 .tabs button{padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
 .tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
 .panel{display:flex;flex-direction:column;gap:20px}
@@ -270,7 +270,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
   <nav class="tabs" role="tablist">
     <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Actividad</button>
     <button type="button" role="tab" id="tabInc" aria-selected="false" aria-controls="panelInc">Incidencias</button>
-    <button type="button" role="tab" id="tabListInc" aria-selected="false" aria-controls="panelListInc">Listado Incidencias</button>
   </nav>
 
   <!-- PESTAÑA PRINCIPAL -->
@@ -361,8 +360,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   <!-- PESTAÑA INCIDENCIAS -->
   <div class="panel" id="panelInc" role="tabpanel" hidden>
-    <section>
-      <h2>Nueva incidencia</h2>
+    <details class="desp" id="detNuevaInc" open>
+      <summary>Nueva incidencia</summary>
+      <div class="cuerpo">
       <div class="fila2 fila-guardar">
         <div class="campo-act">
           <label class="lbl" for="incTipo">Tipo de incidencia</label>
@@ -392,47 +392,56 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <textarea id="incComentario" placeholder="Qué ha pasado y dónde exactamente"></textarea>
       </div>
       <p class="status" id="statusInc" role="status" aria-live="polite"></p>
-    </section>
-
-  </div>
-
-  <!-- PESTAÑA LISTADO INCIDENCIAS -->
-  <div class="panel" id="panelListInc" role="tabpanel" hidden>
-    <section>
-      <div class="sechead">
-        <h2>Incidencias <span id="contadorInc">0</span></h2>
-        <button type="button" id="btnTodosInc" class="mini">Seleccionar todas</button>
       </div>
-      <div class="vista" role="group" aria-label="Modo de vista">
-        <button type="button" id="vistaListaInc" aria-pressed="true">Listado</button>
-        <button type="button" id="vistaMapaInc" aria-pressed="false">Mapa</button>
-      </div>
-      <ol id="listaInc"></ol>
-      <div id="mapaInc" hidden></div>
-      <p class="hint" id="mapaIncNota" hidden></p>
-      <p class="empty" id="vacioInc">No hay incidencias.</p>
-      <div class="acciones">
-        <div class="row">
+    </details>
+
+    <details class="desp" id="detListInc" open>
+      <summary>Listado incidencias <span id="contadorInc">0</span></summary>
+      <div class="cuerpo">
+      <div class="sub">
+        <div class="sechead">
+          <h3 id="tituloDiaInc">Incidencias de hoy</h3>
+          <div class="calbtns"><button type="button" class="mini" id="btnHoyInc" hidden>Volver a hoy</button>
+          <button type="button" class="mini calbtn" id="btnCalInc" aria-expanded="false" aria-controls="calBoxInc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Otros días</button></div>
+        </div>
+        <div id="calBoxInc" hidden>
+          <div class="calhead">
+            <button type="button" class="calnav" id="mesAntInc" aria-label="Mes anterior">‹</button>
+            <h2 id="mesLblInc" aria-live="polite"></h2>
+            <button type="button" class="calnav" id="mesSigInc" aria-label="Mes siguiente">›</button>
+          </div>
+          <div class="cal" id="calInc"></div>
+        </div>
+        <div class="barra">
+          <button type="button" id="btnTodosInc" class="mini">Seleccionar todas</button>
           <button class="btn danger ico" id="btnBorrarInc" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
           <button class="btn sec ico" id="btnCompartirInc" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
         </div>
-        <div id="confirmBoxInc" hidden style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;border:2px solid var(--err);border-radius:10px">
-          <span id="confirmTxtInc" style="flex:1 1 100%"></span>
-          <button class="btn danger" id="btnSiBorrarInc" type="button">Sí, eliminar</button>
-          <button class="btn sec" id="btnNoBorrarInc" type="button">Cancelar</button>
+        <div class="confirmbox" id="confirmBoxInc" hidden>
+      <span id="confirmTxtInc"></span>
+      <button class="btn danger" id="btnSiBorrarInc" type="button">Sí, eliminar</button>
+      <button class="btn sec" id="btnNoBorrarInc" type="button">Cancelar</button>
         </div>
+        <div class="confirmbox share" id="shareBoxInc" hidden>
+          <span id="shareTxtInc"></span>
+          <label class="chk"><input type="checkbox" id="shWaInc" checked>WhatsApp <small class="destTel">Sin teléfono</small></label>
+          <label class="chk"><input type="checkbox" id="shMailInc" checked>Email <small class="destMail">Sin email</small></label>
+          <label class="chk"><input type="checkbox" id="shAdjInc">Con fotos, vídeos y audios <small>(menú de compartir del móvil)</small></label>
+          <button class="btn sec" id="btnShNoInc" type="button">Cancelar</button>
+          <button class="btn" id="btnShOkInc" type="button">Confirmar</button>
+        </div>
+        <div class="vista" role="group" aria-label="Modo de vista">
+          <button type="button" id="vistaListaInc" aria-pressed="true">Listado</button>
+          <button type="button" id="vistaMapaInc" aria-pressed="false">Mapa</button>
+        </div>
+        <ol id="listaInc"></ol>
+        <div id="mapaInc" hidden></div>
+        <p class="hint" id="mapaNotaInc" hidden></p>
+        <p class="empty" id="vacioListaInc">No hay incidencias.</p>
+        <p class="status" id="statusListInc" role="status" aria-live="polite"></p>
       </div>
-      <p class="status" id="statusListInc" role="status" aria-live="polite"></p>
-    </section>
-
-    <section>
-      <h2>Enviar seleccionadas</h2>
-      <div class="send">
-        <button class="sendbtn wa" id="btnWhatsappInc" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
-        <button class="sendbtn mail" id="btnEmailInc" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
       </div>
-      <p class="hint">WhatsApp y Email envían el texto con la ubicación. Para enviar también las fotos, vídeos y audios usa <b>Compartir</b> y elige WhatsApp o el correo.</p>
-    </section>
+    </details>
   </div>
 
   <div class="visor" id="visor" hidden role="dialog" aria-modal="true" aria-label="Adjunto">
@@ -667,7 +676,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   let cfg={nombre:store.get(KEY_NOM,'')||'Angel',tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
 
   /* ---------- Pestañas ---------- */
-  const PESTANAS={reg:['tabReg','panelReg'],inc:['tabInc','panelInc'],listInc:['tabListInc','panelListInc'],cfg:['tabCfg','panelCfg']};
+  const PESTANAS={reg:['tabReg','panelReg'],inc:['tabInc','panelInc'],cfg:['tabCfg','panelCfg']};
   // pestanaAntes: la última pestaña que no era Configuración, para volver a ella al pulsar otra vez el engranaje
   let pestana='reg', pestanaAntes='reg';
   function abrir(tab){
@@ -679,7 +688,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
     if(tab==='reg')pintarListado();
-    if(tab==='listInc')pintarIncidencias();
+    if(tab==='inc')pintarIncidencias();
     window.scrollTo(0,0);
   }
   Object.entries(PESTANAS).forEach(([k,[t]])=>$(t).addEventListener('click',()=>abrir(k==='cfg'&&pestana==='cfg'?pestanaAntes:k)));
@@ -1500,7 +1509,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
         lat:FINCA.lat+dLa,lon:FINCA.lon+dLo,precision:5+Math.round(Math.random()*7),adjuntos:[],prueba:true});
     });
     incidencias.sort((a,b)=>new Date(a.iso)-new Date(b.iso));
-    guardarIncidencias();pintarIncidencias();
+    guardarIncidencias();diasSelInc=new Set();marcarDiasInc();pintarIncidencias();
     guardarRegistros();diasSel=new Set();marcarDias();
     const hoyD=new Date();mesVista=new Date(hoyD.getFullYear(),hoyD.getMonth(),1);
     pintarTodo();actualizarSeguimiento();
@@ -1707,9 +1716,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
       }
       incidencias.push(x);guardarIncidencias();
       nuevos=[];pintarNuevos();$('incComentario').value='';
-      selInc=new Set([x.id]);
+      diasSelInc=new Set();selInc=new Set([x.id]);
       $('btnIncidencia').disabled=false;
-      pintarIncidencias();pintarMapaHoy();
+      pintarIncidencias();pintarListado();
     };
     $('btnIncidencia').disabled=true;statusInc('Obteniendo posición GPS…');
     if(!('geolocation' in navigator)){x.error='GPS no disponible';guardar().then(()=>statusInc('Incidencia guardada sin posición: este navegador no da GPS.','err'));return}
@@ -1722,10 +1731,15 @@ textarea:focus{outline:none;border-color:var(--olive)}
     },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
   });
 
-  // Listado: la más reciente arriba; por defecto solo está marcada la última
-  let selInc=new Set(incidencias.length?[incidencias[incidencias.length-1].id]:[]);
+  // Listado de incidencias: igual que el de actividades. Por defecto, las de hoy; con «Otros días» se elige uno o varios días del calendario.
+  let diasSelInc=new Set();
+  const diasEfInc=()=>diasSelInc.size?diasSelInc:new Set([diaKey(new Date())]);
+  const incVisibles=()=>{const ds=diasEfInc();return incidencias.filter(x=>ds.has(diaDe(x)))};
+  let selInc=(()=>{const v=incVisibles();return new Set(v.length?[v[v.length-1].id]:[])})();
   let vistaMapaInc=false, urlsLista=[];
-  const incSeleccionadas=()=>incidencias.filter(x=>selInc.has(x.id));
+  let mesVistaInc=new Date(hoy.getFullYear(),hoy.getMonth(),1);
+  const incSeleccionadas=()=>incVisibles().filter(x=>selInc.has(x.id));
+  const marcarDiasInc=()=>{const ds=diasEfInc();selInc=new Set(incidencias.filter(x=>ds.has(diaDe(x))).map(x=>x.id))};
   function resumenAdjuntos(adj){
     const c={foto:0,video:0,audio:0};(adj||[]).forEach(a=>c[a.tipo]++);
     return [[c.foto,'foto','fotos'],[c.video,'vídeo','vídeos'],[c.audio,'audio','audios']].filter(([n])=>n).map(([n,s,p])=>`${n} ${n===1?s:p}`).join(', ');
@@ -1737,12 +1751,19 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(x===incidencias[incidencias.length-1]){const t=document.createElement('span');t.className='tag';t.textContent='Última';b.appendChild(t)}
     if(x.ejemplo){const t=document.createElement('span');t.className='tag';t.textContent='Ejemplo';b.appendChild(t)}
     txt.appendChild(b);
-    txt.appendChild(document.createTextNode(x.fechaHora));txt.appendChild(document.createElement('br'));
+    // Fecha y hora sencillas y, a su derecha, el icono de ubicación (tachado si no hay posición), como en las actividades
+    const fila=document.createElement('div');fila.className='fh';
+    const fecha=document.createElement('span');fecha.className='fecha';fecha.textContent=fechaRegistro(x);fila.appendChild(fecha);
     if(x.lat!=null){
-      const l=document.createElement('a');l.href=`https://maps.google.com/?q=${x.lat},${x.lon}`;l.target='_blank';l.rel='noopener';
-      l.textContent=`${x.lat.toFixed(6)}, ${x.lon.toFixed(6)}`;txt.appendChild(l);
-      txt.appendChild(document.createTextNode(` · ±${Math.round(x.precision)} m`));
-    }else txt.appendChild(document.createTextNode('Sin posición ('+(x.error||'no disponible')+')'));
+      const l=document.createElement('a');l.className='ubic';l.href=`https://maps.google.com/?q=${x.lat},${x.lon}`;l.target='_blank';l.rel='noopener';
+      l.title='Ver en Google Maps';l.setAttribute('aria-label','Ver en Google Maps');l.innerHTML=SVG_UBIC;fila.appendChild(l);
+    }else{
+      const m=document.createElement('span'),motivo=`Sin posición (${x.error||'no disponible'})`;
+      m.className='ubic sin';m.title=motivo;m.setAttribute('role','img');m.setAttribute('aria-label',motivo);
+      m.innerHTML=SVG_UBIC+'<svg class="tacha" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4 L20 20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
+      fila.appendChild(m);
+    }
+    txt.appendChild(fila);
     if(x.comentario){const c=document.createElement('span');c.className='coment';c.textContent=`«${x.comentario}»`;txt.appendChild(c)}
     if((x.adjuntos||[]).length){
       const fila=document.createElement('div');fila.className='adjs';
@@ -1761,31 +1782,45 @@ textarea:focus{outline:none;border-color:var(--olive)}
     return txt;
   }
   function pintarIncidencias(){
+    if(diasSelInc.size===1&&diasSelInc.has(diaKey(new Date())))diasSelInc=new Set(); // solo hoy = opción por defecto
     urlsLista.forEach(u=>URL.revokeObjectURL(u));urlsLista=[];
-    const ol=$('listaInc');ol.textContent='';
-    incidencias.slice().reverse().forEach(x=>{
+    const lista=incVisibles(), ol=$('listaInc');ol.textContent='';
+    // Número de orden de cada incidencia marcada con posición: el mismo que lleva su marcador en el mapa
+    const num=new Map();
+    lista.filter(x=>selInc.has(x.id)&&conPosicion(x)).forEach((x,i)=>num.set(x.id,i+1));
+    lista.slice().reverse().forEach(x=>{
       const li=document.createElement('li');
-      const lab=document.createElement('label');lab.className='item'+(selInc.has(x.id)?' sel':'');
+      const lab=document.createElement('label');lab.className='item hoyitem col'+(selInc.has(x.id)?' sel':'');
       lab.style.borderLeftColor='#f2b600';
       const cb=document.createElement('input');cb.type='checkbox';cb.id='inc_'+x.id;cb.checked=selInc.has(x.id);
-      cb.addEventListener('change',()=>{cb.checked?selInc.add(x.id):selInc.delete(x.id);pintarSelInc();if(vistaMapaInc)pintarMapaInc()});
-      lab.appendChild(cb);lab.appendChild(contenidoIncidencia(x));li.appendChild(lab);ol.appendChild(li);
+      cb.addEventListener('change',()=>{cb.checked?selInc.add(x.id):selInc.delete(x.id);pintarIncidencias()});
+      const izq=document.createElement('div');izq.className='izq';izq.appendChild(cb);
+      if(num.has(x.id)){const pin=crearPinInc(String(num.get(x.id)));pin.title=`Nº ${num.get(x.id)} en el mapa`;izq.appendChild(pin)}
+      const fila=document.createElement('div');fila.className='itemfila';fila.appendChild(izq);fila.appendChild(contenidoIncidencia(x));
+      lab.appendChild(fila);li.appendChild(lab);ol.appendChild(li);
     });
-    $('contadorInc').textContent=incidencias.length;
-    $('vacioInc').hidden=incidencias.length>0;
-    ol.hidden=vistaMapaInc;$('mapaInc').hidden=!vistaMapaInc;$('mapaIncNota').hidden=!vistaMapaInc;
-    pintarSelInc();
-    if(vistaMapaInc)pintarMapaInc();
+    // Título y botones de día
+    const ds=[...diasEfInc()].sort();
+    $('btnHoyInc').hidden=!diasSelInc.size;
+    if(!diasSelInc.size)$('tituloDiaInc').textContent='Incidencias de hoy';
+    else if(ds.length===1){const [y,m,d]=ds[0].split('-').map(Number);$('tituloDiaInc').textContent=`Incidencias del ${fechaCorta(new Date(y,m-1,d))}`}
+    else $('tituloDiaInc').textContent=`Incidencias de ${ds.length} días`;
+    $('contadorInc').textContent=lista.length;
+    $('vacioListaInc').hidden=lista.length>0;
+    $('vacioListaInc').textContent=diasSelInc.size?'No hay incidencias en los días elegidos.':'Hoy no hay incidencias.';
+    ol.hidden=vistaMapaInc;$('mapaInc').hidden=!vistaMapaInc;$('mapaNotaInc').hidden=!vistaMapaInc;
+    const n=incSeleccionadas().length, total=lista.length;
+    $('btnTodosInc').textContent=(n===total&&total>0)?'Quitar todas':'Seleccionar todas';
+    ['btnCompartirInc','btnBorrarInc'].forEach(id=>$(id).disabled=n===0);
+    $('confirmBoxInc').hidden=true;$('shareBoxInc').hidden=true;
+    pintarCalendarioInc();
+    // El mapa solo se pinta con el listado visible y desplegado (Leaflet necesita su tamaño real)
+    if(vistaMapaInc&&$('detListInc').open&&!$('panelInc').hidden)pintarMapaInc();
   }
-  function pintarSelInc(){
-    const n=incSeleccionadas().length, total=incidencias.length;
-    $('btnTodosInc').textContent=(n===total&&total>0)?'Quitar selección':'Seleccionar todas';
-    ['btnWhatsappInc','btnEmailInc','btnCompartirInc','btnBorrarInc'].forEach(id=>$(id).disabled=n===0);
-    document.querySelectorAll('#listaInc label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
-    $('confirmBoxInc').hidden=true;
-  }
+  $('detListInc').addEventListener('toggle',pintarIncidencias);
   $('btnTodosInc').addEventListener('click',()=>{
-    selInc=incSeleccionadas().length===incidencias.length?new Set():new Set(incidencias.map(x=>x.id));
+    const lista=incVisibles();
+    selInc=incSeleccionadas().length===lista.length?new Set():new Set(lista.map(x=>x.id));
     pintarIncidencias();
   });
   function vistaInc(enMapa){
@@ -1796,10 +1831,46 @@ textarea:focus{outline:none;border-color:var(--olive)}
   $('vistaListaInc').addEventListener('click',()=>vistaInc(false));
   $('vistaMapaInc').addEventListener('click',()=>vistaInc(true));
 
+  // Calendario del listado: días con incidencias, selección múltiple
+  function pintarCalendarioInc(){
+    const y=mesVistaInc.getFullYear(), m=mesVistaInc.getMonth();
+    $('mesLblInc').textContent=`${MESES[m]} ${y}`;
+    $('mesSigInc').disabled=y>hoy.getFullYear()||(y===hoy.getFullYear()&&m>=hoy.getMonth());
+    const porDia={};incidencias.forEach(x=>{const k=diaDe(x);porDia[k]=(porDia[k]||0)+1});
+    const cal=$('calInc');cal.textContent='';
+    ['L','M','X','J','V','S','D'].forEach(d=>{const e=document.createElement('div');e.className='dow';e.textContent=d;cal.appendChild(e)});
+    const hueco=(new Date(y,m,1).getDay()+6)%7, total=new Date(y,m+1,0).getDate(), kHoy=diaKey(new Date()), ef=diasEfInc();
+    for(let i=0;i<hueco;i++)cal.appendChild(document.createElement('div'));
+    for(let d=1;d<=total;d++){
+      const k=diaKey(new Date(y,m,d)), n=porDia[k]||0;
+      const b=document.createElement('button');b.type='button';b.className='dia';b.textContent=d;
+      if(k===kHoy)b.classList.add('hoy');
+      if(n){
+        b.classList.add('con');
+        b.setAttribute('aria-label',`${d} de ${MESES[m]}: ${n} incidencia${n===1?'':'s'}`);
+        b.setAttribute('aria-pressed',ef.has(k));
+        if(ef.has(k))b.classList.add('act');
+        b.addEventListener('click',()=>{
+          const nuevo=new Set(diasEfInc());nuevo.has(k)?nuevo.delete(k):nuevo.add(k);
+          diasSelInc=(nuevo.size===1&&nuevo.has(kHoy))?new Set():nuevo;
+          marcarDiasInc();pintarIncidencias();
+        });
+      }else b.disabled=true;
+      cal.appendChild(b);
+    }
+  }
+  $('btnCalInc').addEventListener('click',()=>{
+    const a=$('calBoxInc').hidden;$('calBoxInc').hidden=!a;$('btnCalInc').setAttribute('aria-expanded',a);
+    if(a){const d=[...diasEfInc()].sort().pop().split('-').map(Number);mesVistaInc=new Date(d[0],d[1]-1,1);pintarCalendarioInc()}
+  });
+  $('btnHoyInc').addEventListener('click',()=>{diasSelInc=new Set();marcarDiasInc();pintarIncidencias()});
+  $('mesAntInc').addEventListener('click',()=>{mesVistaInc=new Date(mesVistaInc.getFullYear(),mesVistaInc.getMonth()-1,1);pintarCalendarioInc()});
+  $('mesSigInc').addEventListener('click',()=>{mesVistaInc=new Date(mesVistaInc.getFullYear(),mesVistaInc.getMonth()+1,1);pintarCalendarioInc()});
+
   // Mapa de incidencias: las marcadas, numeradas por orden de hora
   let mapaI=null, capaI=null;
   function pintarMapaInc(){
-    const nota=$('mapaIncNota');
+    const nota=$('mapaNotaInc');
     if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';return}
     if(!mapaI){
       mapaI=L.map('mapaInc',{zoomControl:false});
@@ -1825,30 +1896,27 @@ textarea:focus{outline:none;border-color:var(--olive)}
     return lista.map(x=>{
       const d=new Date(x.iso), adj=resumenAdjuntos(x.adjuntos);
       const ubic=x.lat!=null?`https://maps.google.com/?q=${x.lat.toFixed(6)},${x.lon.toFixed(6)}`:'sin posición';
-      return `INCIDENCIA: ${x.tipo}\nEmpleado: ${x.nombre}\nFecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\nUbicación: ${ubic}\nPrecisión GPS: ${x.lat!=null?'±'+Math.round(x.precision)+' m':'sin dato'}`+
+      return `INCIDENCIA: ${x.tipo}\nEmpleado: ${x.nombre}\nFecha: ${fechaCorta(d)}\nHora: ${pad(d.getHours())}:${pad(d.getMinutes())}\nUbicación: ${ubic}`+
         (x.comentario?`\nComentario: ${x.comentario}`:'')+(adj?`\nAdjuntos: ${adj}`:'');
     }).join('\n\n');
   }
   function haySelInc(){if(!incSeleccionadas().length){statusListInc('Marca al menos una incidencia.','err');return false}return true}
-  $('btnWhatsappInc').addEventListener('click',()=>{
-    if(!haySelInc())return;
+  function enviarWhatsappInc(lista){
     if(!cfg.tel){abrir('cfg');$('telefono').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el teléfono de WhatsApp y guarda.';return}
-    window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(textoIncidencias(incSeleccionadas()))}`,'_blank');
-  });
-  $('btnEmailInc').addEventListener('click',()=>{
-    if(!haySelInc())return;
+    window.open(`https://wa.me/${telefonoLimpio(cfg.tel)}?text=${encodeURIComponent(textoIncidencias(lista))}`,'_blank');
+  }
+  function enviarEmailInc(lista){
     if(!cfg.mail){abrir('cfg');$('email').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Añade el email del destinatario y guarda.';return}
-    const lista=incSeleccionadas(), fh=x=>{const d=new Date(x.iso);return `${fechaCorta(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+    const fh=x=>{const d=new Date(x.iso);return `${fechaCorta(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
     const tipos=[...new Set(lista.map(x=>x.tipo))].join(', '), nombres=[...new Set(lista.map(x=>x.nombre))].join(', ');
     const cuando=lista.length===1?fh(lista[0]):`${fh(lista[0])} – ${fh(lista[lista.length-1])}`;
     const asunto=['Incidencia',tipos,nombres,cuando].join(' ');
     const dest=cfg.mail.split(',').map(s=>s.trim()).filter(Boolean).join(',');
     location.href=`mailto:${dest}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(textoIncidencias(lista))}`;
-  });
-  // Compartir: texto + todas las fotos, vídeos y audios de las incidencias marcadas
-  $('btnCompartirInc').addEventListener('click',async()=>{
-    if(!haySelInc())return;
-    const lista=incSeleccionadas(), files=[];
+  }
+  // Texto + todas las fotos, vídeos y audios de las incidencias marcadas, con el menú de compartir del móvil
+  async function compartirIncConAdjuntos(lista){
+    const files=[];
     statusListInc('Preparando adjuntos…');
     for(const x of lista)for(const a of x.adjuntos||[]){
       const bl=await media.leer(a.id);
@@ -1856,10 +1924,30 @@ textarea:focus{outline:none;border-color:var(--olive)}
     }
     const res=await compartirArchivos(files,'Incidencias de la finca',textoIncidencias(lista));
     statusListInc(res==='ok'?`Compartida${lista.length===1?'':'s'} ${lista.length} incidencia${lista.length===1?'':'s'} con ${files.length} adjunto${files.length===1?'':'s'}.`:res==='cancelado'?'':res,res==='ok'?'ok':'err');
+  }
+  // Compartir: se pregunta por dónde enviar las marcadas
+  $('btnCompartirInc').addEventListener('click',()=>{
+    if(!haySelInc())return;
+    const lista=incSeleccionadas(), n=lista.length, conAdj=lista.some(x=>(x.adjuntos||[]).length);
+    $('confirmBoxInc').hidden=true;
+    $('shareTxtInc').textContent=`¿Cómo quieres compartir ${n===1?'la incidencia marcada':`las ${n} incidencias marcadas`}?`;
+    $('shWaInc').checked=$('shMailInc').checked=true;$('shAdjInc').checked=false;
+    $('shAdjInc').closest('label').hidden=!conAdj;
+    $('btnShOkInc').disabled=false;$('shareBoxInc').hidden=false;
   });
+  const hayCanalInc=()=>{$('btnShOkInc').disabled=!($('shWaInc').checked||$('shMailInc').checked||$('shAdjInc').checked)};
+  ['shWaInc','shMailInc','shAdjInc'].forEach(id=>$(id).addEventListener('change',hayCanalInc));
+  $('btnShOkInc').addEventListener('click',()=>{
+    const lista=incSeleccionadas();$('shareBoxInc').hidden=true;if(!lista.length)return;
+    if($('shWaInc').checked)enviarWhatsappInc(lista);
+    if($('shMailInc').checked)enviarEmailInc(lista);
+    if($('shAdjInc').checked)compartirIncConAdjuntos(lista);
+  });
+  $('btnShNoInc').addEventListener('click',()=>{$('shareBoxInc').hidden=true});
   $('btnBorrarInc').addEventListener('click',()=>{
     if(!haySelInc())return;
     const n=incSeleccionadas().length;
+    $('shareBoxInc').hidden=true;
     $('confirmTxtInc').textContent=`¿Eliminar ${n} incidencia${n===1?'':'s'} y sus adjuntos del móvil? No se puede deshacer.`;
     $('confirmBoxInc').hidden=false;
   });
@@ -1868,8 +1956,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const borrar=incSeleccionadas(), n=borrar.length, ids=new Set(borrar.map(x=>x.id));
     for(const x of borrar)for(const a of x.adjuntos||[])await media.borrar(a.id);
     incidencias=incidencias.filter(x=>!ids.has(x.id));guardarIncidencias();
-    selInc=new Set(incidencias.length?[incidencias[incidencias.length-1].id]:[]);
-    pintarIncidencias();pintarMapaHoy();
+    diasSelInc=new Set([...diasSelInc].filter(k=>incidencias.some(x=>diaDe(x)===k)));
+    selInc=new Set();
+    pintarIncidencias();pintarListado();
     statusListInc(`${n} incidencia${n===1?'':'s'} eliminada${n===1?'':'s'}.`,'ok');
   });
 
