@@ -102,9 +102,9 @@ label.item{cursor:pointer}
 .item .fh .ubic.sin .tacha{position:absolute;inset:4px;width:20px;height:20px}
 .item .dur{font-size:1.05rem}
 .item .fh a.ubic{display:inline-flex;padding:4px;margin:-4px 0}
-.item.col{flex-direction:column;gap:6px}
+.item.hoyitem.col{flex-direction:column;align-items:stretch;gap:6px}
 .item .itemfila{display:flex;gap:12px;align-items:flex-start;width:100%}
-.item .vel{color:var(--muted);white-space:nowrap}
+.item .vel{color:var(--muted);white-space:nowrap;text-align:left;padding-left:38px} /* 38 = ancho de la columna de la casilla (26) + hueco (12): queda alineado con la fecha */
 /* Registros de hoy: datos a la izquierda, duración hh:mm hasta el siguiente a la derecha */
 .item.hoyitem{align-items:center}
 .dur{margin-left:auto;flex:none;text-align:right;font-family:var(--mono);font-size:1.2rem;font-weight:500;font-variant-numeric:tabular-nums;color:var(--fg)}
