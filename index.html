@@ -340,7 +340,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <div class="sechead">
           <h3 id="tituloDia">Actividades de hoy</h3>
           <div class="calbtns"><button type="button" class="mini" id="btnHoy" hidden>Volver a hoy</button>
-          <button type="button" class="mini calbtn" id="btnCal" aria-expanded="false" aria-controls="calBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Otros días</button></div>
+          <button type="button" class="mini calbtn" id="btnCal" aria-expanded="false" aria-controls="calBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendario</button></div>
         </div>
         <div id="calBox" hidden>
           <div class="calhead">
@@ -432,7 +432,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
         <div class="sechead">
           <h3 id="tituloDiaInc">Incidencias de hoy</h3>
           <div class="calbtns"><button type="button" class="mini" id="btnHoyInc" hidden>Volver a hoy</button>
-          <button type="button" class="mini calbtn" id="btnCalInc" aria-expanded="false" aria-controls="calBoxInc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Otros días</button></div>
+          <button type="button" class="mini calbtn" id="btnCalInc" aria-expanded="false" aria-controls="calBoxInc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendario</button></div>
         </div>
         <div id="calBoxInc" hidden>
           <div class="calhead">
@@ -1326,7 +1326,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       E('vacioLista').hidden=lista.length>0;
       E('vacioLista').textContent=diasSel.size?'No hay actividades en los días elegidos.':'Hoy aún no hay actividades.';
       E('lista').hidden=enMapa;E('mapa').hidden=E('leyenda').hidden=E('mapaNota').hidden=!enMapa;
-      // Título: por defecto «hoy»; con otros días elegidos se indica cuáles y aparece «Volver a hoy» junto a «Otros días»
+      // Título: por defecto «hoy»; con otros días elegidos se indica cuáles y aparece «Volver a hoy» junto a «Calendario»
       const ds=[...diasEf()].sort();
       $('btnHoy').hidden=!diasSel.size;
       if(!diasSel.size)$('tituloDia').textContent='Actividades de hoy';
@@ -1917,7 +1917,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
   });
 
-  // Listado de incidencias: igual que el de actividades. Por defecto, las de hoy; con «Otros días» se elige uno o varios días del calendario.
+  // Listado de incidencias: igual que el de actividades. Por defecto, las de hoy; con «Calendario» se elige uno o varios días del calendario.
   let diasSelInc=new Set();
   const diasEfInc=()=>diasSelInc.size?diasSelInc:new Set([diaKey(new Date())]);
   const incVisibles=()=>{const ds=diasEfInc();return incidencias.filter(x=>ds.has(diaDe(x)))};
