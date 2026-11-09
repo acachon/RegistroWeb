@@ -519,6 +519,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
   const MOSTRAR_EJEMPLOS=true;
   // Ubicación de referencia de los datos de prueba: la finca del Cádimo
   const FINCA={lat:37.852699,lon:-3.730443};
+  // Un registro, punto o incidencia sin coordenadas válidas (GPS caído o denegado) nunca se dibuja en un mapa
+  const conPosicion=x=>Number.isFinite(x.lat)&&Number.isFinite(x.lon);
   if(MOSTRAR_EJEMPLOS){
     const base=new Date(), dia=(n,h,m)=>new Date(base.getFullYear(),base.getMonth(),base.getDate()+n,h,m);
     // A nombre del empleado configurado (cfg aún no existe aquí, se lee directamente)
@@ -793,7 +795,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   // Texto «Distancia 1,2 km · Vel. media 2,5 km/h». La velocidad usa el tiempo de la actividad: hasta el registro
   // siguiente del mismo día, hasta ahora si es la última de hoy, o hasta su último punto si es de otro día.
   function textoRecorrido(r){
-    const trazo=[r,...puntosDe(r)].filter(x=>x.lat!=null).sort((a,b)=>new Date(a.iso)-new Date(b.iso));
+    const trazo=[r,...puntosDe(r)].filter(conPosicion).sort((a,b)=>new Date(a.iso)-new Date(b.iso));
     let m=0;for(let i=1;i<trazo.length;i++)m+=metrosEntre(trazo[i-1],trazo[i]);
     const sig=registros[registros.indexOf(r)+1], dia=diaDe(r);
     const fin=sig&&diaDe(sig)===dia?new Date(sig.iso).getTime()
@@ -988,7 +990,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     }
     // Centra el mapa en el último registro con coordenadas y abre su globo
     function irAlUltimo(){
-      const r=registros.slice().reverse().find(x=>x.lat!=null);
+      const r=registros.slice().reverse().find(conPosicion);
       if(!r){$(idNota).textContent='Todavía no hay registros con ubicación.';return}
       mapa.setView([r.lat,r.lon],18);
       const mk=marcadores.get(r.id);
@@ -1002,8 +1004,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
     // incs: incidencias que se añaden al mapa como triángulos de aviso (pestaña Registro: las de hoy)
     return {pintar(lista,conLinea,avisoVacio,incs=[]){
-    const conPos=lista.filter(r=>r.lat!=null), sin=lista.length-conPos.length, nota=$(idNota);
-    const incsPos=incs.filter(x=>x.lat!=null);
+    const conPos=lista.filter(conPosicion), sin=lista.length-conPos.length, nota=$(idNota);
+    const incsPos=incs.filter(conPosicion);
     nota.textContent=!lista.length&&!incsPos.length?avisoVacio
       :sin?`${sin} registro${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
     if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';$(idMapa).hidden=true;return}
@@ -1029,7 +1031,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       }
     }
     capaMapa.clearLayers();marcadores.clear();
-    const idsLista=new Set(lista.map(r=>r.id)), pts=puntos.filter(p=>idsLista.has(p.registroId));
+    const idsLista=new Set(lista.map(r=>r.id)), pts=puntos.filter(p=>idsLista.has(p.registroId)&&conPosicion(p));
     if(pts.length)nota.textContent=[nota.textContent,`${pts.length} punto${pts.length===1?'':'s'} GPS cada 5 min (círculos pequeños).`].filter(Boolean).join(' ');
     const encuadre=[...conPos.map(r=>[r.lat,r.lon]),...pts.map(p=>[p.lat,p.lon])];
     // Recorrido de cada actividad: su registro y sus puntos de seguimiento, en orden de hora.
@@ -1090,7 +1092,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       const hoyK=diaKey(new Date());
       // Número de orden de cada registro marcado: el mismo que lleva su marcador en el mapa
       const num=new Map();
-      lista.filter(r=>seleccion.has(r.id)&&r.lat!=null).forEach((r,i)=>num.set(r.id,i+1));
+      lista.filter(r=>seleccion.has(r.id)&&conPosicion(r)).forEach((r,i)=>num.set(r.id,i+1));
       lista.slice().reverse().forEach(r=>{
         const li=document.createElement('li');
         const lab=document.createElement('label');lab.className='item hoyitem';
@@ -1746,7 +1748,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       capaI=L.layerGroup().addTo(mapaI);
     }
     capaI.clearLayers();
-    const lista=incSeleccionadas(), conPos=lista.filter(x=>x.lat!=null), sin=lista.length-conPos.length;
+    const lista=incSeleccionadas(), conPos=lista.filter(conPosicion), sin=lista.length-conPos.length;
     nota.textContent=!lista.length?'No hay incidencias marcadas. Márcalas en el listado para verlas en el mapa.'
       :sin?`${sin} incidencia${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
     conPos.forEach((x,i)=>{
