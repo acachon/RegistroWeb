@@ -42,8 +42,8 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:12p
 .engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
 h1{font-size:1.35rem;font-weight:800;margin:0;letter-spacing:-.01em}
 .clock{font-family:var(--mono);font-size:.95rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
-.tabs button{padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
+.tabs{display:flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.tabs button{flex:1;padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
 .tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
 .panel{display:flex;flex-direction:column;gap:20px}
 .lbl{display:block;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -67,6 +67,18 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--earth);outline-
 section{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px}
 h2{font-size:1rem;margin:0;display:flex;justify-content:space-between;align-items:center}
 h2 span{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.85rem}
+details.desp{background:var(--card);border:1px solid var(--line);border-radius:12px}
+details.desp>summary{list-style:none;cursor:pointer;padding:16px;font-size:1.05rem;font-weight:800;display:flex;align-items:center;gap:8px;border-radius:12px}
+details.desp>summary::-webkit-details-marker{display:none}
+details.desp>summary::after{content:'';margin-left:auto;width:9px;height:9px;border-right:2.5px solid var(--olive);border-bottom:2.5px solid var(--olive);transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+details.desp[open]>summary::after{transform:rotate(-135deg)}
+details.desp>summary:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
+details.desp>summary span{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.85rem}
+.cuerpo{padding:0 16px 16px;display:flex;flex-direction:column;gap:18px}
+.sub{display:flex;flex-direction:column;gap:12px}
+.sub h3{margin:0;font-size:.82rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.fila-guardar{align-items:flex-end}
+.fila-guardar #btnRegistro{width:auto;flex:none;padding:0 20px;font-size:1.05rem}
 .sechead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .sechead h2{justify-content:flex-start;gap:8px;white-space:nowrap}
 .mini{white-space:nowrap;flex:none;padding:6px 10px;font-size:.85rem;font-weight:700;background:transparent;color:var(--olive);border:2px solid var(--olive);border-radius:8px}
@@ -132,7 +144,7 @@ label.item{cursor:pointer}
 .vista{display:flex;gap:4px;padding:3px;background:var(--bg);border:1px solid var(--line);border-radius:10px}
 .vista button{flex:1;padding:8px;font-size:.92rem;font-weight:700;background:transparent;color:var(--muted);border-radius:8px}
 .vista button[aria-pressed=true]{background:var(--olive);color:var(--olive-ink)}
-#mapa,#mapaHoy{height:340px;border:1px solid var(--line);border-radius:10px;z-index:0}
+#mapa{height:340px;border:1px solid var(--line);border-radius:10px;z-index:0}
 /* Controles del mapa siempre claros con texto oscuro: en modo oscuro heredarían el texto claro de la web
    y no se leerían (selector Mapa/Satélite, zoom, globos y créditos) */
 .leaflet-container .leaflet-control-layers,.leaflet-container .leaflet-bar a,
@@ -216,104 +228,77 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   <nav class="tabs" role="tablist">
     <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Actividad</button>
-    <button type="button" role="tab" id="tabList" aria-selected="false" aria-controls="panelList">Listado Actividades</button>
     <button type="button" role="tab" id="tabInc" aria-selected="false" aria-controls="panelInc">Incidencias</button>
     <button type="button" role="tab" id="tabListInc" aria-selected="false" aria-controls="panelListInc">Listado Incidencias</button>
   </nav>
 
   <!-- PESTAÑA PRINCIPAL -->
   <div class="panel" id="panelReg" role="tabpanel">
-    <div class="fila2">
-      <div class="campo-act">
-        <label class="lbl" for="actividad">Actividad</label>
-        <select id="actividad">
-          <option>Inicio Jornada</option>
-          <option>Fin Jornada</option>
-          <option>Poda</option>
-          <option>Riego</option>
-          <option>Otros</option>
-        </select>
+    <details class="desp" id="detNueva" open>
+      <summary>Nueva actividad</summary>
+      <div class="cuerpo">
+        <div class="fila2 fila-guardar">
+          <div class="campo-act">
+            <label class="lbl" for="actividad">Tipo de actividad</label>
+            <select id="actividad">
+              <option>Inicio Jornada</option>
+              <option>Fin Jornada</option>
+              <option>Poda</option>
+              <option>Riego</option>
+              <option>Otros</option>
+            </select>
+          </div>
+          <button id="btnRegistro" type="button">GUARDAR</button>
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+        <div class="seg" id="seg" role="status" aria-live="polite"><span class="luz"></span><span id="segTxt"></span></div>
+        <div class="ayuda" id="ayudaGps" hidden>
+          <strong id="ayudaTitulo"></strong>
+          <ol id="ayudaPasos"></ol>
+          <button type="button" class="mini" id="ayudaCerrar">Entendido</button>
+        </div>
+        <div class="sugerencia" id="sugFin" hidden>
+          <strong>Jornada terminada</strong>
+          <p id="sugTxt"></p>
+          <div class="send">
+            <button class="sendbtn wa" id="sugWa" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
+            <button class="sendbtn mail" id="sugMail" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
+          </div>
+          <button type="button" class="mini" id="sugCerrar">Ahora no</button>
+        </div>
       </div>
-    </div>
+    </details>
 
-    <button id="btnRegistro" type="button">REGISTRO</button>
-    <p class="status" id="status" role="status" aria-live="polite"></p>
-    <div class="seg" id="seg" role="status" aria-live="polite"><span class="luz"></span><span id="segTxt"></span></div>
-    <div class="ayuda" id="ayudaGps" hidden>
-      <strong id="ayudaTitulo"></strong>
-      <ol id="ayudaPasos"></ol>
-      <button type="button" class="mini" id="ayudaCerrar">Entendido</button>
-    </div>
-    <div class="sugerencia" id="sugFin" hidden>
-      <strong>Jornada terminada</strong>
-      <p id="sugTxt"></p>
-      <div class="send">
-        <button class="sendbtn wa" id="sugWa" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
-        <button class="sendbtn mail" id="sugMail" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
-      </div>
-      <button type="button" class="mini" id="sugCerrar">Ahora no</button>
-    </div>
-
-    <section>
-      <h2>Mapa de hoy</h2>
-      <div id="mapaHoy"></div>
-      <ul class="leyenda" id="leyendaHoy"></ul>
-      <p class="hint" id="mapaHoyNota"></p>
-    </section>
-
-    <section>
-      <h2>Último registro</h2>
-      <div id="ultimo"></div>
-      <p class="empty" id="vacio">Aún no hay registros. Pulsa REGISTRO al empezar a trabajar.</p>
-    </section>
-
-    <section>
-      <h2>Registros de hoy y duración <span id="contadorHoy">0</span></h2>
-      <ol id="listaHoy"></ol>
-      <p class="empty" id="vacioHoy">Hoy no hay registros anteriores al último.</p>
-    </section>
-
-    <section>
-      <h2 id="tituloEnvio">Enviar último registro</h2>
-      <div class="send">
-        <button class="sendbtn wa" id="btnWhatsapp" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
-        <button class="sendbtn mail" id="btnEmail" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
-      </div>
-    </section>
-
-    <section id="secPrueba">
-      <h2>Datos de prueba</h2>
-      <p class="hint">Borra todos los registros guardados y crea una jornada sin terminar del empleado configurado: Inicio Jornada y, 10, 15 y 20 minutos después, Poda, Riego y Otros, con sus puntos GPS cada 5 minutos, todo a menos de 100 m. Añade además 3 incidencias de prueba en la zona de la finca El Caimbo (sustituyen a las de pruebas anteriores).</p>
-      <button class="btn sec" id="btnPrueba" type="button">Cargar datos de prueba</button>
-    </section>
-  </div>
-
-  <!-- PESTAÑA LISTADO -->
-  <div class="panel" id="panelList" role="tabpanel" hidden>
-    <section>
-      <div class="calhead">
+    <details class="desp" id="detList" open>
+      <summary>Listado actividades <span id="contador">0</span></summary>
+      <div class="cuerpo">
+        <div class="sub">
+          <h3>Enviar actividades seleccionadas</h3>
+          <div class="send">
+            <button class="sendbtn wa" id="btnWhatsappSel" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
+            <button class="sendbtn mail" id="btnEmailSel" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
+          </div>
+        </div>
+        <div class="sub">
+          <h3>Mapa de las actividades seleccionadas</h3>
+          <div id="mapa"></div>
+          <ul class="leyenda" id="leyenda"></ul>
+          <p class="hint" id="mapaNota"></p>
+        </div>
+        <div class="sub">
+          <div class="sechead">
+            <h3>Actividades</h3>
+            <button type="button" id="btnTodos" class="mini">Seleccionar todas</button>
+          </div>
+          <div class="calhead">
         <button type="button" class="calnav" id="mesAnt" aria-label="Mes anterior">‹</button>
         <h2 id="mesLbl" aria-live="polite"></h2>
         <button type="button" class="calnav" id="mesSig" aria-label="Mes siguiente">›</button>
       </div>
       <div class="cal" id="cal"></div>
-    </section>
-
-    <section>
-      <div class="sechead">
-        <h2>Registros <span id="contador">0</span></h2>
-        <button type="button" id="btnTodos" class="mini">Seleccionar todos</button>
-      </div>
-      <div class="filtro" id="filtro"></div>
-      <div class="vista" role="group" aria-label="Modo de vista">
-        <button type="button" id="vistaLista" aria-pressed="true">Listado</button>
-        <button type="button" id="vistaMapa" aria-pressed="false">Mapa</button>
-      </div>
-      <ol id="lista"></ol>
-      <div id="mapa" hidden></div>
-      <ul class="leyenda" id="leyenda" hidden></ul>
-      <p class="hint" id="mapaNota" hidden></p>
-      <p class="empty" id="vacioLista">No hay registros.</p>
+          <div class="filtro" id="filtro"></div>
+          <ol id="lista"></ol>
+          <p class="empty" id="vacioLista">No hay registros.</p>
       <div class="acciones" id="acciones">
         <div class="row">
           <button class="btn danger ico" id="btnBorrar" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
@@ -325,15 +310,15 @@ textarea:focus{outline:none;border-color:var(--olive)}
           <button class="btn sec" id="btnNoBorrar" type="button">Cancelar</button>
         </div>
       </div>
-      <p class="status" id="statusList" role="status" aria-live="polite"></p>
-    </section>
-
-    <section>
-      <h2>Enviar seleccionados</h2>
-      <div class="send">
-        <button class="sendbtn wa" id="btnWhatsappSel" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
-        <button class="sendbtn mail" id="btnEmailSel" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
+          <p class="status" id="statusList" role="status" aria-live="polite"></p>
+        </div>
       </div>
+    </details>
+
+    <section id="secPrueba">
+      <h2>Datos de prueba</h2>
+      <p class="hint">Borra todos los registros guardados y crea una jornada sin terminar del empleado configurado: Inicio Jornada y, 10, 15 y 20 minutos después, Poda, Riego y Otros, con sus puntos GPS cada 5 minutos, todo a menos de 100 m. Añade además 3 incidencias de prueba en la zona de la finca El Caimbo (sustituyen a las de pruebas anteriores).</p>
+      <button class="btn sec" id="btnPrueba" type="button">Cargar datos de prueba</button>
     </section>
   </div>
 
@@ -635,7 +620,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   let cfg={nombre:store.get(KEY_NOM,'')||'Angel',tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
 
   /* ---------- Pestañas ---------- */
-  const PESTANAS={reg:['tabReg','panelReg'],list:['tabList','panelList'],inc:['tabInc','panelInc'],listInc:['tabListInc','panelListInc'],cfg:['tabCfg','panelCfg']};
+  const PESTANAS={reg:['tabReg','panelReg'],inc:['tabInc','panelInc'],listInc:['tabListInc','panelListInc'],cfg:['tabCfg','panelCfg']};
   // pestanaAntes: la última pestaña que no era Configuración, para volver a ella al pulsar otra vez el engranaje
   let pestana='reg', pestanaAntes='reg';
   function abrir(tab){
@@ -646,8 +631,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     if(tab==='cfg'){$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
-    if(tab==='reg')pintarMapaHoy();
-    if(tab==='list'&&vistaMapa)pintarListado();
+    if(tab==='reg')pintarListado();
     if(tab==='listInc')pintarIncidencias();
     window.scrollTo(0,0);
   }
@@ -702,9 +686,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
     sel.value=opciones.includes(actual)?actual:opciones[0];
   }
 
+  let diaPintado=diaKey(new Date());
   setInterval(()=>{
     const d=new Date();$('clock').textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-    if(diaKey(d)!==diaPintado){pintarHoy();actualizarActividades()}else actualizarVivo();
+    if(diaKey(d)!==diaPintado){diaPintado=diaKey(d);pintarTodo()}else actualizarVivo();
   },1000);
 
   function avisar(id,msg,cls){const s=$(id);s.textContent=msg;s.className='status '+(cls||'')}
@@ -818,38 +803,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
     document.querySelectorAll('.vivo .t').forEach(t=>{t.textContent=durHHMM(Date.now()-new Date(t.dataset.desde))});
   }
 
-  // Pestaña Registro: solo el último
-  function pintarUltimo(){
-    const u=ultimo(), box=$('ultimo');box.textContent='';
-    if(u){
-      const d=document.createElement('div');d.className='item hoyitem';d.appendChild(contenidoRegistro(u));
-      d.appendChild(crearDur(durRegistro(u,null)));box.appendChild(d);
-    }
-    $('vacio').hidden=!!u;
-    $('btnWhatsapp').disabled=$('btnEmail').disabled=!u;
-    $('tituloEnvio').textContent=u&&u.actividad===FIN?'Enviar resumen de la jornada':'Enviar último registro';
-    actualizarVivo();
-  }
-
-  // Pestaña Registro: los registros anteriores de hoy (sin el último, que va en su propia sección), en orden
-  let diaPintado=null;
-  function pintarHoy(){
-    diaPintado=diaKey(new Date());
-    const lista=registros.filter(r=>diaDe(r)===diaPintado), ol=$('listaHoy');ol.textContent='';
-    const anteriores=lista.filter(r=>r!==ultimo());
-    anteriores.forEach((r,i)=>{
-      const li=document.createElement('li');
-      const it=document.createElement('div');it.className='item hoyitem';
-      it.appendChild(contenidoRegistro(r));
-      it.appendChild(crearDur(durRegistro(r,lista[i+1])));
-      li.appendChild(it);ol.appendChild(li);
-    });
-    $('contadorHoy').textContent=anteriores.length;
-    $('vacioHoy').hidden=anteriores.length>0;
-    actualizarVivo();
-    pintarMapaHoy();
-  }
-
   // Pestaña Listado: calendario del mes en vista
   const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   function pintarCalendario(){
@@ -904,11 +857,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
     actualizarVivo();
     $('contador').textContent=lista.length;
     $('vacioLista').hidden=lista.length>0;
-    // En modo Mapa no hay casillas, así que se ocultan la selección múltiple, Eliminar y Compartir
-    $('acciones').hidden=lista.length===0||vistaMapa;
-    $('btnTodos').hidden=lista.length<2||vistaMapa;
-    ol.hidden=vistaMapa;$('mapa').hidden=$('leyenda').hidden=!vistaMapa||lista.length===0;$('mapaNota').hidden=!vistaMapa;
-    if(vistaMapa&&lista.length)pintarMapa(lista);
+    $('acciones').hidden=lista.length===0;
+    $('btnTodos').hidden=lista.length<2;
 
     const f=$('filtro');f.textContent='';
     if(filtroDia){
@@ -924,7 +874,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
   /* ---------- Vista Mapa ---------- */
   // Muestra en el mapa los registros visibles (todos o los del día filtrado) que tienen coordenadas,
   // numerados por orden cronológico; con un día filtrado se unen con una línea en ese orden.
-  let vistaMapa=false;
   // Forma y color de cada actividad en el mapa (y en su leyenda)
   const ICONOS={'Inicio Jornada':{color:'#d62828',cuad:true},'Fin Jornada':{color:'#111111',cuad:true},
     'Poda':{color:'#2a9d3f'},'Riego':{color:'#1f6fd1'},'Otros':{color:'#e08a00'}};
@@ -934,7 +883,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const p=document.createElement('div');p.className='pin'+(ic.cuad?' cuad':'');
     p.style.background=ic.color;p.textContent=texto;return p;
   }
-  ['leyenda','leyendaHoy'].forEach(id=>Object.entries(ICONOS).forEach(([nom,ic])=>{
+  ['leyenda'].forEach(id=>Object.entries(ICONOS).forEach(([nom,ic])=>{
     const li=document.createElement('li');li.appendChild(crearPin(ic,''));li.appendChild(document.createTextNode(nom));
     $(id).appendChild(li);
   }));
@@ -944,7 +893,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const p=document.createElement('div');p.className='pin inc';p.innerHTML=SVG_TRI;
     const s=document.createElement('span');s.textContent=texto;p.appendChild(s);return p;
   }
-  {const li=document.createElement('li');li.appendChild(crearPinInc(''));li.appendChild(document.createTextNode('Incidencia'));$('leyendaHoy').appendChild(li)}
   // Globo de una incidencia (con textContent: tipo y comentario vienen de lo que escribe el usuario)
   function globoIncidencia(x,num){
     const pop=document.createElement('div');pop.className='popreg';
@@ -970,14 +918,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
     L.control.layers(fondos,null,{collapsed:true}).addTo(mapa);
     mapa.on('baselayerchange',e=>store.set(claveFondo,e.name));
   }
-  function ponerVista(enMapa){
-    vistaMapa=enMapa;
-    $('vistaLista').setAttribute('aria-pressed',!enMapa);$('vistaMapa').setAttribute('aria-pressed',enMapa);
-    pintarListado();
-  }
-  $('vistaLista').addEventListener('click',()=>ponerVista(false));
-  $('vistaMapa').addEventListener('click',()=>ponerVista(true));
-
   // Mapa reutilizable (Listado y pestaña Registro). pintar(lista,conLinea,avisoVacio) dibuja los registros
   // de lista que tienen coordenadas, numerados por orden; si no hay ninguno, se centra en la finca.
   // fondoInicial: «Mapa» o «Satélite» la primera vez; después cada mapa recuerda su propia elección.
@@ -1028,6 +968,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     nota.textContent=!lista.length&&!incsPos.length?avisoVacio
       :sin?`${sin} registro${sin===1?'':'s'} sin coordenadas no aparece${sin===1?'':'n'} en el mapa.`:'';
     if(typeof L==='undefined'){nota.textContent='No se ha podido cargar el mapa. Comprueba la conexión a internet.';$(idMapa).hidden=true;return}
+    $(idMapa).hidden=false;
     if(!mapa){
       // Sin botones + / −: el zoom se hace con los dedos (o la rueda del ratón en el ordenador)
       mapa=L.map(idMapa,{zoomControl:false});
@@ -1089,32 +1030,27 @@ textarea:focus{outline:none;border-color:var(--olive)}
     },0);
     }};
   }
-  const mapaListado=crearMapa('mapa','mapaNota','Mapa'), mapaHoy=crearMapa('mapaHoy','mapaHoyNota','Satélite',true);
+  const mapaListado=crearMapa('mapa','mapaNota','Satélite',true);
   // Listado: solo los registros marcados; con un día filtrado se unen con una línea
   function pintarMapa(lista){
-    mapaListado.pintar(lista.filter(r=>seleccion.has(r.id)),!!filtroDia,'No hay registros marcados. Márcalos en Listado para verlos en el mapa.');
+    mapaListado.pintar(lista.filter(r=>seleccion.has(r.id)),!!filtroDia,'No hay actividades marcadas. Márcalas en el listado para verlas en el mapa.');
   }
-  // Pestaña Registro: todos los registros de hoy unidos por orden. Solo se pinta con la pestaña visible
-  // (Leaflet necesita el tamaño real); al abrir la pestaña se vuelve a llamar.
-  function pintarMapaHoy(){
-    if($('panelReg').hidden)return;
-    // Mientras la página carga, Leaflet aún no está: lo pintará el evento «load»
-    if(typeof L==='undefined'&&document.readyState!=='complete')return;
-    const k=diaKey(new Date());
-    mapaHoy.pintar(registros.filter(r=>diaDe(r)===k),true,'Hoy aún no hay registros. Pulsa REGISTRO para empezar.',incidencias.filter(x=>diaDe(x)===k));
-  }
-  // Leaflet se carga con «defer», después de este código: pintar el mapa de hoy en cuanto esté
-  window.addEventListener('load',pintarMapaHoy);
+  // Leaflet se carga con «defer», después de este código: pintar el mapa en cuanto esté
+  window.addEventListener('load',pintarListado);
+  // Al desplegar el listado se pinta el mapa, que no podía medirse mientras estaba plegado
+  $('detList').addEventListener('toggle',pintarListado);
 
   function pintarSeleccion(){
     const n=seleccionados().length, total=visibles().length;
-    $('btnTodos').textContent=(n===total&&total>0)?'Quitar selección':'Seleccionar todos';
+    $('btnTodos').textContent=(n===total&&total>0)?'Quitar selección':'Seleccionar todas';
     ['btnWhatsappSel','btnEmailSel','btnCompartir','btnBorrar'].forEach(id=>$(id).disabled=n===0);
     document.querySelectorAll('#lista label').forEach(l=>l.classList.toggle('sel',l.querySelector('input').checked));
     $('confirmBox').hidden=true;
+    // El mapa solo se pinta con el listado desplegado y la pestaña visible (Leaflet necesita su tamaño real)
+    if($('detList').open&&!$('panelReg').hidden)pintarMapa(visibles());
   }
 
-  function pintarTodo(){pintarUltimo();pintarHoy();pintarCalendario();pintarListado();actualizarActividades()}
+  function pintarTodo(){pintarCalendario();pintarListado();actualizarActividades()}
 
   $('btnTodos').addEventListener('click',()=>{
     const lista=visibles();
@@ -1136,21 +1072,21 @@ textarea:focus{outline:none;border-color:var(--olive)}
       titulo='Permite la ubicación para esta web';
       pasos=ios?['Abre Ajustes → Privacidad y seguridad → Localización y comprueba que está activada.',
                  'Safari: en Ajustes → Apps → Safari → Ubicación, elige «Preguntar» o «Permitir». Chrome: en Ajustes → Apps → Chrome → Ubicación, elige «Al usar la app».',
-                 'Vuelve aquí, recarga la página y pulsa REGISTRO.']
+                 'Vuelve aquí, recarga la página y pulsa GUARDAR.']
         :android?['Toca el icono que hay a la izquierda de la dirección web (candado o ajustes).',
                   'Entra en Permisos → Ubicación y elige «Permitir».',
-                  'Recarga la página y pulsa REGISTRO.']
+                  'Recarga la página y pulsa GUARDAR.']
         :['Haz clic en el icono que hay a la izquierda de la dirección web (candado o ajustes).',
           'En Ubicación elige «Permitir».',
-          'Recarga la página y pulsa REGISTRO.'];
+          'Recarga la página y pulsa GUARDAR.'];
     }else if(codigo===2){
       titulo='La ubicación del dispositivo está apagada';
-      pasos=ios?['Abre Ajustes → Privacidad y seguridad → Localización y actívala.','Vuelve aquí y pulsa REGISTRO.']
-        :android?['Desliza desde arriba de la pantalla y activa «Ubicación».','Vuelve aquí y pulsa REGISTRO.']
-        :['Activa la ubicación en la configuración del sistema.','Vuelve aquí y pulsa REGISTRO.'];
+      pasos=ios?['Abre Ajustes → Privacidad y seguridad → Localización y actívala.','Vuelve aquí y pulsa GUARDAR.']
+        :android?['Desliza desde arriba de la pantalla y activa «Ubicación».','Vuelve aquí y pulsa GUARDAR.']
+        :['Activa la ubicación en la configuración del sistema.','Vuelve aquí y pulsa GUARDAR.'];
     }else if(codigo===3){
       titulo='La posición ha tardado demasiado';
-      pasos=['Sal al exterior o acércate a una ventana.','Pulsa REGISTRO otra vez.'];
+      pasos=['Sal al exterior o acércate a una ventana.','Pulsa GUARDAR otra vez.'];
     }else{
       titulo='Este navegador no puede dar la posición';
       pasos=['Abre la web con Chrome o Safari.'];
@@ -1170,7 +1106,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const guardar=()=>{
       // Los ejemplos de hoy se quitan al registrar de verdad, para no mezclar sus duraciones con las reales
       registros=registros.filter(x=>!(x.ejemplo&&diaDe(x)===diaDe(r)));registros.push(r);guardarRegistros();
-      seleccion.clear();filtroDia=null;mesVista=new Date(ahora.getFullYear(),ahora.getMonth(),1);
+      seleccion=new Set([r.id]);filtroDia=null;mesVista=new Date(ahora.getFullYear(),ahora.getMonth(),1);
       pintarTodo();$('btnRegistro').disabled=false;
       actualizarSeguimiento();
       if(r.actividad===FIN)sugerirEnvioDia(r);
@@ -1220,8 +1156,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     puntos.push({id:nuevoId(),registroId:reg.id,nombre:reg.nombre,actividad:reg.actividad,
       fechaHora:fechaHora(d),iso:d.toISOString(),lat,lon,precision});
     guardarPuntos();
-    pintarUltimo();pintarHoy();pintarSeguimiento();
-    if(!$('panelList').hidden)pintarListado();
+    pintarListado();pintarSeguimiento();
   }
   function errorSeguimiento(msg){segError=msg;pintarSeguimiento()}
 
@@ -1404,14 +1339,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
     return true;
   }
 
-  // Si el último registro es un Fin Jornada se envía siempre el resumen del día completo
-  function enviarUltimo(enviar){
-    const u=ultimo();if(!u)return;
-    if(u.actividad===FIN){const res=resumenDe(u);enviar(res.lista,res.cabecera,true)}
-    else enviar([u]);
-  }
-  $('btnWhatsapp').addEventListener('click',()=>enviarUltimo(enviarWhatsapp));
-  $('btnEmail').addEventListener('click',()=>enviarUltimo(enviarEmail));
   $('btnWhatsappSel').addEventListener('click',()=>{if(haySeleccion())enviarWhatsapp(seleccionados())});
   $('btnEmailSel').addEventListener('click',()=>{if(haySeleccion())enviarEmail(seleccionados())});
 
@@ -1764,6 +1691,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   pintarDestinos();
   pintarEmpleado();
+  if(ultimo())seleccion=new Set([ultimo().id]);
   pintarTodo();
   actualizarSeguimiento();
   pintarIncidencias();
