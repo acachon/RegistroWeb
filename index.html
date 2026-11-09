@@ -986,9 +986,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
   const SVG_ULT='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
   function crearMapa(idMapa,idNota,fondoInicial,conUbicacion=false){
     const claveFondo=`${KEY_CAPA}_${idMapa}`;
-    let mapa=null, capaMapa=null, capaYo=null, capaLin=null, capaPol=null, ctlVista=null;
+    let mapa=null, capaMapa=null, capaYo=null, capaLin=null, capaPol=null, ctlVista=null, encuadreActual=[];
     const ver={recorrido:true,area:true}; // qué se dibuja de cada actividad (cada botón del control lo muestra u oculta)
-    const marcadores=new Map(); // id de registro → marcador, para abrir su globo
 
     // Muestra u oculta el recorrido (líneas y puntos GPS) y el área (polígonos) según el control del mapa
     function aplicarModo(){
@@ -1023,18 +1022,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
         ayudaUbicacion(e.code);
       },{enableHighAccuracy:true,timeout:15000,maximumAge:30000});
     }
-    // Centra el mapa en el último registro con coordenadas y abre su globo
-    function irAlUltimo(){
-      const r=registros.slice().reverse().find(conPosicion);
-      if(!r){$(idNota).textContent='Todavía no hay registros con ubicación.';return}
-      mapa.setView([r.lat,r.lon],18);
-      const mk=marcadores.get(r.id);
-      if(mk)mk.openPopup();
-      else{ // de otro día: no está dibujado en este mapa, se marca aparte
-        capaYo.clearLayers();
-        const icono=L.divIcon({className:'',html:crearPin(iconoDe(r),'•').outerHTML,iconSize:[26,26],iconAnchor:[13,13]});
-        L.marker([r.lat,r.lon],{icon:icono}).bindPopup(`Último registro: ${r.fechaHora.slice(0,16)}`).addTo(capaYo).openPopup();
-      }
+    // Ajusta el zoom para que quepan en el mapa todas las actividades seleccionadas (y sus puntos GPS)
+    function verTodo(){
+      if(!encuadreActual.length){$(idNota).textContent='No hay actividades marcadas con ubicación.';return}
+      mapa.fitBounds(L.latLngBounds(encuadreActual).pad(0.3),{maxZoom:18});
     }
 
     // incs: incidencias que se añaden al mapa como triángulos de aviso (pestaña Registro: las de hoy)
@@ -1068,7 +1059,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       if(conUbicacion){
         const Botones=L.Control.extend({options:{position:'topleft'},onAdd(){
           const caja=L.DomUtil.create('div','leaflet-bar ubic');
-          [[SVG_YO,'Ir a mi ubicación actual',irAMiUbicacion],[SVG_ULT,'Ir al último registro',irAlUltimo]].forEach(([svg,titulo,accion])=>{
+          [[SVG_YO,'Ir a mi ubicación actual',irAMiUbicacion],[SVG_ULT,'Ver todas las actividades seleccionadas',verTodo]].forEach(([svg,titulo,accion])=>{
             const a=L.DomUtil.create('a','',caja);a.href='#';a.setAttribute('role','button');
             a.title=titulo;a.setAttribute('aria-label',titulo);a.innerHTML=svg;
             L.DomEvent.on(a,'click',e=>{L.DomEvent.preventDefault(e);accion()});
@@ -1079,12 +1070,13 @@ textarea:focus{outline:none;border-color:var(--olive)}
         new Botones().addTo(mapa);
       }
     }
-    capaMapa.clearLayers();capaLin.clearLayers();capaPol.clearLayers();marcadores.clear();
+    capaMapa.clearLayers();capaLin.clearLayers();capaPol.clearLayers();
     ctlVista.style.display=conLinea?'':'none';
     if(!conLinea){ver.recorrido=ver.area=true;aplicarModo()} // sin control a la vista, todo visible
     const idsLista=new Set(lista.map(r=>r.id)), pts=puntos.filter(p=>idsLista.has(p.registroId)&&conPosicion(p));
     if(pts.length)nota.textContent=[nota.textContent,`${pts.length} punto${pts.length===1?'':'s'} GPS cada 5 min (círculos pequeños).`].filter(Boolean).join(' ');
     const encuadre=[...conPos.map(r=>[r.lat,r.lon]),...pts.map(p=>[p.lat,p.lon])];
+    encuadreActual=encuadre; // se completa más abajo con las incidencias; lo usa el botón «ver todo»
     // Recorrido de cada actividad: su registro y sus puntos de seguimiento, en orden de hora.
     // Las actividades no se unen entre sí: el último punto de una no se conecta con el primero de la siguiente.
     if(conLinea)conPos.forEach(r=>{
@@ -1118,7 +1110,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
           .forEach(t=>{pop.appendChild(document.createTextNode(t));pop.appendChild(document.createElement('br'))});
         return pop;
       };
-      marcadores.set(r.id,L.marker([r.lat,r.lon],{icon:icono}).bindPopup(crearGlobo).addTo(capaMapa));
+      L.marker([r.lat,r.lon],{icon:icono}).bindPopup(crearGlobo).addTo(capaMapa);
     });
     incsPos.forEach(x=>{marcadorIncidencia(x,null,capaMapa);encuadre.push([x.lat,x.lon])});
     if(incsPos.length)nota.textContent=[nota.textContent,`${incsPos.length} incidencia${incsPos.length===1?'':'s'} (triángulos).`].filter(Boolean).join(' ');
