@@ -95,7 +95,11 @@ label.item{cursor:pointer}
 .item .txt{min-width:0;overflow-wrap:anywhere}
 .item b{font-family:var(--display);font-size:.95rem;display:block}
 .item a{color:var(--earth)}
-.item .fh{display:flex;align-items:center;gap:4px;margin-top:2px;white-space:nowrap}
+.item .txt{text-align:left}
+.item .fh{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:0 4px;margin-top:2px}
+.item .fh .fecha{white-space:nowrap}
+.item .fh .ubic.sin{position:relative;display:inline-flex;padding:4px;margin:-4px 0;color:var(--muted);cursor:help}
+.item .fh .ubic.sin .tacha{position:absolute;inset:4px;width:20px;height:20px}
 .item .dur{font-size:1.05rem}
 .item .fh a.ubic{display:inline-flex;padding:4px;margin:-4px 0}
 .item.col{flex-direction:column;gap:6px}
@@ -823,11 +827,17 @@ textarea:focus{outline:none;border-color:var(--olive)}
     txt.appendChild(b);
     // Fecha y hora sencillas (DD/MM - HH:MM) y, a su derecha, enlace a Google Maps
     const d=new Date(r.iso), fila=document.createElement('div');fila.className='fh';
-    fila.appendChild(document.createTextNode(`${pad(d.getDate())}/${pad(d.getMonth()+1)} - ${pad(d.getHours())}:${pad(d.getMinutes())}`));
+    const fecha=document.createElement('span');fecha.className='fecha';
+    fecha.textContent=`${pad(d.getDate())}/${pad(d.getMonth()+1)} - ${pad(d.getHours())}:${pad(d.getMinutes())}`;fila.appendChild(fecha);
     if(r.lat!=null){
       const a=document.createElement('a');a.className='ubic';a.href=`https://maps.google.com/?q=${r.lat},${r.lon}`;a.target='_blank';a.rel='noopener';
       a.title='Ver en Google Maps';a.setAttribute('aria-label','Ver en Google Maps');a.innerHTML=SVG_UBIC;fila.appendChild(a);
-    }else{const s=document.createElement('small');s.textContent=`Sin posición (${r.error||'no disponible'})`;fila.appendChild(s)}
+    }else{ // Sin posición: el mismo icono, tachado; el motivo queda en la ayuda emergente
+      const m=document.createElement('span'),motivo=`Sin posición (${r.error||'no disponible'})`;
+      m.className='ubic sin';m.title=motivo;m.setAttribute('role','img');m.setAttribute('aria-label',motivo);
+      m.innerHTML=SVG_UBIC+'<svg class="tacha" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4 L20 20" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
+      fila.appendChild(m);
+    }
     txt.appendChild(fila);
     const v=document.createElement('div');v.className='vel';v.dataset.id=r.id;v.textContent=textoRecorrido(r);
     txt.appendChild(v);
