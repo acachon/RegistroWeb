@@ -138,13 +138,14 @@ label.item{cursor:pointer}
 .izq{display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
 .confirmbox span{flex:1 1 100%}
 /* Calendario: los días con registros llevan fondo y punto; el día filtrado va en oliva */
+.calbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .calbtn{display:inline-flex;align-items:center;gap:6px}
 #calBox{margin:6px 0 10px}
 .calhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .calhead h2{font-size:1.05rem}
 .calnav{width:40px;height:40px;flex:none;background:transparent;border:2px solid var(--line);color:var(--fg);font-size:1.3rem;line-height:1;border-radius:8px}
 .calnav[disabled]{opacity:.35;cursor:default}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
 .cal .dow{font-size:.72rem;font-weight:700;letter-spacing:.06em;color:var(--muted);padding:2px 0}
 .cal .dia{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:0;font:500 .95rem var(--display);font-variant-numeric:tabular-nums;background:transparent;color:var(--muted);border:2px solid transparent;border-radius:8px}
 .cal .dia[disabled]{cursor:default}
@@ -309,7 +310,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
       <div class="sub">
         <div class="sechead">
           <h3 id="tituloDia">Actividades de hoy</h3>
-          <button type="button" class="mini calbtn" id="btnCal" aria-expanded="false" aria-controls="calBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Otros días</button>
+          <div class="calbtns"><button type="button" class="mini" id="btnHoy" hidden>Volver a hoy</button>
+          <button type="button" class="mini calbtn" id="btnCal" aria-expanded="false" aria-controls="calBox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Otros días</button></div>
         </div>
         <div id="calBox" hidden>
           <div class="calhead">
@@ -319,7 +321,6 @@ textarea:focus{outline:none;border-color:var(--olive)}
           </div>
           <div class="cal" id="cal"></div>
         </div>
-        <div class="filtro" id="filtroH" hidden></div>
         <div class="barra">
           <button type="button" id="btnTodosH" class="mini">Seleccionar todas</button>
           <button class="btn danger ico" id="btnBorrarH" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>Eliminar</button>
@@ -644,7 +645,9 @@ textarea:focus{outline:none;border-color:var(--olive)}
 
   // Estado del listado: selección, día filtrado y mes mostrado en el calendario
   let seleccion=new Set();
-  let filtroDia=null;
+  // Días elegidos en el calendario (selección múltiple); vacío = solo hoy, que es la opción por defecto
+  let diasSel=new Set();
+  const diasEf=()=>diasSel.size?diasSel:new Set([diaKey(new Date())]);
   const hoy=new Date();
   let mesVista=new Date(hoy.getFullYear(),hoy.getMonth(),1);
 
@@ -898,20 +901,25 @@ textarea:focus{outline:none;border-color:var(--olive)}
       if(n){
         b.classList.add('con');
         b.setAttribute('aria-label',`${d} de ${MESES[m]}: ${n} registro${n===1?'':'s'}`);
-        b.setAttribute('aria-pressed',k===(filtroDia||kHoy));
-        if(k===(filtroDia||kHoy))b.classList.add('act');
+        b.setAttribute('aria-pressed',diasEf().has(k));
+        if(diasEf().has(k))b.classList.add('act');
         // Al elegir un día quedan marcados todos sus registros; al quitar el filtro se desmarca todo
-        b.addEventListener('click',()=>{filtroDia=(filtroDia===k||k===kHoy)?null:k;marcarDia(filtroDia);pintarListado();pintarCalendario()});
+        b.addEventListener('click',()=>{
+          const n=new Set(diasEf());n.has(k)?n.delete(k):n.add(k);
+          diasSel=(n.size===1&&n.has(kHoy))?new Set():n;
+          marcarDias();pintarListado();pintarCalendario();
+        });
       }else b.disabled=true;
       cal.appendChild(b);
     }
   }
-  $('btnCal').addEventListener('click',()=>{const a=$('calBox').hidden;$('calBox').hidden=!a;$('btnCal').setAttribute('aria-expanded',a);if(a){const d=filtroDia?filtroDia.split('-').map(Number):null;mesVista=d?new Date(d[0],d[1]-1,1):new Date(hoy.getFullYear(),hoy.getMonth(),1);pintarCalendario()}});
+  $('btnCal').addEventListener('click',()=>{const a=$('calBox').hidden;$('calBox').hidden=!a;$('btnCal').setAttribute('aria-expanded',a);if(a){const d=[...diasEf()].sort().pop().split('-').map(Number);mesVista=new Date(d[0],d[1]-1,1);pintarCalendario()}});
+  $('btnHoy').addEventListener('click',()=>{diasSel=new Set();marcarDias();pintarListado();pintarCalendario()});
   $('mesAnt').addEventListener('click',()=>{mesVista=new Date(mesVista.getFullYear(),mesVista.getMonth()-1,1);pintarCalendario()});
   $('mesSig').addEventListener('click',()=>{mesVista=new Date(mesVista.getFullYear(),mesVista.getMonth()+1,1);pintarCalendario()});
 
   // Marca todos los registros de un día (o ninguno si dia es null)
-  function marcarDia(dia){const k=dia||diaKey(new Date());seleccion=new Set(registros.filter(r=>diaDe(r)===k).map(r=>r.id))}
+  function marcarDias(){const ds=diasEf();seleccion=new Set(registros.filter(r=>ds.has(diaDe(r))).map(r=>r.id))}
 
   /* ---------- Vista Mapa ---------- */
   // Muestra en el mapa los registros visibles (todos o los del día filtrado) que tienen coordenadas,
@@ -1098,8 +1106,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   function crearListado(sfx){
     const deHoy=true, E=id=>$(id+sfx);
     const panel='panelReg';
-    const diaActual=()=>filtroDia||diaKey(new Date());
-    const visibles=()=>registros.filter(r=>diaDe(r)===diaActual());
+    const visibles=()=>{const ds=diasEf();return registros.filter(r=>ds.has(diaDe(r)))};
     const seleccionados=()=>visibles().filter(r=>seleccion.has(r.id));
     const mapa=crearMapa('mapa'+sfx,'mapaNota'+sfx,'Satélite',true);
     const status=(msg,cls)=>avisar('statusList'+sfx,msg,cls);
@@ -1107,7 +1114,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const hayMarcados=()=>{if(!seleccionados().length){status('Marca al menos un registro.','err');return false}return true};
 
     function pintar(){
-      if(filtroDia===diaKey(new Date()))filtroDia=null; // hoy es siempre la opción por defecto
+      if(diasSel.size===1&&diasSel.has(diaKey(new Date())))diasSel=new Set(); // solo hoy = opción por defecto
       const lista=visibles(), ol=E('lista');ol.textContent='';
       const hoyK=diaKey(new Date());
       // Número de orden de cada registro marcado: el mismo que lleva su marcador en el mapa
@@ -1129,17 +1136,14 @@ textarea:focus{outline:none;border-color:var(--olive)}
       actualizarVivo();
       $('contadorH').textContent=lista.length;
       E('vacioLista').hidden=lista.length>0;
-      E('vacioLista').textContent=filtroDia?'No hay actividades este día.':'Hoy aún no hay actividades.';
+      E('vacioLista').textContent=diasSel.size?'No hay actividades en los días elegidos.':'Hoy aún no hay actividades.';
       E('lista').hidden=enMapa;E('mapa').hidden=E('leyenda').hidden=E('mapaNota').hidden=!enMapa;
-      // Título y aviso: por defecto «hoy»; al elegir otro día en el calendario se indica y se ofrece volver
-      const f=E('filtro');f.textContent='';f.hidden=!filtroDia;
-      if(filtroDia){
-        const [y,m,d]=filtroDia.split('-').map(Number);
-        $('tituloDia').textContent=`Actividades del ${fechaCorta(new Date(y,m-1,d))}`;
-        const b=document.createElement('button');b.type='button';b.className='mini';b.textContent='Volver a hoy';
-        b.addEventListener('click',()=>{filtroDia=null;marcarDia(null);pintarListado();pintarCalendario()});
-        f.appendChild(b);
-      }else $('tituloDia').textContent='Actividades de hoy';
+      // Título: por defecto «hoy»; con otros días elegidos se indica cuáles y aparece «Volver a hoy» junto a «Otros días»
+      const ds=[...diasEf()].sort();
+      $('btnHoy').hidden=!diasSel.size;
+      if(!diasSel.size)$('tituloDia').textContent='Actividades de hoy';
+      else if(ds.length===1){const [y,m,d]=ds[0].split('-').map(Number);$('tituloDia').textContent=`Actividades del ${fechaCorta(new Date(y,m-1,d))}`}
+      else $('tituloDia').textContent=`Actividades de ${ds.length} días`;
       const n=seleccionados().length, total=lista.length;
       E('btnTodos').textContent=(n===total&&total>0)?'Quitar todas':'Seleccionar todas';
       ['btnCompartir','btnBorrar'].forEach(id=>E(id).disabled=n===0);
@@ -1148,7 +1152,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       // El mapa solo se pinta con el listado visible y desplegado (Leaflet necesita su tamaño real)
       const abierto=$('detList').open;
       if(enMapa&&abierto&&!$(panel).hidden)
-        mapa.pintar(lista.filter(r=>seleccion.has(r.id)),deHoy||!!filtroDia,'No hay actividades marcadas. Márcalas en el listado para verlas en el mapa.');
+        mapa.pintar(lista.filter(r=>seleccion.has(r.id)),true,'No hay actividades marcadas. Márcalas en el listado para verlas en el mapa.');
     }
 
     const vista=m=>{enMapa=m;E('vistaLista').setAttribute('aria-pressed',!m);E('vistaMapa').setAttribute('aria-pressed',m);pintarListado()};
@@ -1190,7 +1194,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
       const borrar=new Set(seleccionados().map(r=>r.id)), n=borrar.size;
       registros=registros.filter(r=>!borrar.has(r.id));
       guardarRegistros();seleccion.clear();
-      if(filtroDia&&!registros.some(r=>diaDe(r)===filtroDia))filtroDia=null;
+      diasSel=new Set([...diasSel].filter(k=>registros.some(r=>diaDe(r)===k)));
       pintarTodo();
       status(`${n} registro${n===1?'':'s'} eliminado${n===1?'':'s'}.`,'ok');
     });
@@ -1253,7 +1257,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     const guardar=()=>{
       // Los ejemplos de hoy se quitan al registrar de verdad, para no mezclar sus duraciones con las reales
       registros=registros.filter(x=>!(x.ejemplo&&diaDe(x)===diaDe(r)));registros.push(r);guardarRegistros();
-      seleccion=new Set([r.id]);filtroDia=null;mesVista=new Date(ahora.getFullYear(),ahora.getMonth(),1);
+      seleccion=new Set([r.id]);diasSel=new Set();mesVista=new Date(ahora.getFullYear(),ahora.getMonth(),1);
       pintarTodo();$('btnRegistro').disabled=false;
       actualizarSeguimiento();
       if(r.actividad===FIN)sugerirEnvioDia(r);
@@ -1400,7 +1404,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
   function sugerirEnvioDia(fin){
     resumenDia=resumenDe(fin);
     const lista=resumenDia.lista;
-    filtroDia=diaDe(fin);seleccion=new Set(lista.map(x=>x.id));pintarCalendario();pintarListado();
+    diasSel=new Set([diaDe(fin)]);seleccion=new Set(lista.map(x=>x.id));pintarCalendario();pintarListado();
     $('sugTxt').textContent=`Se han seleccionado los ${lista.length} registros de hoy de ${fin.nombre}. ¿Enviarlos todos en un mensaje?`;
     $('sugFin').hidden=false;
   }
@@ -1462,7 +1466,7 @@ textarea:focus{outline:none;border-color:var(--olive)}
     });
     incidencias.sort((a,b)=>new Date(a.iso)-new Date(b.iso));
     guardarIncidencias();pintarIncidencias();
-    guardarRegistros();filtroDia=hoyK;marcarDia(hoyK);
+    guardarRegistros();diasSel=new Set();marcarDias();
     const hoyD=new Date();mesVista=new Date(hoyD.getFullYear(),hoyD.getMonth(),1);
     pintarTodo();actualizarSeguimiento();
     abrir('reg');$('detNueva').open=true;
