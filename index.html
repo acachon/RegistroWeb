@@ -122,6 +122,7 @@ label.item{cursor:pointer}
 .barra{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
 .barra .btn{flex:none;padding:6px 8px;font-size:.85rem;border-radius:8px}
 .barra .btn.ico{gap:5px}
+.barra [id^=btnCompartir]{margin-left:auto}
 .barra .mini{padding:6px 8px}
 .barra .btn svg{width:16px;height:16px}
 .confirmbox.share{border-color:var(--olive)}
@@ -306,8 +307,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
           <span id="shareTxtH"></span>
           <label class="chk"><input type="checkbox" id="shWaH" checked>WhatsApp <small class="destTel">Sin teléfono</small></label>
           <label class="chk"><input type="checkbox" id="shMailH" checked>Email <small class="destMail">Sin email</small></label>
-          <button class="btn" id="btnShOkH" type="button">Confirmar</button>
           <button class="btn sec" id="btnShNoH" type="button">Cancelar</button>
+          <button class="btn" id="btnShOkH" type="button">Confirmar</button>
         </div>
         <div class="vista" role="group" aria-label="Modo de vista">
           <button type="button" id="vistaListaH" aria-pressed="true">Listado</button>
@@ -352,8 +353,8 @@ textarea:focus{outline:none;border-color:var(--olive)}
           <span id="shareTxt"></span>
           <label class="chk"><input type="checkbox" id="shWa" checked>WhatsApp <small class="destTel">Sin teléfono</small></label>
           <label class="chk"><input type="checkbox" id="shMail" checked>Email <small class="destMail">Sin email</small></label>
-          <button class="btn" id="btnShOk" type="button">Confirmar</button>
           <button class="btn sec" id="btnShNo" type="button">Cancelar</button>
+          <button class="btn" id="btnShOk" type="button">Confirmar</button>
         </div>
         <div class="vista" role="group" aria-label="Modo de vista">
           <button type="button" id="vistaLista" aria-pressed="true">Listado</button>
