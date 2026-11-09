@@ -942,7 +942,10 @@ textarea:focus{outline:none;border-color:var(--olive)}
     // Título en negrita: la actividad; el empleado va en la etiqueta verde (los registros antiguos sin actividad muestran solo el nombre)
     const b=document.createElement('b');b.textContent=r.actividad||r.nombre;
     if(r.actividad){const a=document.createElement('span');a.className='act';a.textContent=r.nombre;b.appendChild(a)}
-    if(r===ultimo()){const t=document.createElement('span');t.className='tag';t.textContent='Último';b.appendChild(t)}
+    // La actividad en curso (la que recibe los puntos GPS) lleva «(En curso)»; el último registro de una jornada ya cerrada sigue marcándose «Último»
+    const curso=actividadEnCurso();
+    if(curso&&curso.id===r.id){const t=document.createElement('span');t.className='tag';t.textContent='(En curso)';b.appendChild(t)}
+    else if(r===ultimo()){const t=document.createElement('span');t.className='tag';t.textContent='Último';b.appendChild(t)}
     txt.appendChild(b);
     // Fecha y hora sencillas (DD/MM - HH:MM) y, a su derecha, enlace a Google Maps
     const fila=document.createElement('div');fila.className='fh';
