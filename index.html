@@ -3,34 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#3f5a2a">
+<meta name="theme-color" content="#0f4d2a">
 <title>GEA - Registro</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cpath d='M50 116C40 100 7 80 7 46a43 43 0 1 1 86 0c0 34-33 54-43 70z' fill='%2316642f'/%3E%3Ccircle cx='50' cy='45' r='23' fill='%23fff'/%3E%3Cpath d='M12 76Q50 58 92 55V64Q50 69 16 86Z' fill='%23a6cd3a'/%3E%3C/svg%3E">
+<!-- Letra de la marca GEA (Figtree) incluida en vendor/fonts: funciona también sin cobertura -->
 <!-- Mapas: Leaflet incluido en la app (lo copia «npm run sync») + teselas de OpenStreetMap (sin clave) -->
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <script src="vendor/leaflet/leaflet.js" defer></script>
 <style>
 [hidden]{display:none!important}
 img{max-width:100%}
-/* Una sola columna para móvil al sol: contraste alto, botones grandes, registros como cuaderno de campo */
+/* Identidad GEA: verde bosque, verde campo, lima y beige; letra redondeada (Figtree). Una columna para móvil al sol */
+@font-face{font-family:"Figtree";font-weight:500;font-display:swap;src:url(vendor/fonts/figtree-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:700;font-display:swap;src:url(vendor/fonts/figtree-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Figtree";font-weight:800;font-display:swap;src:url(vendor/fonts/figtree-latin-800-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400 500;font-display:swap;src:url(vendor/fonts/ibm-plex-mono-latin-500-normal.woff2) format("woff2")}
 :root{
-  --bg:#f3f1e8; --card:#fffdf6; --fg:#1f2617; --muted:#5d6650; --line:#d8d4c2;
-  --olive:#3f5a2a; --olive-ink:#ffffff; --olive-soft:#e3e9d6; --earth:#9a5b2e; --ok:#2f6b2f; --err:#a3341f;
+  --bg:#f4f3ec; --card:#ffffff; --fg:#10261a; --muted:#5b6c5f; --line:#dde3d3;
+  --olive:#0f4d2a; --olive-ink:#ffffff; --olive-soft:#e7f1da; --earth:#8a5a1e; --ok:#2e7d32; --err:#b3261e;
+  --verde:#3a9a36; --lima:#a6cd3a; --beige:#d9c9a3;
   --wa:#1f8f4e; --mail:#2d5a8a; --warn:#b86e00;
-  --display:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --display:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
-  --olive:#8fb064; --olive-ink:#142008; --olive-soft:#2a331f; --earth:#d49a66; --ok:#7fc27a; --err:#ef8a74;
+  --bg:#0b1a12; --card:#12261a; --fg:#eaf2e4; --muted:#9fb5a3; --line:#25412f;
+  --olive:#a6cd3a; --olive-ink:#0b1a12; --olive-soft:#1a3523; --earth:#e2b46c; --ok:#8fd07a; --err:#f2907d;
+  --verde:#6cc04a; --lima:#a6cd3a; --beige:#d9c9a3;
   --wa:#2a9d5c; --mail:#3f74ad; --warn:#f0b45a;
   color-scheme:dark}}
 /* Tema elegido en Configuración: oscuro aunque el móvil esté en claro */
 :root[data-theme="dark"]{
-  --bg:#161a12; --card:#1f2419; --fg:#eef0e6; --muted:#a4ab95; --line:#343b2b;
-  --olive:#8fb064; --olive-ink:#142008; --olive-soft:#2a331f; --earth:#d49a66; --ok:#7fc27a; --err:#ef8a74;
+  --bg:#0b1a12; --card:#12261a; --fg:#eaf2e4; --muted:#9fb5a3; --line:#25412f;
+  --olive:#a6cd3a; --olive-ink:#0b1a12; --olive-soft:#1a3523; --earth:#e2b46c; --ok:#8fd07a; --err:#f2907d;
+  --verde:#6cc04a; --lima:#a6cd3a; --beige:#d9c9a3;
   --wa:#2a9d5c; --mail:#3f74ad; --warn:#f0b45a;
   color-scheme:dark}
 *{box-sizing:border-box}
@@ -40,7 +47,15 @@ body{font:1rem/1.45 var(--display);padding-block:env(safe-area-inset-top,0px) en
 main{max-width:480px;margin:0 auto;padding-block:16px 40px;display:flex;flex-direction:column;gap:14px}
 header{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .titulo{min-width:0}
-.empleado{margin:0;font-size:.85rem;font-weight:600;color:var(--olive);overflow-wrap:anywhere}
+/* Marca: logo + «gea» + línea + «Registro» y el empleado debajo (como el logotipo con lema de GEA) */
+.marca{display:flex;align-items:center;gap:8px;margin:0;min-width:0}
+.marca .logo{width:34px;height:41px;flex:none}
+.marca .nombre{font:800 2rem/1 var(--display);letter-spacing:-.03em;color:var(--olive);margin-top:-6px}
+.marca .sep{width:2px;height:30px;background:var(--line);flex:none;margin:0 2px}
+.marca .lema{display:flex;flex-direction:column;min-width:0;font:700 .8rem/1.2 var(--display);color:var(--fg)}
+.marca .lema b{font-weight:800;letter-spacing:.02em}
+@media(max-width:340px){.marca .lema b,.marca .sep{display:none}.marca .nombre{font-size:1.75rem}}
+.marca .lema span{font-weight:600;color:var(--verde);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cabder{display:flex;align-items:center;gap:8px;flex:none}
 /* Configuración y datos de prueba: botones cuadrados de la cabecera */
 .engranaje{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;padding:0;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:10px}
@@ -51,7 +66,6 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .engranaje.nube.girando svg{animation:latido 1s infinite}
 .insignia{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--earth);color:#fff;font:700 .68rem/18px var(--display);text-align:center;border:2px solid var(--bg)}
 .engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
-h1{font-size:clamp(.95rem,5vw,1.2rem);font-weight:800;margin:0;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Pestañas fijas arriba al desplazarse; la franja de encima (zona del sistema) se pinta con el fondo */
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:1001;background:var(--bg)}
 .tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:1000;box-shadow:0 4px 10px rgba(0,0,0,.08);display:grid;grid-template-columns:repeat(2,1fr);gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
@@ -63,13 +77,13 @@ input[type=text],input[type=tel],input[type=email]{width:100%;font:500 1.1rem va
 select{width:100%;font:500 .95rem var(--display);padding:15px 4px 15px 8px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
 textarea{width:100%;min-height:76px;resize:vertical;font:500 1rem/1.4 var(--display);padding:12px 14px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--fg)}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--olive)}
-select:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
+select:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
 input.bad{border-color:var(--err)}
 .fila2{display:flex;gap:8px}
 .campo-act{flex:1 1 0;min-width:0}
 .act{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--olive-soft);color:var(--olive);font-family:var(--display);font-size:.72rem;font-weight:700;letter-spacing:.03em;vertical-align:1px}
 button{font-family:var(--display);cursor:pointer;border:0;border-radius:12px}
-button:focus-visible,input:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
 .status{min-height:1.4em;font-size:.95rem;margin:0}
 .status:empty{min-height:0}
 .status.ok{color:var(--ok)} .status.err{color:var(--err)}
@@ -81,7 +95,7 @@ details.desp>summary{list-style:none;cursor:pointer;padding:16px;font-size:1.05r
 details.desp>summary::-webkit-details-marker{display:none}
 details.desp>summary::after{content:'';flex:none;margin-left:auto;width:9px;height:9px;border-right:2.5px solid var(--olive);border-bottom:2.5px solid var(--olive);transform:rotate(45deg) translateY(-2px);transition:transform .15s}
 details.desp[open]>summary::after{transform:rotate(-135deg)}
-details.desp>summary:focus-visible{outline:3px solid var(--earth);outline-offset:2px}
+details.desp>summary:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
 details.desp>summary span{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.85rem}
 /* Estado del GPS junto a «Nueva actividad»: activo, en pausa (con cuenta atrás), parado o con error */
 details.desp>summary .gps{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 45%,var(--card));background:color-mix(in srgb,var(--c) 12%,var(--card));color:var(--c);font:700 .72rem var(--display);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -96,7 +110,7 @@ details.desp>summary .gps{margin-left:auto;display:inline-flex;align-items:cente
 @media(max-width:340px){.gps b{display:none}#detNueva>summary{font-size:.92rem}#detNueva>summary::after{margin-left:4px}}
 /* Botón (i) junto al título de cada sección: despliega la información complementaria (estado, avisos del mapa…) */
 #panelCfg h2{justify-content:flex-start;gap:8px}
-.infobtn{flex:none;width:26px;height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;position:relative;background:transparent;border:2px solid var(--olive);color:var(--olive);border-radius:50%;font:italic 800 .9rem Georgia,serif;line-height:1}
+.infobtn{flex:none;width:26px;height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;position:relative;background:transparent;border:2px solid var(--verde);color:var(--verde);border-radius:50%;font:800 .9rem var(--display);line-height:1}
 .infobtn[aria-expanded=true]{background:var(--olive);color:var(--olive-ink)}
 .infobtn[data-nuevo=true]::after{content:"";position:absolute;top:-4px;right:-4px;width:10px;height:10px;border-radius:50%;background:var(--earth);border:2px solid var(--card)}
 .infobox{margin:0 0 12px;padding:10px 12px;border:1px dashed var(--line);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;gap:6px}
@@ -131,7 +145,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .item input[type=checkbox]{width:24px;height:24px;flex:0 0 auto;margin:0;accent-color:var(--olive)}
 .item .txt{min-width:0;overflow-wrap:anywhere;text-align:left}
 .item b{font-family:var(--display);font-size:1.05rem;display:block}
-.item a{color:var(--earth)}
+.item a{color:var(--verde)}
 .item .fh{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:0 4px;margin-top:2px}
 .item .fh .fecha{white-space:nowrap;font:800 1.15rem var(--display);color:var(--fg);font-variant-numeric:tabular-nums}
 .item .fh .ubic{display:inline-flex;padding:4px;margin:-4px 0}
@@ -206,7 +220,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .cal .dia[disabled]{cursor:default}
 .cal .dia.con{background:var(--olive-soft);color:var(--fg);font-weight:800}
 .cal .dia.con::after{content:"";position:absolute;bottom:4px;width:6px;height:6px;border-radius:50%;background:var(--olive)}
-.cal .dia.hoy{border-color:var(--earth)}
+.cal .dia.hoy{border-color:var(--verde)}
 .cal .dia.act{background:var(--olive);color:var(--olive-ink)}
 .cal .dia.act::after{background:var(--olive-ink)}
 /* Ayuda cuando no hay ubicación */
@@ -239,7 +253,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .vistamapa{display:flex;background:#fff;border-radius:8px;box-shadow:0 1px 5px rgba(0,0,0,.45);overflow:hidden}
 .vistamapa button{border:0;background:#fff;color:#1f2617;font:600 .78rem var(--display);padding:7px 10px;min-height:0;border-radius:0;cursor:pointer}
 .vistamapa button+button{border-left:1px solid #d8d4c4}
-.vistamapa button[aria-pressed=true]{background:#3f5a2a;color:#fff}
+.vistamapa button[aria-pressed=true]{background:#0f4d2a;color:#fff}
 /* Marcadores: actividades en círculo (Inicio y Fin en cuadrado), incidencias en triángulo */
 .pin{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#6b7280;color:#fff;font:700 .78rem var(--display);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)}
 .pin.cuad{border-radius:3px}
@@ -283,12 +297,12 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .visor p{margin:0;color:#eef0e6;font-size:.9rem;text-align:center}
 .visor .btn{flex:none;background:#eef0e6;color:#1f2617}
 /* Aviso emergente abajo (registro hecho, elemento eliminado con DESHACER) */
-.toast{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:3000;max-width:448px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:#1f2617;color:#fff;font:600 1rem var(--display);box-shadow:0 6px 20px rgba(0,0,0,.35);cursor:pointer}
-.toast .marca{flex:none;width:28px;height:28px;border-radius:50%;background:#2f9e44;display:flex;align-items:center;justify-content:center;font-size:1rem}
-.toast.err .marca{background:#c0392b}
+.toast{border-left:4px solid var(--lima);position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:3000;max-width:448px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;background:#0f2a1a;color:#fff;font:600 1rem var(--display);box-shadow:0 6px 20px rgba(0,0,0,.35);cursor:pointer}
+.toast .marcaok{flex:none;width:28px;height:28px;border-radius:50%;background:#3a9a36;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.toast.err .marcaok{background:#c0392b}
 .toast div{min-width:0}
 .toast small{display:block;font:400 .8rem var(--mono);opacity:.8}
-.toast .deshacer{margin-left:auto;flex:none;background:transparent;color:#b5e48c;font:800 .95rem var(--display);letter-spacing:.06em;padding:8px}
+.toast .deshacer{margin-left:auto;flex:none;background:transparent;color:#c6e66b;font:800 .95rem var(--display);letter-spacing:.06em;padding:8px}
 /* Tema: Automático / Claro / Oscuro */
 .tema{display:flex;gap:4px;padding:3px;background:var(--bg);border:1px solid var(--line);border-radius:10px}
 .tema button{flex:1;padding:9px 4px;font:700 .88rem var(--display);background:transparent;color:var(--muted);border-radius:8px}
@@ -300,6 +314,12 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 <body>
 <!-- Iconos: se dibujan una vez aquí y se usan en toda la web con <use href="#i-…"> -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-logo" viewBox="0 0 100 120">
+    <defs><linearGradient id="logoGv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a9a36"/><stop offset=".55" stop-color="#16642f"/><stop offset="1" stop-color="#0d4a28"/></linearGradient>
+      <clipPath id="logoPin"><path d="M50 116C40 100 7 80 7 46a43 43 0 1 1 86 0c0 34-33 54-43 70z"/></clipPath>
+      <mask id="logoHueco"><rect width="100" height="120" fill="#fff"/><circle cx="50" cy="45" r="23" fill="#000"/><path d="M0 64Q46 50 100 44V55Q50 58 0 76Z" fill="#000"/><path d="M0 88Q50 69 100 64V69Q54 74 0 95Z" fill="#000"/></mask></defs>
+    <g clip-path="url(#logoPin)" mask="url(#logoHueco)"><rect width="100" height="120" fill="url(#logoGv)"/><path d="M0 76Q50 58 100 55V64Q50 69 0 88Z" fill="#a6cd3a"/><path d="M0 95Q54 74 100 69V80Q58 86 0 110Z" fill="#4ea535"/></g>
+  </symbol>
   <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
   <symbol id="i-flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2.2h12.4a1.5 1.5 0 0 0 1.3-2.2L14 9V3M7.5 15h9"/></symbol>
   <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
@@ -320,8 +340,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 <main>
   <header>
     <div class="titulo">
-      <h1>GEA - Registro</h1>
-      <p class="empleado" id="empleadoSub"></p>
+      <h1 class="marca"><svg class="logo" viewBox="0 0 100 120" aria-hidden="true"><use href="#i-logo"/></svg><span class="nombre">gea</span><span class="sep"></span><span class="lema"><b>Registro</b><span id="empleadoSub"></span></span></h1>
     </div>
     <div class="cabder">
       <button type="button" class="engranaje peq nube" id="btnSync" aria-label="Sincronizar con el fichero central" title="Sincronizar con el fichero central"><svg aria-hidden="true"><use href="#i-nube"/></svg><b class="insignia" id="syncPend" hidden></b></button>
@@ -492,7 +511,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='2026-11-10 00:15';
+  const VERSION='2026-11-10 01:30';
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
   window.addEventListener('error',e=>{try{aviso('Error en la App',String(e.message||e.error||'desconocido').slice(0,140),{err:true,ms:8000})}catch(x){}});
   window.addEventListener('unhandledrejection',e=>{try{aviso('Error en la App',String((e.reason&&e.reason.message)||e.reason||'desconocido').slice(0,140),{err:true,ms:8000})}catch(x){}});
@@ -884,7 +903,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     cerrarAviso();
     const t=el('div','toast'+(err?' err':''));t.setAttribute('role','status');
     const d=el('div',null,texto);if(sub)d.appendChild(el('small',null,sub));
-    t.append(el('span','marca',err?'✕':'✓'),d);
+    t.append(el('span','marcaok',err?'✕':'✓'),d);
     if(accion){const b=boton('deshacer',accion.texto);b.addEventListener('click',e=>{e.stopPropagation();avisoFin=null;cerrarAviso();accion.fn()});t.appendChild(b)}
     t.addEventListener('click',cerrarAviso);
     document.body.appendChild(t);avisoEl=t;avisoFin=alCerrar;avisoT=setTimeout(cerrarAviso,ms);
