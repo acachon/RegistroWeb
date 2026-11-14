@@ -98,7 +98,7 @@ details.desp[open]>summary::after{transform:rotate(-135deg)}
 details.desp>summary:focus-visible{outline:3px solid var(--verde);outline-offset:2px}
 details.desp>summary span{font-family:var(--mono);font-weight:400;color:var(--muted);font-size:.85rem}
 /* Estado del GPS junto a «Nueva actividad»: activo, en pausa (con cuenta atrás), parado o con error */
-details.desp>summary .gps{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 45%,var(--card));background:color-mix(in srgb,var(--c) 12%,var(--card));color:var(--c);font:700 .72rem var(--display);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;font-variant-numeric:tabular-nums}
+details.desp>summary .gps,.jornada .gps{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 45%,var(--card));background:color-mix(in srgb,var(--c) 12%,var(--card));color:var(--c);font:700 .72rem var(--display);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;font-variant-numeric:tabular-nums}
 .gps{--c:var(--muted)}
 .gps i{width:8px;height:8px;flex:none;border-radius:50%;background:var(--c)}
 .gps.on{--c:var(--ok)} .gps.on i{animation:latido 2s infinite}
@@ -304,6 +304,23 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .toast small{display:block;font:400 .8rem var(--mono);opacity:.8}
 .toast .deshacer{margin-left:auto;flex:none;background:transparent;color:#c6e66b;font:800 .95rem var(--display);letter-spacing:.06em;padding:8px}
 /* Tema: Automático / Claro / Oscuro */
+.jornada h2{justify-content:flex-start;gap:10px;font-size:1.15rem}
+.jornada h2 .gps{margin-left:auto}
+.jtxt{margin:0;color:var(--muted);font-size:.95rem}
+.jtxt b{color:var(--fg)}
+.jbotones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.jbotones .cta{min-height:64px;padding:0 8px;font-size:clamp(.82rem,4vw,1rem);letter-spacing:.03em;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
+.jbotones .cta small{font:600 .78rem var(--mono);letter-spacing:0;opacity:.9}
+.jbotones .cta.fin{background:#7a1f1a;color:#fff}
+.jbotones .cta.pausar{background:var(--warn);color:#fff}
+.jbotones .cta[disabled]{background:#b9b3a8;color:#f1eee8}
+.modal{position:fixed;inset:0;z-index:2600;display:flex;align-items:flex-end;justify-content:center;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:rgba(8,20,12,.55)}
+.modal .caja{width:100%;max-width:448px;background:var(--card);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.modal .caja strong{font-size:1.15rem}
+.modal .caja p{margin:0;color:var(--muted);font-size:.92rem}
+.opc4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opc4 button{min-height:64px;border-radius:12px;background:var(--olive-soft);color:var(--fg);border:2px solid var(--line);font:800 1.25rem var(--display)}
+.opc4 button small{display:block;font:600 .75rem var(--display);color:var(--muted)}
 .tema{display:flex;gap:4px;padding:3px;background:var(--bg);border:1px solid var(--line);border-radius:10px}
 .tema button{flex:1;padding:9px 4px;font:700 .88rem var(--display);background:transparent;color:var(--muted);border-radius:8px}
 .tema button[aria-pressed=true]{background:var(--olive);color:var(--olive-ink)}
@@ -377,28 +394,48 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
           </div>
           <button class="cta" id="btnRegistro" type="button">REGISTRAR</button>
         </div>
-        <div class="ayuda" id="ayudaGps" hidden>
-          <strong id="ayudaTitulo"></strong>
-          <ol id="ayudaPasos"></ol>
-          <button type="button" class="mini" id="ayudaCerrar">Entendido</button>
-        </div>
-        <div class="sugerencia" id="sugFin" hidden>
-          <strong>Jornada terminada</strong>
-          <p id="sugTxt"></p>
-          <div class="send">
-            <button class="sendbtn wa" id="sugWa" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
-            <button class="sendbtn mail" id="sugMail" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
-          </div>
-          <button type="button" class="mini" id="sugCerrar">Ahora no</button>
-        </div>
       </div>
     </details>
+    <div id="avisosJornada">
+        <div class="ayuda" id="ayudaGps" hidden>
+        <strong id="ayudaTitulo"></strong>
+        <ol id="ayudaPasos"></ol>
+        <button type="button" class="mini" id="ayudaCerrar">Entendido</button>
+      </div>
+      <div class="sugerencia" id="sugFin" hidden>
+        <strong>Jornada terminada</strong>
+        <p id="sugTxt"></p>
+        <div class="send">
+          <button class="sendbtn wa" id="sugWa" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
+          <button class="sendbtn mail" id="sugMail" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
+        </div>
+        <button type="button" class="mini" id="sugCerrar">Ahora no</button>
+      </div>
+    </div>
     <div data-listado="H" data-titulo="Listado actividades"></div>
   </div>
 
   <!-- PESTAÑA INCIDENCIAS -->
-  <!-- PESTAÑA REGISTRO: solo «Nueva actividad» (la misma sección de Actividad, que se muestra aquí al abrir esta pestaña) -->
-  <div class="panel" id="panelRegistro" role="tabpanel" hidden></div>
+  <!-- PESTAÑA REGISTRO: inicio y fin de jornada y pausa del GPS -->
+  <div class="panel" id="panelRegistro" role="tabpanel" hidden>
+    <section class="jornada">
+      <h2>Jornada <span class="gps" id="gpsJornada" role="status"></span></h2>
+      <p class="jtxt" id="jornadaTxt"></p>
+      <div class="jbotones">
+        <button class="cta" id="btnJornadaA" type="button">INICIO JORNADA</button>
+        <button class="cta fin" id="btnJornadaFin" type="button">FIN JORNADA</button>
+      </div>
+    </section>
+  </div>
+  <!-- Menú para elegir cuánto pausar la toma de puntos GPS -->
+  <div class="modal" id="modalPausa" role="dialog" aria-modal="true" aria-labelledby="modalPausaT" hidden>
+    <div class="caja">
+      <strong id="modalPausaT">Pausar el GPS</strong>
+      <p>¿Cuánto tiempo? Se reanuda solo al terminar.</p>
+      <div class="opc4" id="pausaOpc"></div>
+      <button type="button" class="btn sec" id="pausaCancelar">Cancelar</button>
+    </div>
+  </div>
 
   <div class="panel" id="panelInc" role="tabpanel" hidden>
     <details class="desp" id="detNuevaInc" open>
@@ -516,7 +553,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-14 11:15';
+  const VERSION='v1 · 2026-11-14 11:45';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -794,9 +831,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute(k==='cfg'?'aria-pressed':'aria-selected',k===tab);$(p).hidden=k!==tab});
     if(tab==='cfg'){editores.forEach(e=>e.pintar());$('gpsIntervalo').value=intervaloSeg;$('syncUrl').value=sync.url;$('syncClave').value=sync.clave;$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
-    // «Nueva actividad» es una sola sección: se coloca en la pestaña Registro o arriba de Actividad según cuál se abra
-    if(tab==='registro'){$('panelRegistro').appendChild($('detNueva'));$('detNueva').open=true}
-    if(tab==='reg')$('panelReg').insertBefore($('detNueva'),$('panelReg').firstChild);
+    // Ayuda de ubicación y resumen del fin de jornada: en la pestaña Registro o bajo «Nueva actividad», según cuál se abra
+    if(tab==='registro'){$('panelRegistro').appendChild($('avisosJornada'));pintarJornada()}
+    if(tab==='reg')$('detNueva').after($('avisosJornada'));
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
     if(tab==='reg')pintarListado();
     if(tab==='inc')pintarIncidencias();
@@ -815,7 +852,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // Listas editables: actividades (además de Inicio y Fin Jornada, que son fijas), minutos de pausa y tipos de incidencia
   const TIPOS_SERIE=['Olivo','Vehículo/Herramienta','Acceso/Nave','Riego','Producto','Otros'];
   const TAREAS_SERIE=['Poda','Riego','Recolección','Otros'];
-  const PAUSAS_SERIE=[15,30,60];
+  const PAUSAS_SERIE=[15,30,60,90];
   const ACT_FIJAS=[INICIO,FIN];
   const leerLista=(k,serie)=>{const t=store.get(k,null);return Array.isArray(t)&&t.length?t:serie.slice()};
   let tiposInc=leerLista(KEY_TIPOS,TIPOS_SERIE), tareasAct=leerLista(KEY_TAREAS,TAREAS_SERIE), pausasMin=leerLista(KEY_PAUSAS,PAUSAS_SERIE);
@@ -902,7 +939,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     const d=new Date();
     if(diaKey(d)!==diaPintado){diaPintado=diaKey(d);pintarTodo()}else actualizarVivo();
     if(pausa&&Date.now()>=pausa.hasta){actualizarSeguimiento();pintarListado()} // terminó la pausa: se reanuda sola, como con «reanudar»
-    else if(pausa){document.querySelectorAll('.pausacuenta').forEach(e=>{e.textContent=cuentaPausa()});pintarGps()}
+    else if(pausa){document.querySelectorAll('.pausacuenta').forEach(e=>{e.textContent=cuentaPausa()});pintarGps();pintarJornada()}
   },1000);
 
   /* ---------- Aviso emergente ---------- */
@@ -1451,18 +1488,22 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   }
 
   /* ---------- Registrar actividad ---------- */
-  $('btnRegistro').addEventListener('click',async()=>{
+  let registrando=false;
+  $('btnRegistro').addEventListener('click',()=>registrar($('actividad').value));
+  // Registra una actividad (desde «Nueva actividad» o desde los botones de la pestaña Registro)
+  async function registrar(actividad){
+    if(registrando)return;
     const ahora=new Date();
-    const r={id:nuevoId(),nombre:cfg.nombre,actividad:$('actividad').value,fechaHora:fechaHora(ahora),iso:ahora.toISOString(),lat:null,lon:null,precision:null};
+    const r={id:nuevoId(),nombre:cfg.nombre,actividad,fechaHora:fechaHora(ahora),iso:ahora.toISOString(),lat:null,lon:null,precision:null};
     $('ayudaGps').hidden=true;$('sugFin').hidden=true;
     const sinGps=!('geolocation' in navigator);
-    if(!sinGps){$('btnRegistro').disabled=true;status('Obteniendo posición GPS…')}
+    registrando=true;if(!sinGps){$('btnRegistro').disabled=true;pintarJornada();status('Obteniendo posición GPS…')}
     const pos=await pedirPosicion();
     if(pos.error)r.error=pos.error;else Object.assign(r,pos);
     // Los ejemplos de hoy se quitan al registrar de verdad, para no mezclar sus duraciones con las reales
     registros=registros.filter(x=>!(x.ejemplo&&diaDe(x)===diaDe(r)));registros.push(r);guardarRegistros();
     LA.sel=new Set([r.id]);LA.dias=new Set();LA.cal.irA(ahora);
-    pintarTodo();$('btnRegistro').disabled=false;
+    registrando=false;pintarTodo();$('btnRegistro').disabled=false;
     actualizarSeguimiento();
     if(r.actividad===FIN)sugerirEnvioDia(r);
     if(pos.error){
@@ -1472,7 +1513,40 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       status(`Registrado ${r.fechaHora.slice(11,19)} · precisión ±${Math.round(r.precision)} m`,'ok');if(navigator.vibrate)navigator.vibrate(120);
       aviso(`Actividad registrada: ${r.actividad}`,`${hhmm(ahora)} · GPS ±${Math.round(r.precision)} m`+(r.actividad===FIN?' · seguimiento parado':' · seguimiento activo'));
     }
+  }
+
+  /* ---------- Pestaña Registro: Inicio / Pausar / Fin de jornada ---------- */
+  // Sin jornada en curso solo se puede pulsar «Inicio Jornada»; con la jornada en curso ese botón pasa a «Pausar»
+  // (o «Reanudar» con la cuenta atrás) y se puede pulsar «Fin Jornada».
+  function pintarJornada(){
+    const curso=actividadEnCurso(), a=$('btnJornadaA'), f=$('btnJornadaFin'), t=$('jornadaTxt');
+    const hoy=registros.filter(x=>!x.ejemplo&&x.nombre===cfg.nombre&&diaDe(x)===hoyKey()), ult=hoy[hoy.length-1];
+    a.classList.toggle('pausar',!!curso&&!enPausa());
+    if(!curso){a.innerHTML='INICIO JORNADA';a.dataset.accion='inicio'}
+    else if(enPausa()){a.innerHTML=`REANUDAR<small>${cuentaPausa()}</small>`;a.dataset.accion='reanudar'}
+    else{a.innerHTML='PAUSAR<small>GPS</small>';a.dataset.accion='pausar'}
+    a.disabled=registrando;f.disabled=registrando||!curso;
+    if(curso){
+      const ini=registros.slice().reverse().find(x=>!x.ejemplo&&x.nombre===cfg.nombre&&x.actividad===INICIO&&diaDe(x)===hoyKey());
+      t.innerHTML='';t.append('Jornada en curso',ini?` desde las `:'');if(ini)t.appendChild(el('b',null,hhmm(new Date(ini.iso))));
+      t.append(enPausa()?` · GPS en pausa hasta las ${hhmm(new Date(pausa.hasta))}`:` · ${curso.actividad}`);
+    }else t.textContent=ult&&ult.actividad===FIN?`Jornada terminada a las ${hhmm(new Date(ult.iso))}. Puedes empezar otra.`:'Pulsa «Inicio Jornada» al empezar a trabajar.';
+  }
+  $('btnJornadaA').addEventListener('click',()=>{
+    const acc=$('btnJornadaA').dataset.accion;
+    if(acc==='inicio')registrar(INICIO);else if(acc==='reanudar')reanudar();else abrirMenuPausa();
   });
+  $('btnJornadaFin').addEventListener('click',()=>registrar(FIN));
+  // Menú superpuesto con un botón por cada tiempo de pausa
+  function abrirMenuPausa(){
+    const c=$('pausaOpc');c.textContent='';
+    pausasMin.forEach(min=>{const b=boton(null,min);b.appendChild(el('small',null,'minutos'));b.addEventListener('click',()=>{cerrarMenuPausa();pausar(min)});c.appendChild(b)});
+    $('modalPausa').hidden=false;c.firstChild&&c.firstChild.focus();
+  }
+  const cerrarMenuPausa=()=>{$('modalPausa').hidden=true};
+  $('pausaCancelar').addEventListener('click',cerrarMenuPausa);
+  $('modalPausa').addEventListener('click',e=>{if(e.target.id==='modalPausa')cerrarMenuPausa()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('modalPausa').hidden)cerrarMenuPausa()});
 
   /* ---------- Seguimiento GPS ---------- */
   // Mientras la jornada del empleado está abierta (su último registro de hoy no es Fin Jornada) se guarda un punto
@@ -1614,10 +1688,10 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       :segError?['err','error',`Seguimiento GPS sin funcionar: ${segError}`]
       :enPausa()?['pausa','pausa '+cuentaPausa(),'Toma de coordenadas en pausa; se reanuda sola al acabar la cuenta atrás']
       :['on','activo',`Guardando la posición cada ${textoIntervalo()}`];
-    g.className='gps '+cls;g.innerHTML='<i></i><b>GPS </b>';g.append(txt);g.title=tit;
+    [g,$('gpsJornada')].forEach(g=>{g.className='gps '+cls;g.innerHTML='<i></i><b>GPS </b>';g.append(txt);g.title=tit});
   }
   function pintarSeguimiento(){
-    pintarGps();
+    pintarGps();pintarJornada();
     const reg=actividadEnCurso(), box=$('seg'), txt=$('segTxt');
     if(!reg){box.className='seg';txt.textContent='Seguimiento GPS parado. Arranca con Inicio Jornada y se para con Fin Jornada.';return}
     if(segError){box.className='seg err';txt.textContent=`Seguimiento GPS sin funcionar: ${segError}.`;return}
