@@ -560,7 +560,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-14 11:45';
+  const VERSION='v1 · 2026-11-14 11:50';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -863,6 +863,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   const ACT_FIJAS=[INICIO,FIN];
   const leerLista=(k,serie)=>{const t=store.get(k,null);return Array.isArray(t)&&t.length?t:serie.slice()};
   let tiposInc=leerLista(KEY_TIPOS,TIPOS_SERIE), tareasAct=leerLista(KEY_TAREAS,TAREAS_SERIE), pausasMin=leerLista(KEY_PAUSAS,PAUSAS_SERIE);
+  // La serie antigua guardada en el móvil (15, 30 y 60) se actualiza a la nueva, que incluye 90 min
+  if(pausasMin.join()==='15,30,60'){pausasMin=PAUSAS_SERIE.slice();store.set(KEY_PAUSAS,pausasMin)}
   const llenarSelect=(sel,lista,actual)=>{sel.textContent='';lista.forEach(v=>sel.appendChild(el('option',null,v)));sel.value=lista.includes(actual)?actual:lista[0]};
   const llenarTiposInc=()=>llenarSelect($('incTipo'),tiposInc,$('incTipo').value);
   // Editor de una lista: filas con campo de texto y ✕, «Añadir» y «Restaurar». valores() devuelve la lista sin vacíos ni repetidos.
