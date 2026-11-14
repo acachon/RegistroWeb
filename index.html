@@ -304,7 +304,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .toast small{display:block;font:400 .8rem var(--mono);opacity:.8}
 .toast .deshacer{margin-left:auto;flex:none;background:transparent;color:#c6e66b;font:800 .95rem var(--display);letter-spacing:.06em;padding:8px}
 /* Tema: Automático / Claro / Oscuro */
-.jornada h2{justify-content:flex-start;gap:10px;font-size:1.15rem}
+.jornada h2{justify-content:flex-start;flex-wrap:wrap;gap:6px 10px;font-size:clamp(1rem,4.8vw,1.15rem)}
+.jornada h2 #jornadaFecha{white-space:nowrap}
 .jornada h2 .gps{margin-left:auto}
 .jtxt{margin:0;color:var(--muted);font-size:.95rem}
 .jtxt b{color:var(--fg)}
@@ -372,13 +373,13 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   </div>
 
   <nav class="tabs" role="tablist">
-    <button type="button" role="tab" id="tabRegistro" aria-selected="false" aria-controls="panelRegistro">Registro</button>
-    <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Actividad</button>
+    <button type="button" role="tab" id="tabRegistro" aria-selected="true" aria-controls="panelRegistro">Registro</button>
+    <button type="button" role="tab" id="tabReg" aria-selected="false" aria-controls="panelReg">Actividad</button>
     <button type="button" role="tab" id="tabInc" aria-selected="false" aria-controls="panelInc">Incidencias</button>
   </nav>
 
   <!-- PESTAÑA ACTIVIDAD -->
-  <div class="panel" id="panelReg" role="tabpanel">
+  <div class="panel" id="panelReg" role="tabpanel" hidden>
     <details class="desp" id="detNueva" open>
       <summary>Nueva actividad <button type="button" class="infobtn" data-info="infoNueva">i</button><span class="gps" id="gpsEstado" role="status"></span></summary>
       <div class="cuerpo">
@@ -417,13 +418,13 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 
   <!-- PESTAÑA INCIDENCIAS -->
   <!-- PESTAÑA REGISTRO: inicio y fin de jornada y pausa del GPS -->
-  <div class="panel" id="panelRegistro" role="tabpanel" hidden>
+  <div class="panel" id="panelRegistro" role="tabpanel">
     <section class="jornada">
-      <h2>Jornada <span class="gps" id="gpsJornada" role="status"></span></h2>
+      <h2><span id="jornadaFecha"></span> <span class="gps" id="gpsJornada" role="status"></span></h2>
       <p class="jtxt" id="jornadaTxt"></p>
       <div class="jbotones">
-        <button class="cta" id="btnJornadaA" type="button">INICIO JORNADA</button>
         <button class="cta fin" id="btnJornadaFin" type="button">FIN JORNADA</button>
+        <button class="cta" id="btnJornadaA" type="button">INICIO JORNADA</button>
       </div>
     </section>
   </div>
@@ -553,7 +554,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-14 11:45';
+  const VERSION='v1 · 2026-11-14 11:30';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -823,7 +824,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   /* ---------- Pestañas ---------- */
   const PESTANAS={registro:['tabRegistro','panelRegistro'],reg:['tabReg','panelReg'],inc:['tabInc','panelInc'],cfg:['tabCfg','panelCfg']};
   // pestanaAntes: la última pestaña que no era Configuración, para volver a ella al pulsar otra vez el engranaje
-  let pestana='reg', pestanaAntes='reg';
+  let pestana='registro', pestanaAntes='registro';
   function abrir(tab){
     if(pestana!=='cfg')pestanaAntes=pestana;
     pestana=tab;
@@ -936,7 +937,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // Cada segundo: los datos en vivo y el cronómetro de la actividad en curso, y la cuenta atrás de la pausa
   let diaPintado=hoyKey();
   setInterval(()=>{
-    const d=new Date();
+    const d=new Date();pintarFecha();
     if(diaKey(d)!==diaPintado){diaPintado=diaKey(d);pintarTodo()}else actualizarVivo();
     if(pausa&&Date.now()>=pausa.hasta){actualizarSeguimiento();pintarListado()} // terminó la pausa: se reanuda sola, como con «reanudar»
     else if(pausa){document.querySelectorAll('.pausacuenta').forEach(e=>{e.textContent=cuentaPausa()});pintarGps();pintarJornada()}
@@ -1518,7 +1519,11 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   /* ---------- Pestaña Registro: Inicio / Pausar / Fin de jornada ---------- */
   // Sin jornada en curso solo se puede pulsar «Inicio Jornada»; con la jornada en curso ese botón pasa a «Pausar»
   // (o «Reanudar» con la cuenta atrás) y se puede pulsar «Fin Jornada».
+  // Título de la pestaña: día de la semana, fecha y hora (Sábado, 14 Nov - 11:21)
+  const DIAS_T=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'], MESES_C=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const pintarFecha=()=>{const d=new Date();$('jornadaFecha').textContent=`${DIAS_T[d.getDay()]}, ${d.getDate()} ${MESES_C[d.getMonth()]} - ${hhmm(d)}`};
   function pintarJornada(){
+    pintarFecha();
     const curso=actividadEnCurso(), a=$('btnJornadaA'), f=$('btnJornadaFin'), t=$('jornadaTxt');
     const hoy=registros.filter(x=>!x.ejemplo&&x.nombre===cfg.nombre&&diaDe(x)===hoyKey()), ult=hoy[hoy.length-1];
     a.classList.toggle('pausar',!!curso&&!enPausa());
@@ -2206,6 +2211,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   pintarTodo();
   actualizarSeguimiento();
   pintarIncidencias();
+  $('panelRegistro').appendChild($('avisosJornada'));pintarJornada(); // se abre en la pestaña Registro
   listo=true;
 })();
 </script>
