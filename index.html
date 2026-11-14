@@ -547,7 +547,6 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       </div>
       <h2>Listas de opciones</h2>
       <div data-lista="tareas" data-titulo="Tipos de actividad" data-info="«Inicio Jornada» y «Fin Jornada» son fijos (de ellos dependen el seguimiento GPS y el resumen del día). Aquí editas las demás actividades.|Los cambios se aplican al pulsar «Guardar configuración». Los registros ya hechos conservan su actividad."></div>
-      <div data-lista="pausas" data-titulo="Pausas del GPS" data-info="Minutos entre los que eliges al pausar la toma de coordenadas de la actividad en curso.|Los cambios se aplican al pulsar «Guardar configuración»."></div>
       <div data-lista="tipos" data-titulo="Tipos de incidencia" data-info="Los cambios se aplican al pulsar «Guardar configuración». Las incidencias ya registradas conservan su tipo."></div>
       <button class="btn" id="btnGuardarCfg" type="button">Guardar configuración</button>
       <p class="status" id="cfgStatus" role="status" aria-live="polite"></p>
@@ -560,7 +559,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-14 11:50';
+  const VERSION='v1 · 2026-11-14 11:55';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -622,7 +621,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 
   const KEY_REG='gea_registros', KEY_NOM='gea_nombre', KEY_ACT='gea_actividad', KEY_TEL='gea_telefono', KEY_MAIL='gea_email',
     KEY_CAPA='gea_capa_mapa2', KEY_PTS='gea_puntos', KEY_INC='gea_incidencias', KEY_PAUSA='gea_pausa_gps',
-    KEY_TIPOS='gea_tipos_incidencia', KEY_TAREAS='gea_tipos_actividad', KEY_PAUSAS='gea_pausas_min';
+    KEY_TIPOS='gea_tipos_incidencia', KEY_TAREAS='gea_tipos_actividad';
   const store={
     get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},
     set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
@@ -859,12 +858,10 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // Listas editables: actividades (además de Inicio y Fin Jornada, que son fijas), minutos de pausa y tipos de incidencia
   const TIPOS_SERIE=['Olivo','Vehículo/Herramienta','Acceso/Nave','Riego','Producto','Otros'];
   const TAREAS_SERIE=['Poda','Riego','Recolección','Otros'];
-  const PAUSAS_SERIE=[15,30,60,90];
+  const PAUSAS_MIN=[15,30,60,90]; // tiempos de pausa fijos
   const ACT_FIJAS=[INICIO,FIN];
   const leerLista=(k,serie)=>{const t=store.get(k,null);return Array.isArray(t)&&t.length?t:serie.slice()};
-  let tiposInc=leerLista(KEY_TIPOS,TIPOS_SERIE), tareasAct=leerLista(KEY_TAREAS,TAREAS_SERIE), pausasMin=leerLista(KEY_PAUSAS,PAUSAS_SERIE);
-  // La serie antigua guardada en el móvil (15, 30 y 60) se actualiza a la nueva, que incluye 90 min
-  if(pausasMin.join()==='15,30,60'){pausasMin=PAUSAS_SERIE.slice();store.set(KEY_PAUSAS,pausasMin)}
+  let tiposInc=leerLista(KEY_TIPOS,TIPOS_SERIE), tareasAct=leerLista(KEY_TAREAS,TAREAS_SERIE);
   const llenarSelect=(sel,lista,actual)=>{sel.textContent='';lista.forEach(v=>sel.appendChild(el('option',null,v)));sel.value=lista.includes(actual)?actual:lista[0]};
   const llenarTiposInc=()=>llenarSelect($('incTipo'),tiposInc,$('incTipo').value);
   // Editor de una lista: filas con campo de texto y ✕, «Añadir» y «Restaurar». valores() devuelve la lista sin vacíos ni repetidos.
@@ -887,8 +884,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   }
   const edTipos=editorLista('tipos',TIPOS_SERIE,()=>tiposInc);
   const edTareas=editorLista('tareas',TAREAS_SERIE,()=>tareasAct,ACT_FIJAS);
-  const edPausas=editorLista('pausas',PAUSAS_SERIE,()=>pausasMin,[],true);
-  const editores=[edTipos,edTareas,edPausas];
+  const editores=[edTipos,edTareas];
   llenarTiposInc();
 
   $('btnGuardarCfg').addEventListener('click',()=>{
@@ -902,16 +898,14 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     const s=$('cfgStatus'), mal=t=>{s.className='status err';s.textContent=t};
     const tipos=edTipos.valores(), tareas=edTareas.valores();
     // Tiempos de pausa: minutos enteros entre 1 y 480, sin repetir y de menor a mayor
-    const pausas=[...new Set(edPausas.valores().map(v=>parseInt(v,10)).filter(n=>n>=1&&n<=480))].sort((a,b)=>a-b);
     if(!nomOk)return mal('Escribe el nombre del empleado.');
     if(!telOk)return mal('El teléfono no es válido.');
     if(!mailOk)return mal('Revisa el email: debe tener la forma nombre@dominio.com.');
-    if(!pausas.length)return mal('Escribe al menos un tiempo de pausa en minutos (entre 1 y 480).');
     if(!tipos.length)return mal('Debe haber al menos un tipo de incidencia.');
     if(!tareas.length)return mal('Debe haber al menos una actividad además de Inicio y Fin Jornada.');
     tiposInc=tipos;store.set(KEY_TIPOS,tipos);llenarTiposInc();
     tareasAct=tareas;store.set(KEY_TAREAS,tareas);
-    pausasMin=pausas;store.set(KEY_PAUSAS,pausas);editores.forEach(e=>e.pintar());
+    editores.forEach(e=>e.pintar());
     const nuevoInt=+$('gpsIntervalo').value;
     if(nuevoInt!==intervaloSeg){intervaloSeg=nuevoInt;store.set(KEY_GPS_INT,nuevoInt);detenerSeguimiento()} // arranca de nuevo con el intervalo nuevo
     cfg={nombre,tel,mail};store.set(KEY_NOM,nombre);store.set(KEY_TEL,tel);store.set(KEY_MAIL,mail);
@@ -1399,7 +1393,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       if(esCurso&&menuPausa&&!enPausa()){ // elegir cuánto tiempo pausar
         const m=el('div','pausaopc');m.appendChild(el('span',null,'Pausar durante:'));
         const opc=(txt,f)=>{const b=boton('mini',txt);b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();f()});m.appendChild(b)};
-        pausasMin.forEach(min=>opc(`${min} min`,()=>pausar(min)));
+        PAUSAS_MIN.forEach(min=>opc(`${min} min`,()=>pausar(min)));
         opc('Cancelar',()=>{menuPausa=false;pintarListado()});
         lab.appendChild(m);
       }
@@ -1553,7 +1547,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // Menú superpuesto con un botón por cada tiempo de pausa
   function abrirMenuPausa(){
     const c=$('pausaOpc');c.textContent='';
-    pausasMin.forEach(min=>{const b=boton(null,min);b.appendChild(el('small',null,'minutos'));b.addEventListener('click',()=>{cerrarMenuPausa();pausar(min)});c.appendChild(b)});
+    PAUSAS_MIN.forEach(min=>{const b=boton(null,min);b.appendChild(el('small',null,'minutos'));b.addEventListener('click',()=>{cerrarMenuPausa();pausar(min)});c.appendChild(b)});
     $('modalPausa').hidden=false;c.firstChild&&c.firstChild.focus();
   }
   const cerrarMenuPausa=()=>{$('modalPausa').hidden=true};
