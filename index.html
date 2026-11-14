@@ -504,6 +504,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       <button class="btn" id="btnGuardarCfg" type="button">Guardar configuración</button>
       <p class="status" id="cfgStatus" role="status" aria-live="polite"></p>
       <p class="hint" id="versionTxt"></p>
+      <a class="mini" id="versionOtra" hidden></a>
     </section>
   </div>
 </main>
@@ -511,7 +512,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='2026-11-10 01:30';
+  const VERSION='v1 · 2026-11-14';
+  // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
+  const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
   window.addEventListener('error',e=>{try{aviso('Error en la App',String(e.message||e.error||'desconocido').slice(0,140),{err:true,ms:8000})}catch(x){}});
   window.addEventListener('unhandledrejection',e=>{try{aviso('Error en la App',String((e.reason&&e.reason.message)||e.reason||'desconocido').slice(0,140),{err:true,ms:8000})}catch(x){}});
@@ -2116,6 +2119,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   pintarDestinos();
   pintarEmpleado();
   $('versionTxt').textContent=`Versión ${VERSION}${nativo?' · App Android':' · web'}`;
+  if(!nativo&&VERSION_OTRA){const a=$('versionOtra');a.href=VERSION_OTRA.href;a.textContent=VERSION_OTRA.texto;a.hidden=false}
   if(ultimo())LA.sel=new Set([ultimo().id]);
   {const v=LI.visibles();LI.sel=new Set(v.length?[v[v.length-1].id]:[])}
   pintarTodo();
