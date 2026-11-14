@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f4d2a">
-<title>GEA - Registro</title>
+<title>GEA - Registro v0</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cpath d='M50 116C40 100 7 80 7 46a43 43 0 1 1 86 0c0 34-33 54-43 70z' fill='%2316642f'/%3E%3Ccircle cx='50' cy='45' r='23' fill='%23fff'/%3E%3Cpath d='M12 76Q50 58 92 55V64Q50 69 16 86Z' fill='%23a6cd3a'/%3E%3C/svg%3E">
 <!-- Letra de la marca GEA (Figtree) incluida en vendor/fonts: funciona también sin cobertura -->
 <!-- Mapas: Leaflet incluido en la app (lo copia «npm run sync») + teselas de OpenStreetMap (sin clave) -->
@@ -504,6 +504,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       <button class="btn" id="btnGuardarCfg" type="button">Guardar configuración</button>
       <p class="status" id="cfgStatus" role="status" aria-live="polite"></p>
       <p class="hint" id="versionTxt"></p>
+      <a class="mini" id="versionOtra" hidden></a>
     </section>
   </div>
 </main>
@@ -511,7 +512,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='2026-11-10 01:30';
+  const VERSION='v0 · 2026-11-10 (congelada)';
+  // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
+  const VERSION_OTRA={href:'../',texto:'Ir a la versión actual (v1)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
   window.addEventListener('error',e=>{try{aviso('Error en la App',String(e.message||e.error||'desconocido').slice(0,140),{err:true,ms:8000})}catch(x){}});
   window.addEventListener('unhandledrejection',e=>{try{aviso('Error en la App',String((e.reason&&e.reason.message)||e.reason||'desconocido').slice(0,140),{err:true,ms:8000})}catch(x){}});
@@ -2116,6 +2119,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   pintarDestinos();
   pintarEmpleado();
   $('versionTxt').textContent=`Versión ${VERSION}${nativo?' · App Android':' · web'}`;
+  if(!nativo&&VERSION_OTRA){const a=$('versionOtra');a.href=VERSION_OTRA.href;a.textContent=VERSION_OTRA.texto;a.hidden=false}
   if(ultimo())LA.sel=new Set([ultimo().id]);
   {const v=LI.visibles();LI.sel=new Set(v.length?[v[v.length-1].id]:[])}
   pintarTodo();
