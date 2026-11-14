@@ -319,7 +319,6 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .jbotones .cta{min-height:64px;padding:0 8px;font-size:clamp(.82rem,4vw,1rem);letter-spacing:.03em;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
 .jbotones .cta small{font:600 .78rem var(--mono);letter-spacing:0;opacity:.9}
 .jbotones .cta.fin{background:#7a1f1a;color:#fff}
-.jbotones .cta.pausar{background:var(--warn);color:#fff}
 .jbotones .cta[disabled]{background:#b9b3a8;color:#f1eee8}
 .modal{position:fixed;inset:0;z-index:2600;display:flex;align-items:flex-end;justify-content:center;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:rgba(8,20,12,.55)}
 .modal .caja{width:100%;max-width:448px;background:var(--card);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
@@ -439,9 +438,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   <div class="modal" id="modalPausa" role="dialog" aria-modal="true" aria-labelledby="modalPausaT" hidden>
     <div class="caja">
       <strong id="modalPausaT">Pausar jornada</strong>
-      <p id="modalPausaP">¿Cuánto tiempo? Se reanuda solo al terminar.</p>
+      <p>¿Cuánto tiempo? Se reanuda solo al terminar.</p>
       <div class="opc4" id="pausaOpc"></div>
-      <button type="button" class="btn sec" id="pausaReanudar" hidden>Reanudar ahora</button>
       <button type="button" class="btn sec" id="pausaCancelar">Cancelar</button>
     </div>
   </div>
@@ -562,7 +560,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-14 11:50';
+  const VERSION='v1 · 2026-11-14 11:45';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1534,9 +1532,10 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     pintarFecha();
     const curso=actividadEnCurso(), a=$('btnJornadaA'), f=$('btnJornadaFin'), t=$('jornadaTxt');
     const hoy=registros.filter(x=>!x.ejemplo&&x.nombre===cfg.nombre&&diaDe(x)===hoyKey()), ult=hoy[hoy.length-1];
-    a.classList.toggle('pausar',!!curso);
+    a.classList.remove('pausar'); // siempre verde, como Inicio
     if(!curso){a.innerHTML='INICIO JORNADA';a.dataset.accion='inicio'}
-    else{a.innerHTML='PAUSAR JORNADA'+(enPausa()?`<small>en pausa ${cuentaPausa()}</small>`:'');a.dataset.accion='pausar'}
+    else if(enPausa()){a.innerHTML=`FIN PAUSA<small>${cuentaPausa()}</small>`;a.dataset.accion='reanudar'}
+    else{a.innerHTML='PAUSAR JORNADA';a.dataset.accion='pausar'}
     a.disabled=registrando;f.disabled=registrando||!curso;
     if(curso){
       const ini=registros.slice().reverse().find(x=>!x.ejemplo&&x.nombre===cfg.nombre&&x.actividad===INICIO&&diaDe(x)===hoyKey());
@@ -1546,22 +1545,17 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   }
   $('btnJornadaA').addEventListener('click',()=>{
     const acc=$('btnJornadaA').dataset.accion;
-    if(acc==='inicio')registrar(INICIO);else abrirMenuPausa();
+    if(acc==='inicio')registrar(INICIO);else if(acc==='reanudar')reanudar();else abrirMenuPausa();
   });
   $('btnJornadaFin').addEventListener('click',()=>registrar(FIN));
   // Menú superpuesto con un botón por cada tiempo de pausa
   function abrirMenuPausa(){
-    const c=$('pausaOpc'), ya=enPausa();c.textContent='';
-    // Con la pausa activa, el tiempo elegido se suma al que queda
-    $('modalPausaT').textContent=ya?'Ampliar la pausa':'Pausar jornada';
-    $('modalPausaP').textContent=ya?`¿Cuánto tiempo más? Se suma a lo que queda (${cuentaPausa()}).`:'¿Cuánto tiempo? Se reanuda solo al terminar.';
-    $('pausaReanudar').hidden=!ya;
-    pausasMin.forEach(min=>{const b=boton(null,min);b.appendChild(el('small',null,ya?'min más':'minutos'));b.addEventListener('click',()=>{cerrarMenuPausa();pausar(min,ya)});c.appendChild(b)});
+    const c=$('pausaOpc');c.textContent='';
+    pausasMin.forEach(min=>{const b=boton(null,min);b.appendChild(el('small',null,'minutos'));b.addEventListener('click',()=>{cerrarMenuPausa();pausar(min)});c.appendChild(b)});
     $('modalPausa').hidden=false;c.firstChild&&c.firstChild.focus();
   }
   const cerrarMenuPausa=()=>{$('modalPausa').hidden=true};
   $('pausaCancelar').addEventListener('click',cerrarMenuPausa);
-  $('pausaReanudar').addEventListener('click',()=>{cerrarMenuPausa();reanudar()});
   $('modalPausa').addEventListener('click',e=>{if(e.target.id==='modalPausa')cerrarMenuPausa()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('modalPausa').hidden)cerrarMenuPausa()});
 
@@ -1687,10 +1681,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   const cuentaPausa=()=>{const seg=Math.max(0,Math.ceil((pausa.hasta-Date.now())/1000));return `${pad(Math.floor(seg/60))}:${pad(seg%60)}`};
   const enPausa=()=>{const r=actividadEnCurso();return !!(r&&pausa&&pausa.regId===r.id&&Date.now()<pausa.hasta)};
   function ponerPausa(p){pausa=p;store.set(KEY_PAUSA,p);menuPausa=false}
-  function pausar(min,ampliar){
+  function pausar(min){
     const r=actividadEnCurso();if(!r)return;
-    const ext=ampliar&&enPausa(); // ampliar: suma el tiempo al que queda de la pausa actual
-    ponerPausa({regId:r.id,hasta:(ext?pausa.hasta:Date.now())+min*60000,min:ext?(pausa.min||0)+min:min});actualizarSeguimiento();pintarListado();
+    ponerPausa({regId:r.id,hasta:Date.now()+min*60000,min});actualizarSeguimiento();pintarListado();
   }
   function reanudar(){ponerPausa(null);actualizarSeguimiento();pintarListado()}
   function actualizarSeguimiento(){
