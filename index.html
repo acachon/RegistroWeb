@@ -62,6 +62,13 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .engranaje svg{width:22px;height:22px}
 .engranaje.peq{width:34px;height:34px;color:var(--muted)}
 .engranaje.peq svg{width:18px;height:18px}
+.gpsico{position:relative;flex:none;width:24px;height:24px;color:var(--muted)}
+.gpsico svg{position:absolute;inset:1px}
+.gpsico.on{color:var(--verde)}
+.gpsico.on .tacha{display:none}
+.gpsico.on>svg:first-child{animation:latido 2s infinite}
+.gpsico.pausa{color:var(--warn)}
+.gpsico.err{color:var(--err)}
 .engranaje.nube{position:relative;color:var(--olive)}
 .engranaje.nube.girando svg{animation:latido 1s infinite}
 .insignia{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--earth);color:#fff;font:700 .68rem/18px var(--display);text-align:center;border:2px solid var(--bg)}
@@ -306,7 +313,6 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 /* Tema: Automático / Claro / Oscuro */
 .jornada h2{justify-content:flex-start;flex-wrap:wrap;gap:6px 10px;font-size:clamp(1rem,4.8vw,1.15rem)}
 .jornada h2 #jornadaFecha{white-space:nowrap}
-.jornada h2 .gps{margin-left:auto}
 .jtxt{margin:0;color:var(--muted);font-size:.95rem}
 .jtxt b{color:var(--fg)}
 .jbotones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -364,6 +370,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       <button type="button" class="engranaje peq nube" id="btnSync" aria-label="Sincronizar con el fichero central" title="Sincronizar con el fichero central"><svg aria-hidden="true"><use href="#i-nube"/></svg><b class="insignia" id="syncPend" hidden></b></button>
       <button type="button" class="engranaje peq" id="btnPrueba" aria-label="Cargar datos de prueba" title="Cargar datos de prueba"><svg aria-hidden="true"><use href="#i-flask"/></svg></button>
       <button type="button" class="engranaje" id="tabCfg" aria-pressed="false" aria-label="Configuración" title="Configuración"><svg aria-hidden="true"><use href="#i-gear"/></svg></button>
+      <span class="gpsico" id="gpsIco" role="img"><svg width="22" height="22" aria-hidden="true"><use href="#i-ubic"/></svg><svg class="tacha" width="22" height="22" aria-hidden="true"><use href="#i-tacha"/></svg></span>
     </div>
   </header>
   <div class="confirmbox" id="boxPrueba" role="alertdialog" aria-live="assertive" hidden>
@@ -420,7 +427,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   <!-- PESTAÑA REGISTRO: inicio y fin de jornada y pausa del GPS -->
   <div class="panel" id="panelRegistro" role="tabpanel">
     <section class="jornada">
-      <h2><span id="jornadaFecha"></span> <span class="gps" id="gpsJornada" role="status"></span></h2>
+      <h2><span id="jornadaFecha"></span></h2>
       <p class="jtxt" id="jornadaTxt"></p>
       <div class="jbotones">
         <button class="cta fin" id="btnJornadaFin" type="button">FIN JORNADA</button>
@@ -554,7 +561,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-14 11:30';
+  const VERSION='v1 · 2026-11-14 11:35';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1693,7 +1700,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       :segError?['err','error',`Seguimiento GPS sin funcionar: ${segError}`]
       :enPausa()?['pausa','pausa '+cuentaPausa(),'Toma de coordenadas en pausa; se reanuda sola al acabar la cuenta atrás']
       :['on','activo',`Guardando la posición cada ${textoIntervalo()}`];
-    [g,$('gpsJornada')].forEach(g=>{g.className='gps '+cls;g.innerHTML='<i></i><b>GPS </b>';g.append(txt);g.title=tit});
+    g.className='gps '+cls;g.innerHTML='<i></i><b>GPS </b>';g.append(txt);g.title=tit;
+    // Icono de la cabecera: ubicación activa, o tachada si el GPS está parado, en pausa o con error
+    const ic=$('gpsIco');ic.className='gpsico '+cls;ic.title=`GPS ${txt}`;ic.setAttribute('aria-label',`GPS ${txt}`);
   }
   function pintarSeguimiento(){
     pintarGps();pintarJornada();
