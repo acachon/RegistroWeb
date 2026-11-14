@@ -315,6 +315,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .jornada h2 #jornadaFecha{white-space:nowrap}
 .jtxt{margin:0;color:var(--muted);font-size:.95rem}
 .jtxt b{color:var(--fg)}
+.jdatos{margin:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.jdatos strong{display:block;font:700 clamp(1.15rem,6vw,1.55rem)/1.1 var(--mono);font-variant-numeric:tabular-nums;color:var(--fg)}
+.jdatos small{display:block;margin-top:2px;color:var(--muted);font-size:.78rem}
 .jbotones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .jbotones .cta{min-height:64px;padding:0 8px;font-size:clamp(.82rem,4vw,1rem);letter-spacing:.03em;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
 .jbotones .cta small{font:600 .78rem var(--mono);letter-spacing:0;opacity:.9}
@@ -559,7 +562,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-14 11:55';
+  const VERSION='v1 · 2026-11-14 12:00';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -937,9 +940,10 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   }
 
   // Cada segundo: los datos en vivo y el cronómetro de la actividad en curso, y la cuenta atrás de la pausa
-  let diaPintado=hoyKey();
+  let diaPintado=hoyKey(), minJornada=-1;
   setInterval(()=>{
     const d=new Date();pintarFecha();
+    if(d.getMinutes()!==minJornada){minJornada=d.getMinutes();pintarJornada()} // la duración avanza cada minuto
     if(diaKey(d)!==diaPintado){diaPintado=diaKey(d);pintarTodo()}else actualizarVivo();
     if(pausa&&Date.now()>=pausa.hasta){actualizarSeguimiento();pintarListado()} // terminó la pausa: se reanuda sola, como con «reanudar»
     else if(pausa){document.querySelectorAll('.pausacuenta').forEach(e=>{e.textContent=cuentaPausa()});pintarGps();pintarJornada()}
@@ -1533,11 +1537,13 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     else if(enPausa()){a.innerHTML=`FIN PAUSA<small>${cuentaPausa()}</small>`;a.dataset.accion='reanudar'}
     else{a.innerHTML='PAUSAR JORNADA';a.dataset.accion='pausar'}
     a.disabled=registrando;f.disabled=registrando||!curso;
-    if(curso){
-      const ini=registros.slice().reverse().find(x=>!x.ejemplo&&x.nombre===cfg.nombre&&x.actividad===INICIO&&diaDe(x)===hoyKey());
-      t.innerHTML='';t.append('Jornada en curso',ini?` desde las `:'');if(ini)t.appendChild(el('b',null,hhmm(new Date(ini.iso))));
-      t.append(enPausa()?` · GPS en pausa hasta las ${hhmm(new Date(pausa.hasta))}`:` · ${curso.actividad}`);
-    }else t.textContent=ult&&ult.actividad===FIN?`Jornada terminada a las ${hhmm(new Date(ult.iso))}. Puedes empezar otra.`:'Pulsa «Inicio Jornada» al empezar a trabajar.';
+    // Datos de la jornada de hoy (la última iniciada): hora de inicio, de fin (-- si sigue abierta) y duración transcurrida
+    const ini=hoy.slice().reverse().find(x=>x.actividad===INICIO), fin=ini&&hoy.find(x=>x.actividad===FIN&&new Date(x.iso)>new Date(ini.iso));
+    t.className=ini?'jdatos':'jtxt';t.textContent='';
+    if(!ini){t.textContent='Pulsa «Inicio Jornada» al empezar a trabajar.';return}
+    const t0=new Date(ini.iso).getTime(), min=Math.max(0,Math.floor(((fin?new Date(fin.iso).getTime():Date.now())-t0)/60000));
+    [[hhmm(new Date(ini.iso)),'Hora inicio'],[fin?hhmm(new Date(fin.iso)):'--','Hora fin'],[`${pad(Math.floor(min/60))}:${pad(min%60)}`,'Duración']].forEach(([v,l])=>{
+      const d=el('div');d.appendChild(el('strong',null,v));d.appendChild(el('small',null,l));t.appendChild(d)});
   }
   $('btnJornadaA').addEventListener('click',()=>{
     const acc=$('btnJornadaA').dataset.accion;
