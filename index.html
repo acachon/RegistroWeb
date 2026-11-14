@@ -562,7 +562,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-14 12:00';
+  const VERSION='v1 · 2026-11-14 12:10';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1005,17 +1005,19 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     const fin=mismoDia?new Date(sig.iso).getTime()
       :esHoy?Date.now():trazo.length>1?new Date(trazo[trazo.length-1].iso).getTime():null;
     const ms=fin==null?0:fin-new Date(r.iso).getTime();
-    const info=durRegistro(r,mismoDia?sig:null,esHoy);
-    return {km:coma(m/1000),vel:ms>0?coma(m/1000/(ms/3600000)):'–',area:coma(areaM2(trazo)/10000,2),
+    const info=durRegistro(r,mismoDia?sig:null,esHoy), pm=Math.floor(msPausa(r)/60000);
+    return {pausaMin:pm,km:coma(m/1000),vel:ms>0?coma(m/1000/(ms/3600000)):'–',area:coma(areaM2(trazo)/10000,2),
       dur:info?(info.desde?durHHMM(Date.now()-new Date(info.desde)):info.texto):'--h:--m',vivo:(esHoy&&!mismoDia)||!!(info&&info.desde),
       // Valores numéricos para el fichero central
       n:{km:+(m/1000).toFixed(3),ha:+(areaM2(trazo)/10000).toFixed(4),vel:ms>0?+(m/1000/(ms/3600000)).toFixed(2):'',
-        min:info?(info.desde?Math.floor((Date.now()-new Date(info.desde))/60000):info.ms!=null?Math.floor(info.ms/60000):''):'',pts:trazo.length-1}};
+        min:info?(info.desde?Math.floor((Date.now()-new Date(info.desde))/60000):info.ms!=null?Math.floor(info.ms/60000):''):'',pts:trazo.length-1,pausa:pm}};
   }
   // Datos de una actividad en la tarjeta: cuadrícula con su nombre encima de cada valor
   function pintarInfo(e,r){
     const d=datosRecorrido(r);e.textContent='';e.dataset.vivo=d.vivo?1:0;
-    [['Duración',d.dur],['Distancia',d.km+' km'],['Área',d.area+' ha'],['Velocidad',d.vel+' km/h']].forEach(([k,v])=>{
+    const celdas=[['Duración',d.dur],['Distancia',d.km+' km'],['Área',d.area+' ha'],['Velocidad',d.vel+' km/h']];
+    if(d.pausaMin>0)celdas.push(['Pausada',durHHMM(d.pausaMin*60000)]); // tiempo en estado «Pausada»; el resto de la duración es «Activo»
+    celdas.forEach(([k,v])=>{
       const c=el('span');c.append(el('em',null,k),el('strong',null,v));e.appendChild(c);
     });
   }
@@ -1542,7 +1544,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     t.className=ini?'jdatos':'jtxt';t.textContent='';
     if(!ini){t.textContent='Pulsa «Inicio Jornada» al empezar a trabajar.';return}
     const t0=new Date(ini.iso).getTime(), min=Math.max(0,Math.floor(((fin?new Date(fin.iso).getTime():Date.now())-t0)/60000));
-    [[hhmm(new Date(ini.iso)),'Hora inicio'],[fin?hhmm(new Date(fin.iso)):'--','Hora fin'],[`${pad(Math.floor(min/60))}:${pad(min%60)}`,'Duración']].forEach(([v,l])=>{
+    [[hhmm(new Date(ini.iso)),'Hora inicio'],[fin?hhmm(new Date(fin.iso)):'--','Hora fin'],[`${Math.floor(min/60)}h ${pad(min%60)}m`,'Duración']].forEach(([v,l])=>{
       const d=el('div');d.appendChild(el('strong',null,v));d.appendChild(el('small',null,l));t.appendChild(d)});
   }
   $('btnJornadaA').addEventListener('click',()=>{
@@ -1680,12 +1682,22 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     pintarSeguimiento();
   }
   // Pausa de la toma de coordenadas: dura lo elegido y termina sola (o antes con «reanudar»); al registrar otra actividad deja de valer
+  // Periodos en estado «Pausada» de cada actividad: r.pausas=[{ini,fin}] (ms); fin=null mientras la pausa sigue en marcha
+  const finPeriodo=(r,q)=>q.fin!=null?q.fin:(pausa&&pausa.regId===r.id?Math.min(Date.now(),pausa.hasta):q.ini);
+  const msPausa=r=>(r.pausas||[]).reduce((t,q)=>t+Math.max(0,finPeriodo(r,q)-q.ini),0);
+  const textoPausas=r=>(r.pausas||[]).map(q=>`${hhmm(new Date(q.ini))}-${hhmm(new Date(finPeriodo(r,q)))}`).join('; ');
   const cuentaPausa=()=>{const seg=Math.max(0,Math.ceil((pausa.hasta-Date.now())/1000));return `${pad(Math.floor(seg/60))}:${pad(seg%60)}`};
   const enPausa=()=>{const r=actividadEnCurso();return !!(r&&pausa&&pausa.regId===r.id&&Date.now()<pausa.hasta)};
-  function ponerPausa(p){pausa=p;store.set(KEY_PAUSA,p);menuPausa=false}
+  function ponerPausa(p){
+    if(pausa){ // cierra el periodo «Pausada» abierto de su actividad (al terminar el tiempo, justo en ese momento)
+      const r=registros.find(x=>x.id===pausa.regId), q=r&&(r.pausas||[]).find(x=>x.fin==null);
+      if(q){q.fin=Math.min(Date.now(),pausa.hasta);guardarRegistros()}
+    }
+    pausa=p;store.set(KEY_PAUSA,p);menuPausa=false}
   function pausar(min){
     const r=actividadEnCurso();if(!r)return;
-    ponerPausa({regId:r.id,hasta:Date.now()+min*60000,min});actualizarSeguimiento();pintarListado();
+    ponerPausa({regId:r.id,hasta:Date.now()+min*60000,min});
+    (r.pausas=r.pausas||[]).push({ini:Date.now(),fin:null});guardarRegistros();actualizarSeguimiento();pintarListado();
   }
   function reanudar(){ponerPausa(null);actualizarSeguimiento();pintarListado()}
   function actualizarSeguimiento(){
@@ -2089,8 +2101,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     Mes:diaKey(d).slice(0,7),Latitud:x.lat!=null?+x.lat.toFixed(6):'',Longitud:x.lon!=null?+x.lon.toFixed(6):'',
     'Precisión (m)':x.precision!=null?Math.round(x.precision):'','Sin posición (motivo)':x.lat==null?(x.error||'no disponible'):'',
     'Ver en mapa':x.lat!=null?urlMapa(x):'','Fecha y hora ISO':x.iso,'Datos de prueba':x.prueba?'Sí':'No'}};
-  const filaActividad=r=>{const t=datosRecorrido(r);return Object.assign(comun(r),{Actividad:r.actividad||'',Estado:t.vivo?'En curso':'Cerrada',
-    'Duración':t.n.min,'Distancia (km)':t.n.km,'Área (ha)':t.n.ha,'Velocidad (km/h)':t.n.vel,'Puntos GPS':t.n.pts})};
+  const filaActividad=r=>{const t=datosRecorrido(r);return Object.assign(comun(r),{Actividad:r.actividad||'',Estado:t.vivo?(pausa&&pausa.regId===r.id&&enPausa()?'Pausada':'En curso'):'Cerrada',
+    'Duración':t.n.min,'Min pausada':t.n.pausa,'Min activa':t.n.min===''?'':Math.max(0,t.n.min-t.n.pausa),'Pausas':textoPausas(r),'Distancia (km)':t.n.km,'Área (ha)':t.n.ha,'Velocidad (km/h)':t.n.vel,'Puntos GPS':t.n.pts})};
   const filaIncidencia=x=>{const c={foto:0,video:0,audio:0};(x.adjuntos||[]).forEach(a=>c[a.tipo]++);
     return Object.assign(comun(x),{Tipo:x.tipo,Comentario:x.comentario||'',Fotos:c.foto,'Vídeos':c.video,Audios:c.audio,
       'Archivos adjuntos':(x.adjuntos||[]).map(a=>nombreAdjunto(x,a)).join('\n'),'Enlaces adjuntos':(x.adjuntos||[]).map(a=>sync.hecho.adj[a.id]||'').filter(Boolean).join('\n')})};
