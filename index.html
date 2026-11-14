@@ -68,8 +68,8 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
 /* Pestañas fijas arriba al desplazarse; la franja de encima (zona del sistema) se pinta con el fondo */
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:1001;background:var(--bg)}
-.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:1000;box-shadow:0 4px 10px rgba(0,0,0,.08);display:grid;grid-template-columns:repeat(2,1fr);gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
-.tabs button{padding:10px 6px;font-size:.92rem;line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:1000;box-shadow:0 4px 10px rgba(0,0,0,.08);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.tabs button{padding:10px 4px;font-size:clamp(.82rem,4vw,.92rem);line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
 .tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
 .panel{display:flex;flex-direction:column;gap:20px}
 .lbl{display:block;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -355,6 +355,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   </div>
 
   <nav class="tabs" role="tablist">
+    <button type="button" role="tab" id="tabRegistro" aria-selected="false" aria-controls="panelRegistro">Registro</button>
     <button type="button" role="tab" id="tabReg" aria-selected="true" aria-controls="panelReg">Actividad</button>
     <button type="button" role="tab" id="tabInc" aria-selected="false" aria-controls="panelInc">Incidencias</button>
   </nav>
@@ -396,6 +397,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   </div>
 
   <!-- PESTAÑA INCIDENCIAS -->
+  <!-- PESTAÑA REGISTRO: solo «Nueva actividad» (la misma sección de Actividad, que se muestra aquí al abrir esta pestaña) -->
+  <div class="panel" id="panelRegistro" role="tabpanel" hidden></div>
+
   <div class="panel" id="panelInc" role="tabpanel" hidden>
     <details class="desp" id="detNuevaInc" open>
       <summary>Nueva incidencia <button type="button" class="infobtn" data-info="infoNuevaInc">i</button></summary>
@@ -512,7 +516,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-14';
+  const VERSION='v1 · 2026-11-14 11:15';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -780,7 +784,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   let menuPausa=false; // se está eligiendo cuánto pausar
 
   /* ---------- Pestañas ---------- */
-  const PESTANAS={reg:['tabReg','panelReg'],inc:['tabInc','panelInc'],cfg:['tabCfg','panelCfg']};
+  const PESTANAS={registro:['tabRegistro','panelRegistro'],reg:['tabReg','panelReg'],inc:['tabInc','panelInc'],cfg:['tabCfg','panelCfg']};
   // pestanaAntes: la última pestaña que no era Configuración, para volver a ella al pulsar otra vez el engranaje
   let pestana='reg', pestanaAntes='reg';
   function abrir(tab){
@@ -790,6 +794,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute(k==='cfg'?'aria-pressed':'aria-selected',k===tab);$(p).hidden=k!==tab});
     if(tab==='cfg'){editores.forEach(e=>e.pintar());$('gpsIntervalo').value=intervaloSeg;$('syncUrl').value=sync.url;$('syncClave').value=sync.clave;$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
+    // «Nueva actividad» es una sola sección: se coloca en la pestaña Registro o arriba de Actividad según cuál se abra
+    if(tab==='registro'){$('panelRegistro').appendChild($('detNueva'));$('detNueva').open=true}
+    if(tab==='reg')$('panelReg').insertBefore($('detNueva'),$('panelReg').firstChild);
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
     if(tab==='reg')pintarListado();
     if(tab==='inc')pintarIncidencias();
