@@ -763,7 +763,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 22:00';
+  const VERSION='v1 · 2026-11-15 22:15';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1664,6 +1664,7 @@ details.desp.fija>summary::after{display:none}
   }
   // Fila compacta del Supervisor (como en Registro e Incidencia): casilla, pin del mapa, nombre y hora; a la derecha, (i) con los KPIs
   // de la actividad, o clip con adjuntos y texto y enlace a Google Maps en las incidencias. Lo desplegado va debajo de la fila.
+  const nombreYo=n=>n===cfg.nombre?`${n} (yo)`:n; // el empleado configurado en este móvil lleva «(yo)»
   const supAbiertas=new Set(), supFiltro={act:true,inc:true}; // qué tipos se muestran en el listado y el mapa (multiselección)
   let supEmp=null; // empleados mostrados: null = todos, o un conjunto de nombres (multiselección)
   function filaSup(x,{sel,num,alternar,repintar}){
@@ -1672,7 +1673,7 @@ details.desp.fija>summary::after{display:none}
     cb.addEventListener('change',()=>alternar(cb.checked));
     const curso=!inc&&!!actividadEnCurso()&&actividadEnCurso().id===x.id;
     const tx=el('div'), nb=el('b',null,nombre);
-    if(x.nombre)nb.appendChild(el('span','emp',` - ${x.nombre}`)); // empleado de ese registro, tras un guión
+    if(x.nombre)nb.appendChild(el('span','emp',` - ${nombreYo(x.nombre)}`)); // empleado de ese registro, tras un guión
     tx.appendChild(nb);
     tx.appendChild(el('small',null,hhmm(new Date(x.iso))+(curso?' · en curso':'')+(inc&&x.comentario?` · ${x.comentario}`:'')));
     const acc=el('div','acc'), abierta=supAbiertas.has(x.id), nAdj=inc?(x.adjuntos||[]).length:0, nTot=nAdj+(inc&&x.comentario?1:0); // nTot: hay algo que desplegar
@@ -1778,7 +1779,7 @@ details.desp.fija>summary::after{display:none}
   const empleadosSup=()=>[...new Set([...registros,...incidencias].map(x=>x.nombre).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
   function etiquetaUsu(){
     const todos=empleadosSup();
-    $('btnUsuH').textContent=!supEmp||todos.every(n=>supEmp.has(n))?'Todos':supEmp.size===1?[...supEmp][0]:`${supEmp.size} empleados`;
+    $('btnUsuH').textContent=!supEmp||todos.every(n=>supEmp.has(n))?'Todos':supEmp.size===1?nombreYo([...supEmp][0]):`${supEmp.size} empleados`;
   }
   function pintarUsuarios(){
     const todos=empleadosSup(), cur=supEmp||new Set(todos), p=$('usuPanel'+'H');p.textContent='';
@@ -1789,7 +1790,7 @@ details.desp.fija>summary::after{display:none}
     const cambio=()=>{etiquetaUsu();LA.marcarDias();LA.pintar();pintarUsuarios()};
     fila('Todos',!supEmp,()=>{supEmp=null;cambio()});
     p.appendChild(el('div','sep'));
-    todos.forEach(n=>fila(n,cur.has(n),()=>{
+    todos.forEach(n=>fila(nombreYo(n),cur.has(n),()=>{
       const s=new Set(cur);s.has(n)?s.delete(n):s.add(n);
       if(!s.size){pintarUsuarios();return} // siempre queda al menos un empleado
       supEmp=s.size===todos.length?null:s;cambio();
