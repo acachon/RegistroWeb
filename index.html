@@ -655,7 +655,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 11:00';
+  const VERSION='v1 · 2026-11-15 11:55';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1734,7 +1734,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     const nombre=act?act.actividad:enP?curso.pausaDe:null;
     const a=$('btnActA'), f=$('btnActFin'), t=$('actTxt'), ti=$('actIcoTit');
     const hoy=registros.filter(x=>!x.ejemplo&&x.nombre===cfg.nombre&&diaDe(x)===hoyKey());
-    const desdeIni=hoy.slice(hoy.map(x=>x.actividad).lastIndexOf(INICIO)+1);
+    const desdeIni=hoy; // todo el día: los registros no enviados siguen en el listado aunque se cierre o se reinicie la jornada
     // Tandas de actividad: una actividad pausada y retomada cuenta como una sola tanda (hasta que otro registro la corta)
     const tandas=[];let cur=null,pausadaDe=null;
     desdeIni.forEach(x=>{
