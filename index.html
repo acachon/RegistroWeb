@@ -762,7 +762,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 22:35';
+  const VERSION='v1 · 2026-11-15 23:00';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -3068,6 +3068,13 @@ details.desp.fija>summary::after{display:none}
     actualizar();
   });
 
+  // Los puntos que el GPS real añadió a una actividad de prueba antigua (cuando se quedaba «en curso») caen lejos de la finca y
+  // desvirtúan el mapa: se descartan los puntos de registros de prueba a más de 3 km de la finca
+  {
+    const idsPrueba=new Set(registros.filter(r=>r.prueba).map(r=>r.id)), antes=puntos.length;
+    puntos=puntos.filter(p=>!(idsPrueba.has(p.registroId)&&conPosicion(p)&&metrosEntre(p,FINCA)>3000));
+    if(puntos.length!==antes)guardarPuntos();
+  }
   pausaAct=store.get(KEY_PAUSA_ACT,null);
   pausa=store.get(KEY_PAUSA,null); // la pausa del GPS sobrevive a recargar la página
   pintarDestinos();
