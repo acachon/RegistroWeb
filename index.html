@@ -739,7 +739,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 17:40';
+  const VERSION='v1 · 2026-11-15 18:00';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1638,8 +1638,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     if(!inc){const b=boton('ib2');b.innerHTML=ico('info',18);desplegable(b,'Ver los datos de la actividad (distancia, área…)')}
     else{
       if(nTot){const b=boton('ib2');b.innerHTML=ico('clip',18)+(nTot>1?`<span class="n">${nTot}</span>`:'');desplegable(b,'Ver archivos adjuntos y texto')}
-      acc.appendChild(ubicBtn(x));
     }
+    acc.appendChild(ubicBtn(x)); // enlace a Google Maps: dónde se inició la actividad o dónde se registró la incidencia
     lab.append(cb,pinSup(x,num),tx,acc);li.appendChild(lab);
     if(abierta){
       if(!inc){const k=el('div','kpis');k.dataset.id=x.id;pintarInfo(k,x);li.appendChild(k)}
