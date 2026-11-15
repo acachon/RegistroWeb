@@ -400,6 +400,10 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .resumenact .ib2.off{opacity:.3;border-style:dashed}
 .resumenact .ib2 .n{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--olive);color:var(--olive-ink);font:800 .66rem/17px var(--display);text-align:center}
 .resumenact li>.adjs{padding:6px 4px 2px}
+.lfil{flex-wrap:wrap;row-gap:6px} /* en pantallas muy estrechas las herramientas bajan a otra línea en vez de cortarse */
+.filtros{display:flex;gap:4px;flex-wrap:nowrap;min-width:0}
+.ftag{height:34px;padding:0 8px;flex:none;white-space:nowrap;font:700 .76rem var(--display);color:var(--muted);background:var(--card);border:2px solid var(--line);border-radius:999px}
+.ftag[aria-pressed="true"]{color:var(--fg);background:var(--olive-soft);border-color:var(--olive)}
 .resumenact .pinfila{justify-self:center}
 .resumenact .pin.apagado{opacity:.4;filter:grayscale(.5)}
 .resumenact .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;padding:8px 10px 4px;color:var(--muted)}
@@ -739,7 +743,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 18:00';
+  const VERSION='v1 · 2026-11-15 18:25';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -768,7 +772,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
           </div>
           ${d.hasAttribute('data-compacta')?
           // Estilo de Registro e Incidencia: herramientas con iconos y, al compartir, botones Cancelar / Email / WhatsApp
-          `<div class="lhead" style="justify-content:flex-end"><div class="lherr">
+          `<div class="lhead lfil"><div class="filtros" role="group" aria-label="Qué mostrar en el listado">
+            <button type="button" class="ftag" id="filtroAct${s}" aria-pressed="true">Actividades</button>
+            <button type="button" class="ftag" id="filtroInc${s}" aria-pressed="true">Incidencias</button></div><div class="lherr">
             <button type="button" class="ib" id="btnTodos${s}" aria-label="Seleccionar todo" title="Seleccionar todo">${ico('selall')}</button>
             <button type="button" class="ib" id="btnCompartir${s}" aria-label="Compartir los marcados" title="Compartir">${ico('share')}</button>
             <button type="button" class="ib peligro" id="btnBorrar${s}" aria-label="Eliminar los marcados" title="Eliminar">${ico('trash')}</button></div></div>
@@ -1520,7 +1526,6 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       }else E('btnTodos').textContent=todas?'Quitar Todo':'Selecciona Todo';
       ['btnCompartir','btnBorrar'].forEach(id=>E(id).disabled=n===0);
       ['btnCompartir','btnBorrar','btnTodos'].forEach(id=>E(id).hidden=enMapa); // en el mapa no tienen uso
-      if(o.compacta)E('btnTodos').closest('.lhead').hidden=enMapa;
       E('shareBox').hidden=true;
       if(!enMapa||$(o.panel).hidden)mapa.salir(); // sin mapa a la vista no puede quedar a pantalla completa
       cal.pintar();
@@ -1621,7 +1626,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   }
   // Fila compacta del Supervisor (como en Registro e Incidencia): casilla, pin del mapa, nombre y hora; a la derecha, (i) con los KPIs
   // de la actividad, o clip con adjuntos y texto y enlace a Google Maps en las incidencias. Lo desplegado va debajo de la fila.
-  const supAbiertas=new Set();
+  const supAbiertas=new Set(), supFiltro={act:true,inc:true}; // qué tipos se muestran en el listado y el mapa (multiselección)
   function filaSup(x,{sel,num,alternar,repintar}){
     const inc=esInc(x), li=el('li'), lab=el('label',sel?'sel':''), cb=el('input'), nombre=inc?x.tipo:(x.actividad||x.nombre);
     cb.type='checkbox';cb.checked=sel;cb.setAttribute('aria-label',`Seleccionar ${nombre}`);
@@ -1648,7 +1653,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     return li;
   }
   const LA=crearListado({sfx:'H',panel:'panelReg',singular:'registro',unidad:'registro',plural:'registros',masc:true,conVista:true,compacta:true,fila:filaSup,
-    datos:()=>[...registros,...incidencias].sort(porHora), clave:claveSup,
+    datos:()=>[...(supFiltro.act?registros:[]),...(supFiltro.inc?incidencias:[])].sort(porHora), clave:claveSup,
     orden:()=>[...Object.keys(ICONOS),...actividades(),...ordenTiposInc().map(t=>'⚠ '+t)], esteTipo:'este tipo',
     vacioHoy:'Hoy aún no hay actividades ni incidencias.', textoNinguna:'Marca al menos un registro.',
     pin:(x,t)=>esInc(x)?crearPinInc(t,colorInc(x.tipo)):crearPin(iconoDe(x),t),
@@ -1723,6 +1728,11 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     },
     trasBorrar(){pintarTodo();actualizarSeguimiento();pintarIncidencias()}
   });
+  // Filtro de tipos: Actividades, Incidencias o ambos (siempre queda al menos uno activo)
+  [['filtroActH','act'],['filtroIncH','inc']].forEach(([id,k])=>$(id).addEventListener('click',()=>{
+    if(supFiltro[k]&&!supFiltro[k==='act'?'inc':'act'])return;
+    supFiltro[k]=!supFiltro[k];$(id).setAttribute('aria-pressed',supFiltro[k]);LA.pintar();
+  }));
   function pintarListado(){LA.pintar();if(typeof actualizarPendientes==='function')actualizarPendientes()}
   function pintarTodo(){pintarListado();actualizarActividades()}
   // Leaflet se carga con «defer», después de este código: pintar los mapas en cuanto esté
