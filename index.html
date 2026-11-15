@@ -315,12 +315,19 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .jornada h2 #jornadaFecha{white-space:nowrap}
 .jtxt{margin:0;color:var(--muted);font-size:.95rem}
 #actIcoTit{flex:none;object-fit:contain}
+/* Resumen de las actividades ya terminadas en la jornada */
+.resumenact{list-style:none;margin:2px 0 0;padding:10px 0 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.resumenact li{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px}
+.resumenact img{width:34px;height:34px;object-fit:contain}
+.resumenact b{display:block;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resumenact small{display:block;color:var(--muted);font-size:.78rem;font-variant-numeric:tabular-nums}
+.resumenact .dur{font:800 .95rem var(--display);white-space:nowrap;font-variant-numeric:tabular-nums}
 #secAct h2{flex-wrap:nowrap}#secAct h2 span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Carrusel de actividades: al menos 3 fichas a la vista y el resto se desplaza */
 .carrusel{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 8px;margin:0 -2px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
-.chipact{flex:0 0 calc((100% - 16px)/3.2);scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px 6px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);font:700 .7rem/1.15 var(--display);text-align:center;cursor:pointer}
-.chipact img{width:44px;height:44px;object-fit:contain;pointer-events:none}
-.chipact span{display:block;min-height:2.3em;display:flex;align-items:flex-start;justify-content:center;overflow-wrap:normal}
+.chipact{flex:0 0 calc((100% - 16px)/3.2);scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px 5px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);font:700 .7rem/1.15 var(--display);text-align:center;cursor:pointer}
+.chipact img{width:56px;height:56px;object-fit:contain;pointer-events:none}
+.chipact span{display:block;min-height:2.2em;display:flex;align-items:flex-start;justify-content:center;overflow-wrap:normal}
 .chipact[aria-checked="true"]{border-color:var(--olive);background:var(--olive-soft);box-shadow:0 0 0 1px var(--olive)}
 .chipact[disabled]{opacity:.4;cursor:not-allowed}
 .chipact[aria-checked="true"][disabled]{opacity:.85}
@@ -455,6 +462,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         <button class="cta" id="btnActA" type="button">INICIO ACTIVIDAD</button>
       </div>
       <div class="carrusel" id="actCarrusel" role="radiogroup" aria-label="Actividad a iniciar"></div>
+      <ol class="resumenact" id="actResumen" aria-label="Actividades de la jornada" hidden></ol>
     </section>
   </div>
   <!-- Menú para elegir cuánto pausar la toma de puntos GPS -->
@@ -1605,6 +1613,16 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       const marcada=act?b.dataset.act===act.actividad:b.dataset.act===actSel;
       b.setAttribute('aria-checked',marcada);b.disabled=registrando||!curso||!!act;
     });
+    // Actividades ya terminadas en la jornada, en orden cronológico
+    const lis=$('actResumen');lis.textContent='';
+    desdeIni.forEach((x,i)=>{
+      if(MARCAS.includes(x.actividad)||x===act)return;
+      const fn=desdeIni[i+1], m=fn?Math.max(0,Math.floor((new Date(fn.iso)-new Date(x.iso))/60000)):0;
+      const li=el('li'), im=el('img');im.src=iconoAct(x.actividad);im.alt='';
+      const tx=el('div');tx.appendChild(el('b',null,x.actividad));tx.appendChild(el('small',null,`${hhmm(new Date(x.iso))} – ${fn?hhmm(new Date(fn.iso)):'--'}`));
+      li.append(im,tx,el('span','dur',`${Math.floor(m/60)}h ${pad(m%60)}m`));lis.appendChild(li);
+    });
+    lis.hidden=!lis.children.length;
     // Datos de la actividad: hora de inicio, de fin (-- si sigue en curso) y duración transcurrida
     t.className=ver?'jdatos':'jtxt';t.textContent='';
     if(!ver){t.textContent=curso?'Elige una actividad y pulsa «Inicio Actividad».':'Inicia la jornada para poder elegir actividad.';return}
