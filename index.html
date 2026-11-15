@@ -356,10 +356,12 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .jbotones .cta small{font:600 .78rem var(--mono);letter-spacing:0;opacity:.9}
 .jbotones .cta.fin{background:#7a1f1a;color:#fff}
 .jbotones .cta.wa{background:var(--wa);color:#fff}.jbotones .cta.mail{background:var(--olive);color:var(--olive-ink)}
-.jbotones .cta.cancelar{grid-column:1/-1}
 /* Menú de envío: botones más bajos y estrechos, con más aire entre ellos */
-.jbotones.envbtn{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 12px;padding:4px 0 2px}
-.jbotones.envbtn .cta{flex:0 1 104px;min-height:46px;font-size:.85rem}
+.jbotones.envbtn{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:12px 8px;padding:4px 0 2px}
+.jbotones.envbtn .cta{flex:0 0 auto;min-height:46px;padding:0 9px;font-size:.72rem;letter-spacing:.01em}
+.jbotones.envbtn .cta.cancelar{margin-right:auto;background:#6b6f63;color:#fff}
+.jbotones.envbtn .cta.fin{background:#7a1f1a}
+@media(max-width:340px){.jbotones.envbtn{gap:12px 6px}.jbotones.envbtn .cta{padding:0 6px;font-size:.68rem}} /* Cancelar a la izquierda; Email y WhatsApp a la derecha */
 .jbotones .cta[disabled]{background:#b9b3a8;color:#f1eee8}
 .modal{position:fixed;inset:0;z-index:2600;display:flex;align-items:flex-end;justify-content:center;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:rgba(8,20,12,.55)}
 .modal .caja{width:100%;max-width:448px;background:var(--card);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
@@ -471,21 +473,21 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     <section class="jornada" id="sugFin" hidden>
       <h2>Enviar registro de la jornada</h2>
       <div class="jbotones envbtn">
+        <button class="cta fin cancelar" id="sugCerrar" type="button">CANCELAR</button>
         <button class="cta mail" id="sugMail" type="button">EMAIL</button>
         <button class="cta wa" id="sugWa" type="button">WHATSAPP</button>
-        <button class="cta fin cancelar" id="sugCerrar" type="button">CANCELAR</button>
       </div>
     </section>
     <!-- Actividad dentro de la jornada: solo se puede usar con la jornada iniciada -->
     <section class="jornada" id="secAct">
       <h2><img id="actIcoTit" alt="" width="30" height="30" hidden><span id="actTitulo">Selecciona una nueva actividad</span></h2>
       <p class="jtxt" id="actTxt"></p>
+      <div class="carrusel" id="actCarrusel" role="radiogroup" aria-label="Actividad a iniciar"></div>
+      <div class="carbarra" id="actBarra" aria-hidden="true"><i></i></div>
       <div class="jbotones">
         <button class="cta fin" id="btnActFin" type="button">FIN ACTIVIDAD</button>
         <button class="cta" id="btnActA" type="button">INICIO ACTIVIDAD</button>
       </div>
-      <div class="carrusel" id="actCarrusel" role="radiogroup" aria-label="Actividad a iniciar"></div>
-      <div class="carbarra" id="actBarra" aria-hidden="true"><i></i></div>
       <div class="listadoact" id="actListado" hidden>
         <div class="lhead">
           <h3>Listado actividades</h3>
@@ -498,9 +500,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         <div class="envio" id="actEnvio" hidden>
           <h3>Enviar actividades</h3>
           <div class="jbotones envbtn">
+            <button class="cta fin cancelar" id="actCancelar" type="button">CANCELAR</button>
             <button class="cta mail" id="actMail" type="button">EMAIL</button>
             <button class="cta wa" id="actWa" type="button">WHATSAPP</button>
-            <button class="cta fin cancelar" id="actCancelar" type="button">CANCELAR</button>
           </div>
         </div>
         <ol class="resumenact" id="actResumen" aria-label="Actividades de la jornada"></ol>
@@ -508,6 +510,17 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     </section>
   </div>
   <!-- Menú para elegir cuánto pausar la toma de puntos GPS -->
+  <!-- Confirmación de Fin Jornada, por si se pulsa sin querer -->
+  <div class="modal" id="modalFin" role="dialog" aria-modal="true" aria-labelledby="modalFinT" hidden>
+    <div class="caja">
+      <strong id="modalFinT">¿Finalizar la jornada?</strong>
+      <p id="modalFinP"></p>
+      <div class="jbotones envbtn">
+        <button type="button" class="cta cancelar" id="finNo">CANCELAR</button>
+        <button type="button" class="cta fin" id="finSi">FINALIZAR</button>
+      </div>
+    </div>
+  </div>
   <div class="modal" id="modalPausa" role="dialog" aria-modal="true" aria-labelledby="modalPausaT" hidden>
     <div class="caja">
       <strong id="modalPausaT">Pausar jornada</strong>
@@ -1752,7 +1765,17 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     const acc=$('btnJornadaA').dataset.accion;
     if(acc==='inicio')registrar(INICIO);else if(acc==='reanudar'){reanudar();avisarGps()}else abrirMenuPausa('jornada');
   });
-  $('btnJornadaFin').addEventListener('click',()=>registrar(FIN));
+  // Fin Jornada pide confirmación; con una actividad en curso se avisa de que también termina
+  const cerrarConfirmaFin=()=>{$('modalFin').hidden=true};
+  $('btnJornadaFin').addEventListener('click',()=>{
+    const c=actividadEnCurso(), act=c&&!MARCAS.includes(c.actividad)?c.actividad:c&&c.actividad===PAUSAACT?c.pausaDe:null;
+    $('modalFinP').textContent=act?`Terminará también la actividad «${act}» y el seguimiento GPS.`:'Se terminará la jornada y el seguimiento GPS.';
+    $('modalFin').hidden=false;$('finNo').focus();
+  });
+  $('finNo').addEventListener('click',cerrarConfirmaFin);
+  $('finSi').addEventListener('click',()=>{cerrarConfirmaFin();registrar(FIN)});
+  $('modalFin').addEventListener('click',e=>{if(e.target.id==='modalFin')cerrarConfirmaFin()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('modalFin').hidden)cerrarConfirmaFin()});
   // Menú superpuesto con un botón por cada tiempo de pausa
   function abrirMenuPausa(destino){
     const c=$('pausaOpc'), deAct=destino==='actividad';c.textContent='';
