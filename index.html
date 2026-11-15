@@ -752,7 +752,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 19:55';
+  const VERSION='v1 · 2026-11-15 20:15';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1818,7 +1818,7 @@ details.desp.fija>summary::after{display:none}
     if(actividad===PAUSAACT)guardarPausaAct({regId:r.id,hasta:ahora.getTime()+extra.min*60000,min:extra.min,actividad:extra.pausaDe});
     else if(pausaAct)guardarPausaAct(null);
     if(pausaPrev){ponerPausa({regId:r.id,hasta:pausaPrev.hasta,min:pausaPrev.min});(r.pausas=r.pausas||[]).push({ini:Date.now(),fin:null});guardarRegistros()}
-    LA.sel=new Set([r.id]);LA.dias=new Set();LA.cal.irA(ahora);
+    LA.dias=new Set();LA.marcarDias();LA.cal.irA(ahora); // en el Supervisor quedan marcados todos los registros de hoy que se muestran
     registrando=false;pintarTodo();$('btnRegistro').disabled=false;
     actualizarSeguimiento();
     if(r.actividad===FIN)sugerirEnvioDia(r);
@@ -2751,7 +2751,7 @@ details.desp.fija>summary::after{display:none}
       x.adjuntos.push({id,tipo:a.tipo,mime:a.mime,nombre:`${pref}_${i+1}.${extDe(a.mime,a.nombre)}`,size:a.blob.size,dur:a.dur?Math.round(a.dur):undefined});
     }
     incidencias.push(x);guardarIncidencias();
-    LA.sel=new Set([x.id]);LA.dias=new Set(); // en el Supervisor queda marcada la nueva incidencia, como al registrar una actividad
+    LA.dias=new Set();LA.marcarDias(); // en el Supervisor quedan marcados todos los registros de hoy que se muestran (la nueva incluida)
     nuevosI=[];$('iComentario').value='';$('iComentario').hidden=true;$('iTexto').setAttribute('aria-expanded',false);incSel=null;opcFotoI(false);opcVideoI(false);
     incOcupadaI=false;pintarNuevosI();
     pintarIncidencias();pintarListado();
@@ -2989,7 +2989,7 @@ details.desp.fija>summary::after{display:none}
   pintarEmpleado();
   $('versionTxt').textContent=`Versión ${VERSION}${nativo?' · App Android':' · web'}`;
   if(!nativo&&VERSION_OTRA){const a=$('versionOtra');a.href=VERSION_OTRA.href;a.textContent=VERSION_OTRA.texto;a.hidden=false}
-  {const v=LA.visibles();LA.sel=new Set(v.length?[v[v.length-1].id]:[])} // se marca el último registro o incidencia de hoy
+  LA.marcarDias(); // al abrir, todos los registros de hoy marcados: el mapa los enseña todos
   {const v=LI.visibles();LI.sel=new Set(v.length?[v[v.length-1].id]:[])}
   pintarTodo();
   actualizarSeguimiento();
