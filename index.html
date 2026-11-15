@@ -417,7 +417,7 @@ details.desp>summary .diasel{margin-left:auto;font:800 .9rem var(--display);colo
 .lfil{flex-wrap:wrap;row-gap:6px} /* en pantallas muy estrechas las herramientas bajan a otra línea en vez de cortarse */
 details.desp.fija>summary{cursor:default}
 details.desp.fija>summary::after{display:none}
-#statusListH:empty{display:none}
+#statusListH:empty,#mapaNotaH:empty{display:none}
 .resumenact b .emp{font-weight:600;color:var(--muted)}
 .lfil .ib{width:34px;height:34px}
 .lfil .lherr{gap:3px}
@@ -702,7 +702,6 @@ details.desp.fija>summary::after{display:none}
       <div class="field">
         <span class="lbl" id="temaLbl">Tema</span>
         <div class="tema" role="group" aria-labelledby="temaLbl"><button type="button" id="temaAuto" data-tema="auto">Automático</button><button type="button" id="temaClaro" data-tema="claro">Claro</button><button type="button" id="temaOscuro" data-tema="oscuro">Oscuro</button></div>
-        <p class="hint">Claro: se lee mejor a pleno sol. Oscuro: gasta menos batería. Se aplica al momento.</p>
       </div>
       <h2>Empleado <button type="button" class="infobtn" data-info="infoCfgEmp">i</button></h2>
       <div class="infobox" id="infoCfgEmp" hidden>
@@ -763,7 +762,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 22:15';
+  const VERSION='v1 · 2026-11-15 22:35';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1505,7 +1504,8 @@ details.desp.fija>summary::after{display:none}
     api.visibles=()=>{const ds=api.diasEf();return o.datos().filter(x=>ds.has(diaDe(x)))};
     api.marcadas=()=>api.visibles().filter(x=>api.sel.has(x.id));
     api.marcarDias=()=>{const ds=api.diasEf();api.sel=new Set(o.datos().filter(x=>ds.has(diaDe(x))).map(x=>x.id))};
-    api.status=(msg,cls)=>avisar('statusList'+s,msg,cls);
+    // El listado compacto solo escribe errores; los avisos informativos («1 eliminado», «Preparando…») no se muestran
+    api.status=(msg,cls)=>avisar('statusList'+s,o.compacta&&cls!=='err'?'':msg,cls);
     const cal=crearCalendario(s,api,o.unidad);api.cal=cal;
     const mapa=crearMapa(s,o.plural,o.conVista);
     const ocultas=new Set(); // claves (actividad o tipo) desmarcadas en la leyenda del mapa
@@ -1541,7 +1541,7 @@ details.desp.fija>summary::after{display:none}
         li.appendChild(lab);ol.appendChild(li);
       });
       E('contador').textContent=lista.length;
-      E('vacioLista').hidden=lista.length>0;
+      E('vacioLista').hidden=lista.length>0||!!o.compacta; // el listado compacto no escribe «no hay…»
       E('vacioLista').textContent=api.dias.size?`No hay ${o.plural} en los días elegidos.`:o.vacioHoy;
       ol.hidden=enMapa;E('mapa').hidden=E('leyenda').hidden=E('mapaNota').hidden=!enMapa;
       // Título: «Hoy» por defecto; con otros días se indica cuáles y aparece «Volver a hoy» junto a «Calendario»
@@ -1757,7 +1757,7 @@ details.desp.fija>summary::after{display:none}
           .bindPopup(()=>{const g=globo(`${i+1}. ${r.actividad||'Registro'}`,[r.nombre,fechaRegistro(r),...lineasInfo(r)]);g.appendChild(enlaceMaps(r));return g}).addTo(c.marc);
         if(foco&&foco.id===r.id)marcador=m;
       });
-      return {nota,encuadre,centro:marcador?[foco.lat,foco.lon]:null,marcador};
+      return {nota:'',encuadre,centro:marcador?[foco.lat,foco.lon]:null,marcador}; // sin texto informativo bajo el mapa
     },
     // Un solo texto con las actividades y las incidencias marcadas; con «adjuntos» se abre el menú de compartir con sus archivos
     compartir(lista,wa,mail){enviarUnaInc(lista,wa?'wa':'mail')},
@@ -2698,7 +2698,8 @@ details.desp.fija>summary::after{display:none}
   const iconoInc=t=>ICONOS_INC[claveAct(t)]||ICONOS_INC.otros;
   let incSel=null, nuevosI=[], urlsNuevosI=[], incOcupadaI=false;
   let incSelFilas=new Set(), incAbiertas=new Set(), sigInc='', urlsListaI=[];
-  const statusI=(msg,cls)=>{const p=$('incTxt');p.textContent=msg||'';p.className='jtxt'+(msg&&cls?' '+cls:'');p.hidden=!msg};
+  // Solo se escriben los errores; los mensajes informativos («Grabando audio…», «Obteniendo posición GPS…») no se muestran
+  const statusI=(msg,cls)=>{const t=cls==='err'?msg:'', p=$('incTxt');p.textContent=t||'';p.className='jtxt'+(t?' err':'');p.hidden=!t};
   statusI('');
 
   function construirCarruselInc(){
