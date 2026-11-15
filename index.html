@@ -277,6 +277,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .popreg{font:500 .85rem var(--display);line-height:1.4}
 .popreg b{display:block;font-size:.95rem}
 .popreg .adjs{margin-top:6px}
+.popreg .popmaps{display:inline-block;margin-top:8px;padding:6px 10px;border:2px solid var(--verde);border-radius:8px;color:var(--verde);font-weight:800;font-size:.8rem;text-decoration:none}
 .popreg .adj{width:40px;height:40px}
 /* Seguimiento GPS: punto verde que late mientras está activo */
 .seg{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:.9rem;color:var(--muted)}
@@ -752,7 +753,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 21:15';
+  const VERSION='v1 · 2026-11-15 21:30';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1333,6 +1334,11 @@ details.desp.fija>summary::after{display:none}
     lineas.filter(Boolean).forEach(t=>pop.append(t,el('br')));
     return pop;
   }
+  // Enlace al final del globo para abrir esa posición en Google Maps (sale de la App)
+  function enlaceMaps(x){
+    const a=el('a','popmaps','Abrir en Google Maps');a.href=urlMapa(x);a.target='_blank';a.rel='noopener';
+    return a;
+  }
 
   /* ---------- Mapas ---------- */
   // Fondos a elegir; cada mapa recuerda el último usado en este móvil
@@ -1734,7 +1740,7 @@ details.desp.fija>summary::after{display:none}
         if(esInc(r))m=marcadorIncidencia(r,i+1,c.marc); // incidencia: marcador con su globo (tipo, comentario y adjuntos)
         // El globo se genera al abrirlo para que una duración «en curso» salga actualizada; mismos datos que la tarjeta
         else m=L.marker([r.lat,r.lon],{icon:divIcon(crearPin(iconoDe(r),String(i+1)),26,26,13,13)})
-          .bindPopup(()=>globo(`${i+1}. ${r.actividad||'Registro'}`,[r.nombre,fechaRegistro(r),...lineasInfo(r)])).addTo(c.marc);
+          .bindPopup(()=>{const g=globo(`${i+1}. ${r.actividad||'Registro'}`,[r.nombre,fechaRegistro(r),...lineasInfo(r)]);g.appendChild(enlaceMaps(r));return g}).addTo(c.marc);
         if(foco&&foco.id===r.id)marcador=m;
       });
       return {nota,encuadre,centro:marcador?[foco.lat,foco.lon]:null,marcador};
@@ -2871,6 +2877,7 @@ details.desp.fija>summary::after{display:none}
     return L.marker([x.lat,x.lon],{icon:divIcon(crearPinInc(String(num),colorInc(x.tipo)),30,28,15,24),zIndexOffset:500}).bindPopup(()=>{
       const pop=globo(`${num}. ⚠ ${x.tipo}`,[x.nombre,x.fechaHora.slice(0,16),x.comentario]);
       if((x.adjuntos||[]).length)pop.appendChild(filaAdjuntos(x,[],false));
+      pop.appendChild(enlaceMaps(x));
       return pop;
     }).addTo(capa);
   }
