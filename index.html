@@ -752,7 +752,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 20:15';
+  const VERSION='v1 · 2026-11-15 20:30';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1744,6 +1744,8 @@ details.desp.fija>summary::after{display:none}
   [['filtroActH','act'],['filtroIncH','inc']].forEach(([id,k])=>$(id).addEventListener('click',()=>{
     if(supFiltro[k]&&!supFiltro[k==='act'?'inc':'act'])return;
     // Al cambiar el filtro quedan marcados todos los registros que se muestran (si no, el mapa saldría vacío al ver solo un tipo)
+    // Al ocultar y volver a mostrar un tipo, sus filas reaparecen plegadas (sin KPIs ni adjuntos desplegados)
+    (k==='act'?registros:incidencias).forEach(x=>supAbiertas.delete(x.id));
     supFiltro[k]=!supFiltro[k];$(id).setAttribute('aria-pressed',supFiltro[k]);LA.marcarDias();LA.pintar();
   }));
   function pintarListado(){LA.pintar();if(typeof actualizarPendientes==='function')actualizarPendientes()}
