@@ -324,7 +324,12 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .resumenact .dur{font:800 .95rem var(--display);white-space:nowrap;font-variant-numeric:tabular-nums}
 #secAct h2{flex-wrap:nowrap}#secAct h2 span{min-width:0;line-height:1.2} /* el título puede ocupar dos líneas con nombres largos */
 /* Carrusel de actividades: al menos 3 fichas a la vista y el resto se desplaza */
-.carrusel{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 8px;margin:0 -2px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.carrusel{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 2px;margin:0 -2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.carrusel::-webkit-scrollbar{display:none}
+/* Barra de desplazamiento propia, siempre visible (las del navegador se ocultan en muchos móviles) */
+.carbarra{position:relative;height:8px;margin-top:-4px;border-radius:999px;background:var(--line);touch-action:none;cursor:pointer}
+.carbarra i{position:absolute;top:0;bottom:0;left:0;width:40%;border-radius:999px;background:var(--olive)}
+.carbarra[hidden]{display:none}
 .chipact{flex:0 0 calc((100% - 16px)/3.2);scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:1px;padding:2px 2px 3px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);font:700 .9rem/1.1 var(--display);text-align:center;cursor:pointer}
 .chipact img{width:100%;height:71px;object-fit:contain;pointer-events:none}
 .chipact span{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
@@ -462,6 +467,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         <button class="cta" id="btnActA" type="button">INICIO ACTIVIDAD</button>
       </div>
       <div class="carrusel" id="actCarrusel" role="radiogroup" aria-label="Actividad a iniciar"></div>
+      <div class="carbarra" id="actBarra" aria-hidden="true"><i></i></div>
       <ol class="resumenact" id="actResumen" aria-label="Actividades de la jornada" hidden></ol>
     </section>
   </div>
@@ -1603,8 +1609,23 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       b.addEventListener('click',()=>{actSel=actSel===n?null:n;pintarActividad();b.scrollIntoView({inline:'nearest',block:'nearest'})});
       c.appendChild(b);
     });
-    pintarActividad();
+    pintarActividad();barraCarrusel();
   }
+  // Barra bajo el carrusel: el tramo oscuro marca qué parte de la lista se ve; se puede tocar o arrastrar para desplazar
+  function barraCarrusel(){
+    const c=$('actCarrusel'), b=$('actBarra'), i=b.firstChild, mas=c.scrollWidth>c.clientWidth+1;
+    b.hidden=!mas;if(!mas)return;
+    const w=Math.max(.12,c.clientWidth/c.scrollWidth), max=c.scrollWidth-c.clientWidth;
+    i.style.width=(w*100)+'%';i.style.left=((max?c.scrollLeft/max:0)*(1-w)*100)+'%';
+  }
+  (()=>{
+    const c=$('actCarrusel'), b=$('actBarra');
+    c.addEventListener('scroll',barraCarrusel,{passive:true});
+    addEventListener('resize',barraCarrusel);
+    const ir=e=>{const r=b.getBoundingClientRect(), f=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));c.scrollLeft=f*(c.scrollWidth-c.clientWidth)};
+    b.addEventListener('pointerdown',e=>{b.setPointerCapture(e.pointerId);ir(e)});
+    b.addEventListener('pointermove',e=>{if(b.hasPointerCapture(e.pointerId))ir(e)});
+  })();
   function pintarActividad(){
     const curso=actividadEnCurso(), act=curso&&!MARCAS.includes(curso.actividad)?curso:null;
     const enP=!!curso&&curso.actividad===PAUSAACT&&!!pausaAct&&pausaAct.regId===curso.id; // actividad en pausa
