@@ -344,6 +344,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .jbotones .cta{min-height:64px;padding:0 8px;font-size:clamp(.82rem,4vw,1rem);letter-spacing:.03em;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
 .jbotones .cta small{font:600 .78rem var(--mono);letter-spacing:0;opacity:.9}
 .jbotones .cta.fin{background:#7a1f1a;color:#fff}
+.jbotones .cta.wa{background:var(--wa);color:#fff}.jbotones .cta.mail{background:var(--mail);color:#fff}
+.jbotones .cta.cancelar{grid-column:1/-1}
 .jbotones .cta[disabled]{background:#b9b3a8;color:#f1eee8}
 .modal{position:fixed;inset:0;z-index:2600;display:flex;align-items:flex-end;justify-content:center;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:rgba(8,20,12,.55)}
 .modal .caja{width:100%;max-width:448px;background:var(--card);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
@@ -434,15 +436,6 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         <ol id="ayudaPasos"></ol>
         <button type="button" class="mini" id="ayudaCerrar">Entendido</button>
       </div>
-      <div class="sugerencia" id="sugFin" hidden>
-        <strong>Jornada terminada</strong>
-        <p id="sugTxt"></p>
-        <div class="send">
-          <button class="sendbtn wa" id="sugWa" type="button"><strong>WhatsApp</strong><small class="destTel">Sin teléfono</small></button>
-          <button class="sendbtn mail" id="sugMail" type="button"><strong>Email</strong><small class="destMail">Sin email</small></button>
-        </div>
-        <button type="button" class="mini" id="sugCerrar">Ahora no</button>
-      </div>
     </div>
     <div data-listado="H" data-titulo="Listado actividades"></div>
   </div>
@@ -456,6 +449,15 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       <div class="jbotones">
         <button class="cta fin" id="btnJornadaFin" type="button">FIN JORNADA</button>
         <button class="cta" id="btnJornadaA" type="button">INICIO JORNADA</button>
+      </div>
+    </section>
+    <!-- Al terminar la jornada: enviar el registro del día (destinos ya fijados en Configuración) -->
+    <section class="jornada" id="sugFin" hidden>
+      <h2>Enviar registro de la jornada</h2>
+      <div class="jbotones">
+        <button class="cta wa" id="sugWa" type="button">WHATSAPP</button>
+        <button class="cta mail" id="sugMail" type="button">EMAIL</button>
+        <button class="cta fin cancelar" id="sugCerrar" type="button">CANCELAR</button>
       </div>
     </section>
     <!-- Actividad dentro de la jornada: solo se puede usar con la jornada iniciada -->
@@ -1885,7 +1887,6 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     resumenDia={lista,cabecera:`Resumen de la jornada · ${fin.nombre} · ${fechaCorta(new Date(fin.iso))}\n`+
       (ini?`Duración jornada: ${durHHMM(new Date(fin.iso)-new Date(ini.iso))}\n`:'')+'\n'};
     LA.dias=new Set([k]);LA.sel=new Set(lista.map(x=>x.id));pintarListado();
-    $('sugTxt').textContent=`Se han seleccionado los ${lista.length} registros de hoy de ${fin.nombre}. ¿Enviarlos todos en un mensaje?`;
     $('sugFin').hidden=false;
   }
   $('sugWa').addEventListener('click',()=>{if(resumenDia)enviarWhatsapp(resumenDia.lista,resumenDia.cabecera)});
