@@ -752,7 +752,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 20:30';
+  const VERSION='v1 · 2026-11-15 20:50';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -2246,7 +2246,7 @@ details.desp.fija>summary::after{display:none}
   // Se guardan como registros reales (marcados «prueba»).
   $('btnPrueba').hidden=!MOSTRAR_EJEMPLOS;
   const ZONAS_PRUEBA={ // desplazamiento en grados respecto a FINCA (0,001° ≈ 111 m en latitud, ≈ 88 m en longitud)
-    [INICIO]:[0,0], 'Poda':[0.0013,-0.0014], 'Riego':[-0.0012,0.0017], 'Recolección':[-0.0016,-0.0012], 'Otros':[0.0015,-0.0011]};
+    [INICIO]:[0,0], 'Poda':[0.0013,-0.0014], 'Riego':[-0.0012,0.0017], 'Recolección':[-0.0016,-0.0012], 'Otros':[0.0015,-0.0011], [FIN]:[0.0002,0.0003]};
   // Vídeo de prueba: 2 s dibujados en un canvas y grabados con MediaRecorder (null si el navegador no puede grabar)
   const videoEj=()=>new Promise(ok=>{
     try{
@@ -2283,6 +2283,11 @@ details.desp.fija>summary::after{display:none}
       return {id:nuevoId(),nombre:cfg.nombre,actividad,fechaHora:fechaHora(d),iso:d.toISOString(),
         lat:FINCA.lat+zLa+azar()*0.00012,lon:FINCA.lon+zLo+azar()*0.00015,precision:5+Math.round(Math.random()*7),prueba:true};
     });
+    // La jornada de prueba termina con Fin Jornada: ninguna actividad queda en curso (si no, seguiría tomando puntos con el GPS real,
+    // lejos de la finca, y desvirtuaría el mapa)
+    const dFin=new Date(ahora-60000);
+    nuevos.push({id:nuevoId(),nombre:cfg.nombre,actividad:FIN,fechaHora:fechaHora(dFin),iso:dFin.toISOString(),
+      lat:FINCA.lat+ZONAS_PRUEBA[FIN][0]+azar()*0.00012,lon:FINCA.lon+ZONAS_PRUEBA[FIN][1]+azar()*0.00015,precision:5+Math.round(Math.random()*7),prueba:true});
     // 1) Fuera todo lo de hoy y los datos de prueba anteriores
     const sobra=x=>diaDe(x)===hoyK||x.prueba;
     incidencias.filter(sobra).forEach(x=>(x.adjuntos||[]).forEach(a=>media.borrar(a.id)));
@@ -2293,6 +2298,7 @@ details.desp.fija>summary::after{display:none}
     pausa=null;store.set(KEY_PAUSA,null);guardarPausaAct(null);actSel=null;
     // 2) Puntos GPS cada 5 min de cada actividad, en su zona de la finca
     nuevos.forEach((r,i)=>{
+      if(r.actividad===FIN)return; // Fin Jornada no genera puntos
       const hasta=i+1<nuevos.length?new Date(nuevos[i+1].iso).getTime():ahora;
       const [zLa,zLo]=ZONAS_PRUEBA[r.actividad];
       // Paseo al azar alrededor del centro de la zona (≈ ±33 m en latitud, ±35 m en longitud)
@@ -2338,7 +2344,7 @@ details.desp.fija>summary::after{display:none}
     sigInc='';incSelFilas=new Set();incAbiertas=new Set();
     pintarTodo();pintarIncidencias();actualizarSeguimiento();pintarJornada();pintarNuevaInc();
     abrir('registro');
-    aviso('Datos de prueba cargados',`${nuevos.length} actividades, ${puntos.filter(p=>p.prueba).length} puntos GPS y ${DEF.length} incidencias de ${cfg.nombre}`);
+    aviso('Datos de prueba cargados',`${pasos.length} actividades (jornada terminada),${puntos.filter(p=>p.prueba).length} puntos GPS y ${DEF.length} incidencias de ${cfg.nombre}`);
   }
   // Sin confirm() del navegador: algunos navegadores (y los integrados en otras apps) lo bloquean
   const cerrarPrueba=()=>{$('boxPrueba').hidden=true};
