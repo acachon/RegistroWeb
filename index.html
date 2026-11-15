@@ -351,13 +351,14 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .jdatos{margin:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
 .jdatos strong{display:block;font:800 clamp(1.1rem,5.6vw,1.6rem)/1.1 var(--display);letter-spacing:-.01em;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--fg)}
 .jdatos small{display:block;margin-top:2px;color:var(--muted);font-size:.78rem}
-.jbotones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.jbotones .cta{min-height:64px;padding:0 8px;font-size:clamp(.82rem,4vw,1rem);letter-spacing:.03em;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
+.jbotones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;padding:0 8px} /* más aire entre botones y con el borde */
+.jbotones .cta{min-height:64px;padding:0 6px;font-size:clamp(.8rem,3.9vw,.95rem);letter-spacing:.03em;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
+.jbotones .cta span{display:block}
 .jbotones .cta small{font:600 .78rem var(--mono);letter-spacing:0;opacity:.9}
 .jbotones .cta.fin{background:#7a1f1a;color:#fff}
 .jbotones .cta.wa{background:var(--wa);color:#fff}.jbotones .cta.mail{background:var(--olive);color:var(--olive-ink)}
 /* Menú de envío: botones más bajos y estrechos, con más aire entre ellos */
-.jbotones.envbtn{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:12px 8px;padding:4px 0 2px}
+.jbotones.envbtn{padding:4px 0 2px;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:12px 8px;padding:4px 0 2px}
 .jbotones.envbtn .cta{flex:0 0 auto;min-height:46px;padding:0 9px;font-size:.72rem;letter-spacing:.01em}
 .jbotones.envbtn .cta.cancelar{margin-right:auto;background:#6b6f63;color:#fff}
 .jbotones.envbtn .cta.fin{background:#7a1f1a}
@@ -465,8 +466,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       <h2><span id="jornadaFecha"></span></h2>
       <p class="jtxt" id="jornadaTxt"></p>
       <div class="jbotones">
-        <button class="cta fin" id="btnJornadaFin" type="button">FIN JORNADA</button>
-        <button class="cta" id="btnJornadaA" type="button">INICIO JORNADA</button>
+        <button class="cta fin" id="btnJornadaFin" type="button"><span>FIN</span><span>JORNADA</span></button>
+        <button class="cta" id="btnJornadaA" type="button"><span>INICIO</span><span>JORNADA</span></button>
       </div>
     </section>
     <!-- Al terminar la jornada: enviar el registro del día (destinos ya fijados en Configuración) -->
@@ -485,8 +486,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       <div class="carrusel" id="actCarrusel" role="radiogroup" aria-label="Actividad a iniciar"></div>
       <div class="carbarra" id="actBarra" aria-hidden="true"><i></i></div>
       <div class="jbotones">
-        <button class="cta fin" id="btnActFin" type="button">FIN ACTIVIDAD</button>
-        <button class="cta" id="btnActA" type="button">INICIO ACTIVIDAD</button>
+        <button class="cta fin" id="btnActFin" type="button"><span>FIN</span><span>ACTIVIDAD</span></button>
+        <button class="cta" id="btnActA" type="button"><span>INICIO</span><span>ACTIVIDAD</span></button>
       </div>
       <div class="listadoact" id="actListado" hidden>
         <div class="lhead">
@@ -1633,9 +1634,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     const curso=actividadEnCurso(), a=$('btnJornadaA'), f=$('btnJornadaFin'), t=$('jornadaTxt');
     const hoy=registros.filter(x=>!x.ejemplo&&x.nombre===cfg.nombre&&diaDe(x)===hoyKey()), ult=hoy[hoy.length-1];
     a.classList.remove('pausar'); // siempre verde, como Inicio
-    if(!curso){a.innerHTML='INICIO JORNADA';a.dataset.accion='inicio'}
-    else if(enPausa()){a.innerHTML=`FIN PAUSA<small>${cuentaPausa()}</small>`;a.dataset.accion='reanudar'}
-    else{a.innerHTML='PAUSAR JORNADA';a.dataset.accion='pausar'}
+    if(!curso){a.innerHTML='<span>INICIO</span><span>JORNADA</span>';a.dataset.accion='inicio'}
+    else if(enPausa()){a.innerHTML=`<span>FIN</span><span>PAUSA</span><small>${cuentaPausa()}</small>`;a.dataset.accion='reanudar'}
+    else{a.innerHTML='<span>PAUSAR</span><span>JORNADA</span>';a.dataset.accion='pausar'}
     a.disabled=registrando;f.disabled=registrando||!curso;
     // Datos de la jornada de hoy (la última iniciada): hora de inicio, de fin (-- si sigue abierta) y duración transcurrida
     const ini=hoy.slice().reverse().find(x=>x.actividad===INICIO), fin=ini&&hoy.find(x=>x.actividad===FIN&&new Date(x.iso)>new Date(ini.iso));
@@ -1741,9 +1742,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     ti.hidden=!nombre;if(nombre)ti.src=iconoAct(nombre);
     // Botones: con la jornada iniciada se puede iniciar la elegida; en curso pasa a «Pausar actividad»; en pausa, «Fin pausa» con la cuenta atrás
     a.classList.remove('pausar');
-    if(enP){a.innerHTML=`FIN PAUSA<small>${cuentaPausaAct()}</small>`;a.dataset.accion='reanudar'}
-    else if(act){a.innerHTML='PAUSAR ACTIVIDAD';a.dataset.accion='pausar'}
-    else{a.innerHTML='INICIO ACTIVIDAD';a.dataset.accion='inicio'}
+    if(enP){a.innerHTML=`<span>FIN</span><span>PAUSA</span><small>${cuentaPausaAct()}</small>`;a.dataset.accion='reanudar'}
+    else if(act){a.innerHTML='<span>PAUSAR</span><span>ACTIVIDAD</span>';a.dataset.accion='pausar'}
+    else{a.innerHTML='<span>INICIO</span><span>ACTIVIDAD</span>';a.dataset.accion='inicio'}
     a.disabled=registrando||!curso||(!nombre&&!actSel);f.disabled=registrando||!nombre;
     document.querySelectorAll('#actCarrusel .chipact').forEach(b=>{
       const marcada=nombre?b.dataset.act===nombre:b.dataset.act===actSel;
@@ -1752,8 +1753,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     pintarListadoAct(tandas.filter(x=>x.fin));
     // Datos de la actividad: hora de inicio, de fin (-- si sigue en curso) y duración transcurrida
     t.className='jdatos';t.textContent='';
+    // Sin actividad en curso: la hora de inicio es la hora actual, y fin y duración van sin dato
     const min=ver?Math.max(0,Math.floor((Date.now()-new Date(ver.ini).getTime())/60000)):0;
-    [[ver?hhmm(new Date(ver.ini)):'--','Hora inicio'],['--','Hora fin'],[`${Math.floor(min/60)}h ${pad(min%60)}m`,'Duración']].forEach(([v,l])=>{
+    [[ver?hhmm(new Date(ver.ini)):hhmm(new Date()),'Hora inicio'],['--','Hora fin'],[ver?`${Math.floor(min/60)}h ${pad(min%60)}m`:'-h --m','Duración']].forEach(([v,l])=>{
       const d=el('div');d.appendChild(el('strong',null,v));d.appendChild(el('small',null,l));t.appendChild(d)});
   }
   $('btnActA').addEventListener('click',()=>{
