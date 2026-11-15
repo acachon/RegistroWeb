@@ -331,7 +331,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .resumenact b{display:block;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .resumenact small{display:block;white-space:nowrap;color:var(--muted);font-size:.78rem;font-variant-numeric:tabular-nums}
 .resumenact .dur{font:800 .95rem var(--display);white-space:nowrap;font-variant-numeric:tabular-nums}
-.envio{display:flex;flex-direction:column;gap:10px;margin-top:4px;padding-top:10px;border-top:1px solid var(--line)}
+.envio{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .envio h3{margin:0;font-size:1.05rem}
 #secAct h2{flex-wrap:nowrap}#secAct h2 span{min-width:0;line-height:1.2} /* el título puede ocupar dos líneas con nombres largos */
 /* Carrusel de actividades: al menos 3 fichas a la vista y el resto se desplaza */
@@ -355,8 +355,11 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .jbotones .cta{min-height:64px;padding:0 8px;font-size:clamp(.82rem,4vw,1rem);letter-spacing:.03em;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15}
 .jbotones .cta small{font:600 .78rem var(--mono);letter-spacing:0;opacity:.9}
 .jbotones .cta.fin{background:#7a1f1a;color:#fff}
-.jbotones .cta.wa{background:var(--wa);color:#fff}.jbotones .cta.mail{background:var(--mail);color:#fff}
+.jbotones .cta.wa{background:var(--wa);color:#fff}.jbotones .cta.mail{background:var(--olive);color:var(--olive-ink)}
 .jbotones .cta.cancelar{grid-column:1/-1}
+/* Menú de envío: botones más bajos y estrechos, con más aire entre ellos */
+.jbotones.envbtn{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 12px;padding:4px 0 2px}
+.jbotones.envbtn .cta{flex:0 1 104px;min-height:46px;font-size:.85rem}
 .jbotones .cta[disabled]{background:#b9b3a8;color:#f1eee8}
 .modal{position:fixed;inset:0;z-index:2600;display:flex;align-items:flex-end;justify-content:center;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:rgba(8,20,12,.55)}
 .modal .caja{width:100%;max-width:448px;background:var(--card);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
@@ -467,7 +470,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     <!-- Al terminar la jornada: enviar el registro del día (destinos ya fijados en Configuración) -->
     <section class="jornada" id="sugFin" hidden>
       <h2>Enviar registro de la jornada</h2>
-      <div class="jbotones">
+      <div class="jbotones envbtn">
         <button class="cta mail" id="sugMail" type="button">EMAIL</button>
         <button class="cta wa" id="sugWa" type="button">WHATSAPP</button>
         <button class="cta fin cancelar" id="sugCerrar" type="button">CANCELAR</button>
@@ -492,15 +495,15 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
             <button type="button" class="ib peligro" id="actBorrar" aria-label="Eliminar las seleccionadas" title="Eliminar"><svg width="20" height="20" aria-hidden="true"><use href="#i-trash"/></svg></button>
           </div>
         </div>
-        <ol class="resumenact" id="actResumen" aria-label="Actividades de la jornada"></ol>
         <div class="envio" id="actEnvio" hidden>
-          <h3>Enviar actividades seleccionadas</h3>
-          <div class="jbotones">
+          <h3>Enviar actividades</h3>
+          <div class="jbotones envbtn">
             <button class="cta mail" id="actMail" type="button">EMAIL</button>
             <button class="cta wa" id="actWa" type="button">WHATSAPP</button>
             <button class="cta fin cancelar" id="actCancelar" type="button">CANCELAR</button>
           </div>
         </div>
+        <ol class="resumenact" id="actResumen" aria-label="Actividades de la jornada"></ol>
       </div>
     </section>
   </div>
@@ -1594,8 +1597,10 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     actualizarSeguimiento();
     if(r.actividad===FIN)sugerirEnvioDia(r);
     if(pos.error){
-      status(sinGps?'Registrado sin posición: este navegador no da GPS.':'Registrado sin posición: '+r.error+'.','err');ayudaUbicacion(pos.codigo);
-      if(actividad===INICIO||actividad===FIN)aviso(`Actividad registrada sin posición: ${r.actividad}`,sinGps?'Este navegador no da GPS':`GPS: ${r.error}. Mira la ayuda para activarlo.`,{err:true,ms:5000});
+      status(sinGps?'Registrado sin posición: este navegador no da GPS.':'Registrado sin posición: '+r.error+'.','err');
+      // El aviso del GPS (sin permiso, sin ubicación…) solo sale al iniciar la jornada o una actividad; no al terminar ni al enviar
+      if(actividad===INICIO||(!MARCAS.includes(actividad)&&!extra.conservar))ayudaUbicacion(pos.codigo);
+      if(actividad===INICIO||(!MARCAS.includes(actividad)&&!extra.conservar))aviso(`Actividad registrada sin posición: ${r.actividad}`,sinGps?'Este navegador no da GPS':`GPS: ${r.error}. Mira la ayuda para activarlo.`,{err:true,ms:5000});
     }else{
       status(`Registrado ${r.fechaHora.slice(11,19)} · precisión ±${Math.round(r.precision)} m`,'ok');if(navigator.vibrate)navigator.vibrate(120);
       // El aviso de registro solo sale con la jornada (inicio o fin); las actividades y sus pausas no lo muestran
@@ -1745,7 +1750,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   $('btnActFin').addEventListener('click',()=>registrar(FINACT));
   $('btnJornadaA').addEventListener('click',()=>{
     const acc=$('btnJornadaA').dataset.accion;
-    if(acc==='inicio')registrar(INICIO);else if(acc==='reanudar')reanudar();else abrirMenuPausa('jornada');
+    if(acc==='inicio')registrar(INICIO);else if(acc==='reanudar'){reanudar();avisarGps()}else abrirMenuPausa('jornada');
   });
   $('btnJornadaFin').addEventListener('click',()=>registrar(FIN));
   // Menú superpuesto con un botón por cada tiempo de pausa
@@ -1906,11 +1911,19 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     if(!c||c.id!==pausaAct.regId){guardarPausaAct(null);return}
     registrar(pausaAct.actividad,{cuando:natural?new Date(pausaAct.hasta):new Date(),conservar:true});
   }
+  // Avisa si el GPS no está funcionando (sin permiso, sin soporte o con error); se usa al pausar y reanudar la jornada
+  async function avisarGps(){
+    let motivo='';
+    if(!('geolocation' in navigator))motivo='Este navegador no da GPS';
+    else if(segError)motivo=segError;
+    else try{const q=await navigator.permissions.query({name:'geolocation'});if(q.state==='denied')motivo='permiso de ubicación denegado'}catch(e){}
+    if(motivo)aviso('GPS sin funcionar',motivo,{err:true,ms:5000});
+  }
   function pausar(min){
     const r=actividadEnCurso();if(!r)return;
     ponerPausa({regId:r.id,hasta:Date.now()+min*60000,min});
     (r.pausas=r.pausas||[]).push({ini:Date.now(),fin:null});guardarRegistros();actualizarSeguimiento();pintarListado();
-    aviso('Jornada en pausa',`Sin tomar posiciones durante ${min} min`);
+    aviso('Jornada en pausa',`Sin tomar posiciones durante ${min} min`);avisarGps();
   }
   function reanudar(){ponerPausa(null);actualizarSeguimiento();pintarListado()}
   function actualizarSeguimiento(){
