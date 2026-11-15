@@ -776,7 +776,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-16 02:00';
+  const VERSION='v1 · 2026-11-16 02:30';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1142,6 +1142,8 @@ details.desp.fija>summary::after{display:none}
     if(!urlOk){$('cfgStatus').className='status err';$('cfgStatus').textContent='La dirección del servicio debe empezar por https://';return}
     sync.url=sUrl;sync.clave=sClave;store.set(KEY_SYNC_URL,sUrl);store.set(KEY_SYNC_CLAVE,sClave);actualizarPendientes();
     sync.claveLec=$('syncClaveLec').value.trim();store.set(KEY_SYNC_CLAVE_LEC,sync.claveLec);
+    if(!sync.claveLec)quitarCentral();
+    mostrarActualizar();
     const nomOk=!!nombre, telOk=!tel||telefonoLimpio(tel).length>=10, mailOk=!mail||emailsValidos(mail);
     $('nombre').classList.toggle('bad',!nomOk);$('telefono').classList.toggle('bad',!telOk);$('email').classList.toggle('bad',!mailOk);
     const s=$('cfgStatus'), mal=t=>{s.className='status err';s.textContent=t};
@@ -3137,6 +3139,16 @@ details.desp.fija>summary::after{display:none}
   $('btnActReales').addEventListener('click',()=>{cerrarElegirDatos();quitarPrueba();centralDias.clear();cargarCentral(true)});
   $('btnActPrueba').addEventListener('click',()=>{cerrarElegirDatos();pedirPrueba()});
   LA.alCambiarDias=()=>cargarCentral(false);
+  // El icono Actualizar solo existe con la clave de lectura. Sin ella, el Supervisor maneja solo los datos locales de este móvil:
+  // si la clave se borra, también se descarta lo que había llegado del fichero central.
+  function mostrarActualizar(){$('btnActualizar').hidden=!sync.claveLec;if(!sync.claveLec)$('boxActualizar').hidden=true}
+  function quitarCentral(){
+    if(!registros.some(r=>r.central)&&!incidencias.some(x=>x.central)&&!puntos.some(p=>p.central)){centralDias.clear();return}
+    registros=registros.filter(r=>!r.central);incidencias=incidencias.filter(x=>!x.central);puntos=puntos.filter(p=>!p.central);centralDias.clear();
+    LA.dias=new Set();LA.marcarDias();supAbiertas.clear();
+    pintarListado();pintarIncidencias();
+  }
+  mostrarActualizar();
   // Memoria del navegador: unos 5 millones de caracteres por web. Al pasar del 70 % se borran del móvil los puntos GPS
   // ya enviados al fichero central, por días y empezando por el más antiguo, hasta bajar al 50 %. Los de hoy nunca se borran.
   // Antes, cada actividad afectada guarda sus datos calculados (distancia, área, velocidad, duración) para seguir mostrándolos.
