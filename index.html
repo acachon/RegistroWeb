@@ -400,6 +400,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .resumenact .ib2.off{opacity:.3;border-style:dashed}
 .resumenact .ib2 .n{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--olive);color:var(--olive-ink);font:800 .66rem/17px var(--display);text-align:center}
 .resumenact li>.adjs{padding:6px 4px 2px}
+.resumenact li>.detinc{display:flex;flex-direction:column;gap:6px;padding:6px 4px 2px}
+.resumenact .textoinc{margin:0;font-style:italic;white-space:pre-wrap;overflow-wrap:anywhere}
 .lfil{flex-wrap:wrap;row-gap:6px} /* en pantallas muy estrechas las herramientas bajan a otra línea en vez de cortarse */
 details.desp.fija>summary{cursor:default}
 details.desp.fija>summary::after{display:none}
@@ -749,7 +751,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 18:45';
+  const VERSION='v1 · 2026-11-15 19:05';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1621,16 +1623,12 @@ details.desp.fija>summary::after{display:none}
     }
     const s=el('span','ib2 off');s.title='Sin posición GPS';s.setAttribute('role','img');s.setAttribute('aria-label','Sin posición GPS');s.innerHTML=ico('ubic',18);return s;
   }
-  // Adjuntos desplegados de una incidencia, más un .txt con el texto completo si lo tiene (en la fila solo cabe una línea)
+  // Detalle desplegado de una incidencia: su texto completo entrecomillado (en la fila solo cabe una línea) y, después, los adjuntos
   function filaAdjuntosTxt(x,urls,conFoto){
-    const f=filaAdjuntos(x,urls,conFoto);
-    if(x.comentario){
-      const b=boton('adj');b.title='Texto completo';b.setAttribute('aria-label','Ver el texto completo');
-      b.innerHTML=ico('texto',24)+'<span class="dura">.txt</span>';
-      b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();abrirVisor('txt',x.comentario,`${x.tipo} · ${hhmm(new Date(x.iso))}`)});
-      f.appendChild(b);
-    }
-    return f;
+    const d=el('div','detinc');
+    if(x.comentario)d.appendChild(el('p','textoinc',`«${x.comentario}»`));
+    if((x.adjuntos||[]).length)d.appendChild(filaAdjuntos(x,urls,conFoto));
+    return d;
   }
   // Fila compacta del Supervisor (como en Registro e Incidencia): casilla, pin del mapa, nombre y hora; a la derecha, (i) con los KPIs
   // de la actividad, o clip con adjuntos y texto y enlace a Google Maps en las incidencias. Lo desplegado va debajo de la fila.
@@ -1644,7 +1642,7 @@ details.desp.fija>summary::after{display:none}
     if(x.nombre)nb.appendChild(el('span','emp',` - ${x.nombre}`)); // empleado de ese registro, tras un guión
     tx.appendChild(nb);
     tx.appendChild(el('small',null,hhmm(new Date(x.iso))+(curso?' · en curso':'')+(inc&&x.comentario?` · ${x.comentario}`:'')));
-    const acc=el('div','acc'), abierta=supAbiertas.has(x.id), nTot=inc?(x.adjuntos||[]).length+(x.comentario?1:0):0;
+    const acc=el('div','acc'), abierta=supAbiertas.has(x.id), nAdj=inc?(x.adjuntos||[]).length:0, nTot=nAdj+(inc&&x.comentario?1:0); // nTot: hay algo que desplegar
     const desplegable=(b,titulo)=>{
       b.title=titulo;b.setAttribute('aria-label',titulo);b.setAttribute('aria-expanded',abierta);
       b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();supAbiertas.has(x.id)?supAbiertas.delete(x.id):supAbiertas.add(x.id);repintar()});
@@ -1652,7 +1650,7 @@ details.desp.fija>summary::after{display:none}
     };
     if(!inc){const b=boton('ib2');b.innerHTML=ico('info',18);desplegable(b,'Ver los datos de la actividad (distancia, área…)')}
     else{
-      if(nTot){const b=boton('ib2');b.innerHTML=ico('clip',18)+(nTot>1?`<span class="n">${nTot}</span>`:'');desplegable(b,'Ver archivos adjuntos y texto')}
+      if(nTot){const b=boton('ib2');b.innerHTML=ico('clip',18)+(nAdj>1?`<span class="n">${nAdj}</span>`:'');desplegable(b,'Ver el texto y los archivos adjuntos')}
     }
     acc.appendChild(ubicBtn(x)); // enlace a Google Maps: dónde se inició la actividad o dónde se registró la incidencia
     lab.append(cb,pinSup(x,num),tx,acc);li.appendChild(lab);
@@ -2786,10 +2784,10 @@ details.desp.fija>summary::after{display:none}
       im.src=iconoInc(x.tipo);im.alt='';
       const tx=el('div');tx.appendChild(el('b',null,x.tipo));
       tx.appendChild(el('small',null,hhmm(new Date(x.iso))+(x.comentario?` · ${x.comentario}`:'')));
-      const acc=el('div','acc'), nTot=(x.adjuntos||[]).length+(x.comentario?1:0); // adjuntos y, si hay texto, su .txt
+      const acc=el('div','acc'), nAdj=(x.adjuntos||[]).length, nTot=nAdj+(x.comentario?1:0); // nTot: hay texto o adjuntos que desplegar
       if(nTot){
-        const b=boton('ib2');b.title='Ver archivos adjuntos y texto';b.setAttribute('aria-label',`Ver ${nTot} ${plural(nTot,'archivo adjunto','archivos adjuntos')}`);
-        b.setAttribute('aria-expanded',incAbiertas.has(x.id));b.innerHTML=ico('clip',18)+(nTot>1?`<span class="n">${nTot}</span>`:'');
+        const b=boton('ib2');b.title='Ver el texto y los archivos adjuntos';b.setAttribute('aria-label','Ver el texto y los archivos adjuntos');
+        b.setAttribute('aria-expanded',incAbiertas.has(x.id));b.innerHTML=ico('clip',18)+(nAdj>1?`<span class="n">${nAdj}</span>`:'');
         b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();incAbiertas.has(x.id)?incAbiertas.delete(x.id):incAbiertas.add(x.id);pintarListadoInc()});
         acc.appendChild(b);
       }
