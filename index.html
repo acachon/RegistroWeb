@@ -776,7 +776,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-16 02:45';
+  const VERSION='v1 · 2026-11-16 03:00';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1077,6 +1077,7 @@ details.desp.fija>summary::after{display:none}
   // pestanaAntes: la última pestaña que no era Configuración, para volver a ella al pulsar otra vez el engranaje
   let pestana='registro', pestanaAntes='registro';
   function abrir(tab){
+    if(tab==='reg'&&!sync.claveLec)tab='registro'; // sin clave de lectura no hay pestaña Supervisor
     if(pestana!=='cfg')pestanaAntes=pestana;
     pestana=tab;
     // Configuración es el engranaje de la cabecera (aria-pressed); el resto son pestañas (aria-selected)
@@ -1674,6 +1675,7 @@ details.desp.fija>summary::after{display:none}
   // (apagado y sin acción si no tiene posición)
   let focoSup=null;
   function verEnMapa(x){
+    if(!sync.claveLec){window.open(urlMapa(x),'_blank');return} // sin pestaña Supervisor, se abre Google Maps
     if(esInc(x)){supFiltro.inc=true;$('filtroIncH').setAttribute('aria-pressed',true)}else{supFiltro.act=true;$('filtroActH').setAttribute('aria-pressed',true)}
     const d=diaDe(x);LA.dias=d===hoyKey()?new Set():new Set([d]); // el día del registro (hoy es el que se ve por defecto)
     LA.irAlMapa(x);focoSup=x;
@@ -3141,9 +3143,13 @@ details.desp.fija>summary::after{display:none}
   LA.alCambiarDias=()=>cargarCentral(false);
   // El botón «Datos reales» del menú Actualizar solo existe con la clave de lectura (sin ella solo se ofrecen datos de prueba).
   // Si la clave se borra, también se descarta lo que había llegado del fichero central.
+  // Sin clave de lectura tampoco hay pestaña Supervisor: la app solo maneja los datos de este usuario (Registro e Incidencia).
   function mostrarActualizar(){
     $('btnActReales').hidden=!sync.claveLec;
     $('boxActualizar').querySelector('h3').textContent=sync.claveLec?'¿Actualizar con datos reales o de prueba?':'¿Cargar datos de prueba?';
+    $('tabReg').hidden=!sync.claveLec;
+    document.querySelector('.tabs').style.gridTemplateColumns=sync.claveLec?'':'repeat(2,minmax(0,1fr))';
+    if(!sync.claveLec&&pestana==='reg')abrir('registro');
   }
   function quitarCentral(){
     if(!registros.some(r=>r.central)&&!incidencias.some(x=>x.central)&&!puntos.some(p=>p.central)){centralDias.clear();return}
