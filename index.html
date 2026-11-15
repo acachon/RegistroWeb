@@ -466,6 +466,7 @@ details.desp.fija>summary::after{display:none}
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></symbol>
   <symbol id="i-texto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></symbol>
   <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r=".6" fill="currentColor"/></symbol>
+  <symbol id="i-descarga" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1-.6-9.96A6 6 0 0 1 18 9a4.5 4.5 0 0 1 .5 8.97"/><path d="M12 21v-9M8.5 17.5 12 21l3.5-3.5"/></symbol>
   <symbol id="i-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.5l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></symbol>
 </svg>
@@ -475,12 +476,21 @@ details.desp.fija>summary::after{display:none}
       <h1 class="marca"><svg class="logo" viewBox="0 0 100 120" aria-hidden="true"><use href="#i-logo"/></svg><span class="nombre">gea</span><span class="sep"></span><span class="lema"><b>Registro</b><span id="empleadoSub"></span></span></h1>
     </div>
     <div class="cabder">
+      <button type="button" class="engranaje peq nube" id="btnActualizar" aria-label="Actualizar con el fichero central" title="Actualizar con el fichero central"><svg aria-hidden="true"><use href="#i-descarga"/></svg></button>
       <button type="button" class="engranaje peq nube" id="btnSync" aria-label="Sincronizar con el fichero central" title="Sincronizar con el fichero central"><svg aria-hidden="true"><use href="#i-nube"/></svg><b class="insignia" id="syncPend" hidden></b></button>
-      <button type="button" class="engranaje peq" id="btnPrueba" aria-label="Cargar datos de prueba" title="Cargar datos de prueba"><svg aria-hidden="true"><use href="#i-flask"/></svg></button>
       <button type="button" class="engranaje" id="tabCfg" aria-pressed="false" aria-label="Configuración" title="Configuración"><svg aria-hidden="true"><use href="#i-gear"/></svg></button>
       <span class="gpsico" id="gpsIco" role="img"><svg width="22" height="22" aria-hidden="true"><use href="#i-ubic"/></svg><svg class="tacha" width="22" height="22" aria-hidden="true"><use href="#i-tacha"/></svg></span>
     </div>
   </header>
+  <!-- Icono Actualizar: elegir con qué datos -->
+  <div class="envio" id="boxActualizar" role="alertdialog" hidden>
+    <h3>¿Actualizar con datos reales o de prueba?</h3>
+    <div class="jbotones envbtn">
+      <button class="cta fin cancelar" id="btnActNo" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-x"/></svg><span>Cancelar</span></button>
+      <button class="cta" id="btnActPrueba" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-flask"/></svg><span>Datos prueba</span></button>
+      <button class="cta mail" id="btnActReales" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-descarga"/></svg><span>Datos reales</span></button>
+    </div>
+  </div>
   <div class="confirmbox" id="boxPrueba" role="alertdialog" aria-live="assertive" hidden>
     <span id="boxPruebaTxt"></span>
     <button class="btn sec" id="btnPruebaNo" type="button">Cancelar</button>
@@ -738,6 +748,10 @@ details.desp.fija>summary::after{display:none}
         <label class="lbl" for="syncClave">Clave</label>
         <input id="syncClave" type="password" autocomplete="new-password" spellcheck="false" placeholder="Clave del fichero central">
       </div>
+      <div class="field">
+        <label class="lbl" for="syncClaveLec">Clave de lectura (supervisor)</label>
+        <input id="syncClaveLec" type="password" autocomplete="new-password" spellcheck="false" placeholder="Clave para actualizar desde el fichero central">
+      </div>
       <h2>Toma de puntos GPS <button type="button" class="infobtn" data-info="infoCfgGps">i</button></h2>
       <div class="infobox" id="infoCfgGps" hidden>
         <p class="hint">Cada cuánto se guarda la posición de la actividad en curso. Menos tiempo da recorridos más detallados pero gasta más batería y ocupa más.</p>
@@ -762,7 +776,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 23:00';
+  const VERSION='v1 · 2026-11-16 01:10';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -870,6 +884,8 @@ details.desp.fija>summary::after{display:none}
   // Datos de ejemplo para comprobar la web: se muestran junto a los reales pero nunca se guardan.
   // Poner MOSTRAR_EJEMPLOS=false cuando la web vaya a usarse de verdad.
   const MOSTRAR_EJEMPLOS=true;
+  // Con la clave de lectura (supervisor) los datos vienen del fichero central: no se generan los ejemplos de días anteriores
+  const EJEMPLOS_ACTIVOS=MOSTRAR_EJEMPLOS&&!store.get('gea_sync_clave_lec','');
   let listo=false; // la página terminó de arrancar
   // Ubicación de referencia de los datos de prueba: la finca
   const FINCA={lat:37.852699,lon:-3.730443};
@@ -880,7 +896,7 @@ details.desp.fija>summary::after{display:none}
     t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
   const base=new Date(), dia=(n,h,m)=>new Date(base.getFullYear(),base.getMonth(),base.getDate()+n,h,m);
   const empleadoEj=store.get(KEY_NOM,'')||'Angel';
-  if(MOSTRAR_EJEMPLOS){
+  if(EJEMPLOS_ACTIVOS){
     // Una jornada completa: Inicio Jornada, entre 2 y 5 tareas y Fin Jornada, todo a menos de 200 m de un centro junto a la finca
     function jornadaEjemplo(n){
       const d0=dia(n,0,0), azar=azarDe(d0.getFullYear()*1000+d0.getMonth()*40+d0.getDate());
@@ -917,14 +933,14 @@ details.desp.fija>summary::after{display:none}
   // navegador se acerca a su límite: entonces se borran los más antiguos que ya están en el fichero central (limpiarMovil).
   let limpiando=false;
   const guardarPuntos=()=>{
-    const escribir=()=>localStorage.setItem(KEY_PTS,JSON.stringify(puntos.filter(p=>!p.ejemplo)));
+    const escribir=()=>localStorage.setItem(KEY_PTS,JSON.stringify(puntos.filter(p=>!p.ejemplo&&!p.central)));
     try{escribir();if(!limpiando&&typeof limpiarMovil==='function')limpiarMovil()}
     catch(e){
       if(!limpiando&&typeof limpiarMovil==='function'&&limpiarMovil(true))return;
       if(typeof aviso==='function')aviso('Memoria del móvil llena','Sincroniza con el fichero central para liberar espacio',{err:true,ms:8000});
     }
   };
-  if(MOSTRAR_EJEMPLOS){
+  if(EJEMPLOS_ACTIVOS){
     // Puntos de ejemplo cada 5 minutos de cada actividad de ejemplo, hasta la siguiente del mismo día (o hasta ahora):
     // paseo al azar que no se aleja más de ≈35 m del punto donde se registró
     const PASO=5*60000, ahoraT=Date.now();
@@ -952,7 +968,7 @@ details.desp.fija>summary::after{display:none}
   };
   // Al guardar registros se quitan los puntos cuyo registro ya no existe
   function guardarRegistros(){
-    store.set(KEY_REG,registros.filter(r=>!r.ejemplo));
+    store.set(KEY_REG,registros.filter(r=>!r.ejemplo&&!r.central));
     const ids=new Set(registros.map(r=>r.id)), antes=puntos.length;
     puntos=puntos.filter(p=>ids.has(p.registroId));
     if(puntos.length!==antes)guardarPuntos();
@@ -963,7 +979,7 @@ details.desp.fija>summary::after{display:none}
   // Cada incidencia: {id,nombre,tipo,comentario,fechaHora,iso,lat,lon,precision,error?,adjuntos:[{id,tipo,mime,nombre,size,dur?}]}.
   // Los datos van en localStorage; los archivos (fotos, vídeos, audios) en IndexedDB, que admite mucho más espacio.
   let incidencias=store.get(KEY_INC,[]);
-  const guardarIncidencias=()=>store.set(KEY_INC,incidencias.filter(x=>!x.ejemplo));
+  const guardarIncidencias=()=>store.set(KEY_INC,incidencias.filter(x=>!x.ejemplo&&!x.central));
   // Archivos de ejemplo (y de reserva si IndexedDB no está disponible): solo en memoria
   const mediaMem=new Map();
   const media={
@@ -995,7 +1011,7 @@ details.desp.fija>summary::after{display:none}
       [-2,10,48,'Olivo','Olivo partido por el viento, bloquea el camino de la parcela norte.',-0.00033,-0.00061,5,['foto']],
       [-1,12,15,'Vehículo/Herramienta','La tijera eléctrica de poda no carga. Dejo nota de voz.',0.00012,0.00071,9,['audio']],
       [0,9,30,'Acceso/Nave','Puerta de acceso desde la carretera sin cerrar bien.',-0.00052,0.00018,6,['foto','audio']]
-    ].filter(x=>dia(x[0],x[1],x[2])<base&&!(x[0]===0&&hayRealHoy)).forEach(([n,h,m,tipo,comentario,dLat,dLon,prec,adj])=>{
+    ].filter(x=>dia(x[0],x[1],x[2])<base&&!(x[0]===0&&hayRealHoy)&&EJEMPLOS_ACTIVOS).forEach(([n,h,m,tipo,comentario,dLat,dLon,prec,adj])=>{
       const d=dia(n,h,m);
       incidencias.push({id:nuevoId(),nombre:empleadoEj,tipo,comentario,fechaHora:fechaHora(d),iso:d.toISOString(),
         lat:FINCA.lat+dLat,lon:FINCA.lon+dLon,precision:prec,ejemplo:true,
@@ -1031,12 +1047,12 @@ details.desp.fija>summary::after{display:none}
   // Empleado y destinatarios por defecto hasta que se guarde otra configuración
   let cfg={nombre:store.get(KEY_NOM,'')||'Angel',tel:store.get(KEY_TEL,'610517915'),mail:store.get(KEY_MAIL,'angel.cachon@gmail.com')};
   // Fichero central: dirección del servicio, clave y lo ya enviado (para no reenviar ni duplicar)
-  const KEY_SYNC_URL='gea_sync_url', KEY_SYNC_CLAVE='gea_sync_clave', KEY_SYNC='gea_sync';
+  const KEY_SYNC_URL='gea_sync_url', KEY_SYNC_CLAVE='gea_sync_clave', KEY_SYNC='gea_sync', KEY_SYNC_CLAVE_LEC='gea_sync_clave_lec';
   // Servicio de la Hoja «GEA - Registro central» (sin la clave no admite datos)
   const SYNC_URL_SERIE='https://script.google.com/macros/s/AKfycbxQAaU7u7FpRTmCC81dQ8Un6UoWvh1o9x_qtkixPX6o35IMhniYSnMiPZEbFGGMccbOPw/exec';
   // Clave de serie: vacía en la web pública (llega con el enlace de configuración); la App la lleva incluida
   const SYNC_CLAVE_SERIE='';
-  const sync={url:store.get(KEY_SYNC_URL,'')||SYNC_URL_SERIE,clave:store.get(KEY_SYNC_CLAVE,'')||SYNC_CLAVE_SERIE,hecho:Object.assign({act:{},inc:{},pts:{},adj:{}},store.get(KEY_SYNC,{}))};
+  const sync={url:store.get(KEY_SYNC_URL,'')||SYNC_URL_SERIE,clave:store.get(KEY_SYNC_CLAVE,'')||SYNC_CLAVE_SERIE,claveLec:store.get(KEY_SYNC_CLAVE_LEC,''),hecho:Object.assign({act:{},inc:{},pts:{},adj:{}},store.get(KEY_SYNC,{}))};
   // Enlace de configuración: …/?servicio=URL&clave=CLAVE rellena los dos campos y se quita de la dirección
   (()=>{try{const q=new URLSearchParams(location.search);if(q.get('servicio')){sync.url=q.get('servicio');store.set(KEY_SYNC_URL,sync.url)}
     if(q.get('clave')){sync.clave=q.get('clave');store.set(KEY_SYNC_CLAVE,sync.clave)}
@@ -1060,7 +1076,7 @@ details.desp.fija>summary::after{display:none}
     pestana=tab;
     // Configuración es el engranaje de la cabecera (aria-pressed); el resto son pestañas (aria-selected)
     Object.entries(PESTANAS).forEach(([k,[t,p]])=>{$(t).setAttribute(k==='cfg'?'aria-pressed':'aria-selected',k===tab);$(p).hidden=k!==tab});
-    if(tab==='cfg'){editores.forEach(e=>e.pintar());$('gpsIntervalo').value=intervaloSeg;$('syncUrl').value=sync.url;$('syncClave').value=sync.clave;$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
+    if(tab==='cfg'){editores.forEach(e=>e.pintar());$('gpsIntervalo').value=intervaloSeg;$('syncUrl').value=sync.url;$('syncClave').value=sync.clave;$('syncClaveLec').value=sync.claveLec;$('nombre').value=cfg.nombre;$('telefono').value=cfg.tel;$('email').value=cfg.mail;$('cfgStatus').textContent='';
       ['nombre','telefono','email'].forEach(id=>$(id).classList.remove('bad'))}
     // Ayuda de ubicación y resumen del fin de jornada: en la pestaña Registro o bajo «Nueva actividad», según cuál se abra
     if(tab==='registro'){$('panelRegistro').appendChild($('avisosJornada'));pintarJornada()}
@@ -1120,6 +1136,7 @@ details.desp.fija>summary::after{display:none}
     $('syncUrl').classList.toggle('bad',!urlOk);
     if(!urlOk){$('cfgStatus').className='status err';$('cfgStatus').textContent='La dirección del servicio debe empezar por https://';return}
     sync.url=sUrl;sync.clave=sClave;store.set(KEY_SYNC_URL,sUrl);store.set(KEY_SYNC_CLAVE,sClave);actualizarPendientes();
+    sync.claveLec=$('syncClaveLec').value.trim();store.set(KEY_SYNC_CLAVE_LEC,sync.claveLec);
     const nomOk=!!nombre, telOk=!tel||telefonoLimpio(tel).length>=10, mailOk=!mail||emailsValidos(mail);
     $('nombre').classList.toggle('bad',!nomOk);$('telefono').classList.toggle('bad',!telOk);$('email').classList.toggle('bad',!mailOk);
     const s=$('cfgStatus'), mal=t=>{s.className='status err';s.textContent=t};
@@ -1223,7 +1240,7 @@ details.desp.fija>summary::after{display:none}
   // hasta el registro siguiente del mismo día, hasta ahora si es la última de hoy, o hasta su último punto si es de otro día.
   // vivo: los datos cambian con el paso del tiempo (se refrescan cada segundo)
   function datosRecorrido(r){
-    if(r.fijo&&!puntosDe(r).length)return Object.assign({vivo:false},r.fijo); // sus puntos ya están solo en el fichero central
+    if(r.fijo&&!r.central&&!puntosDe(r).length)return Object.assign({vivo:false},r.fijo); // sus puntos ya están solo en el fichero central
     const trazo=[r,...puntosDe(r)].filter(conPosicion).sort(porHora);
     let m=0;for(let i=1;i<trazo.length;i++)m+=metrosEntre(trazo[i-1],trazo[i]);
     // sig: el siguiente registro del mismo empleado
@@ -1232,11 +1249,14 @@ details.desp.fija>summary::after{display:none}
       :esHoy?Date.now():trazo.length>1?new Date(trazo[trazo.length-1].iso).getTime():null;
     const ms=fin==null?0:fin-new Date(r.iso).getTime();
     const info=durRegistro(r,mismoDia?sig:null,esHoy), pm=Math.floor(msPausa(r)/60000);
-    return {pausaMin:pm,km:coma(m/1000),vel:ms>0?coma(m/1000/(ms/3600000)):'–',area:coma(areaM2(trazo)/10000,2),
+    const res={pausaMin:pm,km:coma(m/1000),vel:ms>0?coma(m/1000/(ms/3600000)):'–',area:coma(areaM2(trazo)/10000,2),
       dur:info?(info.desde?durHHMM(Date.now()-new Date(info.desde)):info.texto):'--h:--m',vivo:(esHoy&&!mismoDia)||!!(info&&info.desde),
       // Valores numéricos para el fichero central
       n:{km:+(m/1000).toFixed(3),ha:+(areaM2(trazo)/10000).toFixed(4),vel:ms>0?+(m/1000/(ms/3600000)).toFixed(2):'',
         min:info?(info.desde?Math.floor((Date.now()-new Date(info.desde))/60000):info.ms!=null?Math.floor(info.ms/60000):''):'',pts:trazo.length-1,pausa:pm}};
+    // Actividad del fichero central cuyos puntos aún no están en el móvil: distancia, área y velocidad vienen ya calculadas
+    if(r.central&&r.fijo&&trazo.length<2){Object.assign(res,{km:r.fijo.km,vel:r.fijo.vel,area:r.fijo.area,pausaMin:r.fijo.pausaMin});Object.assign(res.n,r.fijo.n)}
+    return res;
   }
   // Datos de una actividad en la tarjeta: cuadrícula con su nombre encima de cada valor
   function pintarInfo(e,r){
@@ -1413,7 +1433,7 @@ details.desp.fija>summary::after{display:none}
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&completo)pantallaCompleta(false)});
     function iniciar(){
       // Sin botones + / −: el zoom se hace con los dedos (o la rueda del ratón)
-      mapa=L.map(idMapa,{zoomControl:false});
+      mapa=L.map(idMapa,{zoomControl:false,preferCanvas:true}); // líneas y puntos en un canvas: aguanta miles de puntos sin ir lento
       control('topright','leaflet-bar completo',c=>{
         const a=L.DomUtil.create('a','',c);a.href='#';a.setAttribute('role','button');btnCompleto=a;
         L.DomEvent.on(a,'click',e=>{L.DomEvent.preventDefault(e);pantallaCompleta(!completo)});
@@ -1451,6 +1471,7 @@ details.desp.fija>summary::after{display:none}
   }
 
   /* ---------- Calendario (selección de uno o varios días) ---------- */
+  const MAX_DIAS=3; // días que se pueden elegir a la vez en el calendario
   const DIAS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   function crearCalendario(sfx,api,nombre){
@@ -1467,16 +1488,20 @@ details.desp.fija>summary::after{display:none}
       const hueco=(new Date(y,m,1).getDay()+6)%7, total=new Date(y,m+1,0).getDate();
       for(let i=0;i<hueco;i++)cal.appendChild(el('div'));
       for(let d=1;d<=total;d++){
-        const k=diaKey(new Date(y,m,d)), n=porDia[k]||0, b=boton('dia',d);
+        // libre: con la clave de lectura se pueden pedir al fichero central días sin datos en este móvil
+        const k=diaKey(new Date(y,m,d)), n=porDia[k]||0, libre=!n&&!!sync.claveLec&&k<=kHoy, b=boton('dia',d);
         if(k===kHoy)b.classList.add('hoy');
-        if(n){
+        if(n||libre){
           b.classList.add('con');if(ef.has(k))b.classList.add('act');
-          b.setAttribute('aria-label',`${d} de ${MESES[m]}: ${n} ${plural(n,nombre)}`);b.setAttribute('aria-pressed',ef.has(k));
+          b.setAttribute('aria-label',n?`${d} de ${MESES[m]}: ${n} ${plural(n,nombre)}`:`${d} de ${MESES[m]}`);b.setAttribute('aria-pressed',ef.has(k));
+          if(!ef.has(k)&&ef.size>=MAX_DIAS)b.disabled=true; // como máximo MAX_DIAS días a la vez
           // Al elegir o quitar un día quedan marcados todos los elementos de los días elegidos
           b.addEventListener('click',()=>{
-            const s=new Set(ef);s.has(k)?s.delete(k):s.add(k);
-            api.dias=(s.size===1&&s.has(kHoy))?new Set():s;
+            const s=new Set(ef);
+            if(s.has(k))s.delete(k);else{if(s.size>=MAX_DIAS)return;s.add(k)}
+            api.dias=(s.size===0||(s.size===1&&s.has(kHoy)))?new Set():s;
             api.marcarDias();api.pintar();
+            if(api.alCambiarDias)api.alCambiarDias(); // con clave de lectura, trae del fichero central los días elegidos
           });
         }else b.disabled=true;
         cal.appendChild(b);
@@ -1487,7 +1512,7 @@ details.desp.fija>summary::after{display:none}
       const abrirlo=box.hidden;box.hidden=!abrirlo;$('btnCal'+sfx).setAttribute('aria-expanded',abrirlo);
       if(abrirlo){const [y,m]=[...api.diasEf()].sort().pop().split('-').map(Number);irA(new Date(y,m-1,1))}
     });
-    $('btnHoy'+sfx).addEventListener('click',()=>{api.dias=new Set();api.marcarDias();api.pintar()});
+    $('btnHoy'+sfx).addEventListener('click',()=>{api.dias=new Set();api.marcarDias();api.pintar();if(api.alCambiarDias)api.alCambiarDias()});
     $('mesAnt'+sfx).addEventListener('click',()=>irA(new Date(mes.getFullYear(),mes.getMonth()-1,1)));
     $('mesSig'+sfx).addEventListener('click',()=>irA(new Date(mes.getFullYear(),mes.getMonth()+1,1)));
     return {pintar,irA};
@@ -1741,8 +1766,11 @@ details.desp.fija>summary::after{display:none}
       });
       // Puntos GPS de las actividades (aunque su registro no tenga posición), en el orden en que se tomaron
       const ids=new Set(lista.filter(r=>!esInc(r)).map(r=>r.id)), pts=puntos.filter(p=>ids.has(p.registroId)&&conPosicion(p));
-      pts.forEach(p=>{
+      // Con muchos puntos se dibuja uno de cada «paso» (como mucho unos 2.500 círculos); el recorrido y el área usan todos
+      const paso=Math.max(1,Math.ceil(pts.length/2500));
+      pts.forEach((p,i)=>{
         encuadre.push([p.lat,p.lon]);
+        if(i%paso)return;
         L.circleMarker([p.lat,p.lon],{radius:5,color:'#fff',weight:1.5,fillColor:iconoDe(p).color,fillOpacity:.9})
           .bindTooltip(`${p.actividad} · ${hhmm(new Date(p.iso))} · ±${Math.round(p.precision)} m`).addTo(c.lin);
       });
@@ -2099,7 +2127,7 @@ details.desp.fija>summary::after{display:none}
 
   // Registro de la actividad en curso: el último registro real de hoy del empleado, si no es Fin Jornada
   function actividadEnCurso(){
-    const r=registros.slice().reverse().find(x=>!x.ejemplo&&x.nombre===cfg.nombre);
+    const r=registros.slice().reverse().find(x=>!x.ejemplo&&!x.central&&x.nombre===cfg.nombre); // lo del fichero central nunca arranca el GPS
     return r&&r.actividad!==FIN&&diaDe(r)===hoyKey()?r:null;
   }
   // Momento desde el que se cuenta el intervalo: el último punto o la última lectura de esa actividad, o el propio registro
@@ -2309,7 +2337,6 @@ details.desp.fija>summary::after{display:none}
   // Jornada abierta del empleado configurado: Inicio Jornada, Poda, Riego, Recolección y Otros, de unos 90 minutos cada una
   // (la última llega hasta ahora), con un punto GPS cada 5 minutos, cada actividad en su zona de la finca, y 3 incidencias.
   // Se guardan como registros reales (marcados «prueba»).
-  $('btnPrueba').hidden=!MOSTRAR_EJEMPLOS;
   const ZONAS_PRUEBA={ // desplazamiento en grados respecto a FINCA (0,001° ≈ 111 m en latitud, ≈ 88 m en longitud)
     [INICIO]:[0,0], 'Poda':[0.0013,-0.0014], 'Riego':[-0.0012,0.0017], 'Recolección':[-0.0016,-0.0012], 'Otros':[0.0015,-0.0011], [FIN]:[0.0002,0.0003]};
   // Vídeo de prueba: 2 s dibujados en un canvas y grabados con MediaRecorder (null si el navegador no puede grabar)
@@ -2425,15 +2452,16 @@ details.desp.fija>summary::after{display:none}
   const cerrarPrueba=()=>{$('boxPrueba').hidden=true};
   function cajaPrueba(texto,conSi){$('boxPruebaTxt').textContent=texto;$('btnPruebaSi').hidden=!conSi;$('btnPruebaNo').textContent=conSi?'Cancelar':'Cerrar';$('boxPrueba').hidden=false}
   async function lanzarPrueba(){
-    cerrarPrueba();$('btnPrueba').disabled=true;
+    cerrarPrueba();$('btnActualizar').disabled=true;
     try{await cargarPrueba()}catch(e){console.error(e);cajaPrueba(`No se pudieron cargar los datos de prueba: ${e&&e.message||e}`,false)}
-    $('btnPrueba').disabled=false;
+    $('btnActualizar').disabled=false;
   }
-  $('btnPrueba').addEventListener('click',()=>{
-    const hoyK=hoyKey(), n=registros.filter(r=>!r.ejemplo&&!r.prueba&&diaDe(r)===hoyK).length+incidencias.filter(x=>!x.ejemplo&&!x.prueba&&diaDe(x)===hoyK).length;
+  // Datos de prueba (elegidos en el icono Actualizar): si hoy hay datos reales se avisa de que se borrarán
+  function pedirPrueba(){
+    const hoyK=hoyKey(), n=registros.filter(r=>!r.ejemplo&&!r.prueba&&!r.central&&diaDe(r)===hoyK).length+incidencias.filter(x=>!x.ejemplo&&!x.prueba&&!x.central&&diaDe(x)===hoyK).length;
     if(!n)return lanzarPrueba();
     cajaPrueba(`Se ${n===1?'borrará el registro de hoy':`borrarán los ${n} registros de hoy`} (actividades e incidencias) y se cargarán los datos de prueba. ¿Continuar?`,true);
-  });
+  }
   $('btnPruebaSi').addEventListener('click',lanzarPrueba);
   $('btnPruebaNo').addEventListener('click',cerrarPrueba);
 
@@ -2481,19 +2509,23 @@ details.desp.fija>summary::after{display:none}
   }
   // Miniatura de un adjunto: la foto de fondo (blob en memoria, o leída de IndexedDB con su id); vídeo y audio con su icono.
   // urls: se liberan al repintar. Al pulsarla se abre en el visor.
-  function miniatura(tipo,{blob,id,dur,texto,conFoto=true},urls){
+  function miniatura(tipo,{blob,id,dur,texto,conFoto=true,url},urls){
     const b=boton('adj');b.setAttribute('aria-label',VER_ADJ[tipo]);b.title=NOMBRE_ADJ[tipo];
     const fondo=bl=>{const u=URL.createObjectURL(bl);urls.push(u);b.style.backgroundImage=`url("${u}")`;b.innerHTML=''};
     b.innerHTML=(tipo==='foto'&&conFoto?ico('imagen',22):ico(tipo,24))+(dur?`<span class="dura">${mmss(dur)}</span>`:'');
     if(tipo==='foto'&&conFoto){if(blob)fondo(blob);else media.leer(id).then(bl=>{if(bl)fondo(bl)})}
-    b.addEventListener('click',async e=>{e.preventDefault();e.stopPropagation();abrirVisor(tipo,blob||await media.leer(id),texto())});
+    b.addEventListener('click',async e=>{
+      e.preventDefault();e.stopPropagation();
+      if(url&&!blob&&!(await media.leer(id))){window.open(url,'_blank');return} // adjunto del fichero central: se abre su enlace de Drive
+      abrirVisor(tipo,blob||await media.leer(id),texto());
+    });
     return b;
   }
   const textoAdj=(x,ad)=>()=>`${x.tipo} · ${x.fechaHora.slice(0,16)}${ad.size?' · '+tamano(ad.size):''}`;
   function filaAdjuntos(x,urls,conFoto){
     const f=el('div','adjs');
     // En el globo del mapa (conFoto=false) no se carga la foto, solo su icono; al pulsarlo se abre igual
-    (x.adjuntos||[]).forEach(ad=>f.appendChild(miniatura(ad.tipo,{id:ad.id,dur:ad.dur,texto:textoAdj(x,ad),conFoto},urls)));
+    (x.adjuntos||[]).forEach(ad=>f.appendChild(miniatura(ad.tipo,{id:ad.id,dur:ad.dur,texto:textoAdj(x,ad),conFoto,url:ad.url},urls)));
     return f;
   }
 
@@ -2961,10 +2993,11 @@ details.desp.fija>summary::after{display:none}
   }
   const firma=f=>JSON.stringify(f);
   function pendientes(){
-    const act=registros.filter(r=>!r.ejemplo).map(filaActividad).filter(f=>sync.hecho.act[f.ID]!==firma(f));
-    const adj=incidencias.filter(x=>!x.ejemplo).flatMap(x=>(x.adjuntos||[]).filter(a=>!sync.hecho.adj[a.id]).map(a=>({x,a})));
-    const inc=incidencias.filter(x=>!x.ejemplo).map(filaIncidencia).filter(f=>sync.hecho.inc[f.ID]!==firma(f));
-    const pts=puntos.filter(p=>!p.ejemplo&&conPosicion(p)&&!sync.hecho.pts[p.id]).map(filaPunto);
+    // Lo que viene del fichero central (central) ya está allí: nunca se vuelve a enviar
+    const act=registros.filter(r=>!r.ejemplo&&!r.central).map(filaActividad).filter(f=>sync.hecho.act[f.ID]!==firma(f));
+    const adj=incidencias.filter(x=>!x.ejemplo&&!x.central).flatMap(x=>(x.adjuntos||[]).filter(a=>!sync.hecho.adj[a.id]).map(a=>({x,a})));
+    const inc=incidencias.filter(x=>!x.ejemplo&&!x.central).map(filaIncidencia).filter(f=>sync.hecho.inc[f.ID]!==firma(f));
+    const pts=puntos.filter(p=>!p.ejemplo&&!p.central&&conPosicion(p)&&!sync.hecho.pts[p.id]).map(filaPunto);
     return {act,inc,pts,adj};
   }
   // Insignia del botón de la nube: actividades e incidencias por enviar
@@ -3018,6 +3051,87 @@ details.desp.fija>summary::after{display:none}
     }finally{sincronizando=false;$('btnSync').classList.remove('girando');actualizarPendientes()}
   }
   $('btnSync').addEventListener('click',sincronizar);
+
+  /* ---------- Actualizar desde el fichero central: los días elegidos en el calendario (máximo 3) ---------- */
+  // Con la clave de lectura se piden al Registro central las actividades, incidencias y puntos GPS de los días elegidos. Lo que llega
+  // se marca como «central»: queda solo en memoria (no ocupa el almacenamiento del móvil), no se vuelve a enviar y nunca arranca el
+  // GPS. Los registros propios de este móvil (mismo ID) mandan sobre los del fichero central.
+  async function pedirCentral(datos){
+    const res=await fetch(sync.url,{method:'POST',body:JSON.stringify(Object.assign({clave:sync.claveLec},datos))});
+    if(!res.ok)throw new Error(`el servicio respondió ${res.status}`);
+    const j=await res.json();if(!j.ok)throw new Error(j.error||'error del servicio');
+    return j;
+  }
+  function registroDeCentral(a){
+    const d=new Date(a.iso), pausada=a.estado==='Pausada';
+    const r={id:a.id,nombre:a.nombre,actividad:pausada?PAUSAACT:a.actividad,fechaHora:fechaHora(d),iso:a.iso,lat:a.lat,lon:a.lon,precision:a.precision,central:true,
+      fijo:{pausaMin:a.pausa||0,km:coma(a.km||0),vel:a.vel!=null?coma(a.vel):'–',area:coma(a.ha||0,2),
+        n:{km:a.km||0,ha:a.ha||0,vel:a.vel==null?'':a.vel,pts:a.pts||0,pausa:a.pausa||0}}};
+    if(pausada)r.pausaDe=a.actividad;
+    if(a.prueba)r.prueba=true;
+    return r;
+  }
+  function incidenciaDeCentral(i){
+    const d=new Date(i.iso);
+    const x={id:i.id,nombre:i.nombre,tipo:i.tipo,comentario:i.comentario||'',fechaHora:fechaHora(d),iso:i.iso,lat:i.lat,lon:i.lon,precision:i.precision,central:true,
+      adjuntos:(i.adjuntos||[]).map((a,k)=>({id:`${i.id}_c${k}`,tipo:a.tipo,mime:'',nombre:a.nombre,url:a.url||'',size:0}))};
+    if(i.prueba)x.prueba=true;
+    return x;
+  }
+  const centralDias=new Set(); // días ya traídos del fichero central en esta sesión
+  let cargandoCentral=false;
+  const rangoDia=k=>{const [y,m,d]=k.split('-').map(Number);return [new Date(y,m-1,d).toISOString(),new Date(y,m-1,d+1).toISOString()]};
+  // forzar: el icono Actualizar vuelve a pedir los días elegidos; al elegir días en el calendario solo se piden los que faltan
+  async function cargarCentral(forzar){
+    if(!sync.url||!sync.claveLec){
+      if(forzar){abrir('cfg');$('syncClaveLec').focus();$('cfgStatus').className='status err';$('cfgStatus').textContent='Escribe la clave de lectura del fichero central y guarda.'}
+      return;
+    }
+    const dias=[...LA.diasEf()].sort().slice(0,MAX_DIAS).filter(k=>forzar||!centralDias.has(k));
+    if(!dias.length||cargandoCentral)return;
+    if(!navigator.onLine){if(forzar)aviso('Sin conexión',null,{err:true});return}
+    cargandoCentral=true;$('btnActualizar').classList.add('girando');
+    try{
+      const rangos=dias.map(rangoDia), j=await pedirCentral({tipo:'leer',rangos});
+      const enRango=x=>rangos.some(r=>x.iso>=r[0]&&x.iso<r[1]);
+      // Se quita lo central anterior de esos días y se añade lo nuevo; lo propio de este móvil no se toca
+      registros=registros.filter(r=>!(r.central&&enRango(r)));incidencias=incidencias.filter(x=>!(x.central&&enRango(x)));
+      puntos=puntos.filter(p=>!(p.central&&enRango(p)));
+      const idsR=new Set(registros.map(r=>r.id)), idsI=new Set(incidencias.map(x=>x.id));
+      const nuevasR=j.actividades.filter(a=>!idsR.has(a.id)).map(registroDeCentral), nuevasI=j.incidencias.filter(i=>!idsI.has(i.id)).map(incidenciaDeCentral);
+      const porId=new Map(nuevasR.map(r=>[r.id,r])), nuevosP=[];
+      j.puntos.forEach(([reg,seg,lat,lon,pr])=>{
+        const r=porId.get(reg);if(!r||lat==null||lon==null)return; // los puntos de lo propio ya están en el móvil
+        const d=new Date(seg*1000);
+        nuevosP.push({id:`${reg}_${seg}`,registroId:reg,nombre:r.nombre,actividad:r.actividad===PAUSAACT?r.pausaDe:r.actividad,
+          fechaHora:fechaHora(d),iso:d.toISOString(),lat,lon,precision:pr,central:true});
+      });
+      registros=registros.concat(nuevasR).sort(porHora);incidencias=incidencias.concat(nuevasI).sort(porHora);puntos=puntos.concat(nuevosP);
+      dias.forEach(k=>centralDias.add(k));
+      LA.marcarDias();supAbiertas.clear();
+      pintarListado();pintarIncidencias();
+    }catch(e){
+      aviso('No se pudo cargar el fichero central',String(e.message||e).replace(/^Failed to fetch$/,'sin conexión con el servicio'),{err:true,ms:6000});
+    }finally{cargandoCentral=false;$('btnActualizar').classList.remove('girando')}
+  }
+  // Datos reales: se quitan los de prueba (locales) y se vuelven a pedir al fichero central los días elegidos
+  function quitarPrueba(){
+    if(!registros.some(r=>r.prueba)&&!incidencias.some(x=>x.prueba)&&!puntos.some(p=>p.prueba))return;
+    incidencias.filter(x=>x.prueba).forEach(x=>(x.adjuntos||[]).forEach(a=>media.borrar(a.id)));
+    registros=registros.filter(r=>!r.prueba);incidencias=incidencias.filter(x=>!x.prueba);
+    const ids=new Set(registros.map(r=>r.id));puntos=puntos.filter(p=>!p.prueba&&ids.has(p.registroId));
+    guardarRegistros();guardarIncidencias();guardarPuntos();
+    sigInc='';incSelFilas=new Set();incAbiertas=new Set();supAbiertas.clear();
+    LA.dias=new Set();LA.marcarDias();LI.dias=new Set();LI.marcarDias();
+    pintarTodo();pintarIncidencias();actualizarSeguimiento();pintarJornada();pintarNuevaInc();
+  }
+  // Icono Actualizar: pregunta con qué datos
+  const cerrarElegirDatos=()=>{$('boxActualizar').hidden=true};
+  $('btnActualizar').addEventListener('click',()=>{$('boxActualizar').hidden=false});
+  $('btnActNo').addEventListener('click',cerrarElegirDatos);
+  $('btnActReales').addEventListener('click',()=>{cerrarElegirDatos();quitarPrueba();centralDias.clear();cargarCentral(true)});
+  $('btnActPrueba').addEventListener('click',()=>{cerrarElegirDatos();pedirPrueba()});
+  LA.alCambiarDias=()=>cargarCentral(false);
   // Memoria del navegador: unos 5 millones de caracteres por web. Al pasar del 70 % se borran del móvil los puntos GPS
   // ya enviados al fichero central, por días y empezando por el más antiguo, hasta bajar al 50 %. Los de hoy nunca se borran.
   // Antes, cada actividad afectada guarda sus datos calculados (distancia, área, velocidad, duración) para seguir mostrándolos.
@@ -3036,7 +3150,7 @@ details.desp.fija>summary::after{display:none}
         puntos=puntos.filter(p=>!quitar.has(p.id));
         quitar.forEach(id=>{delete sync.hecho.pts[id]});
         total+=quitar.size;
-        guardarRegistros();try{localStorage.setItem(KEY_PTS,JSON.stringify(puntos.filter(p=>!p.ejemplo)))}catch(e){}store.set(KEY_SYNC,sync.hecho);
+        guardarRegistros();try{localStorage.setItem(KEY_PTS,JSON.stringify(puntos.filter(p=>!p.ejemplo&&!p.central)))}catch(e){}store.set(KEY_SYNC,sync.hecho);
         if(usoMemoria()<MEMORIA_OBJETIVO)break;
       }
     }finally{limpiando=false}
