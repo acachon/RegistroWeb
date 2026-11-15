@@ -322,7 +322,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .resumenact b{display:block;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .resumenact small{display:block;color:var(--muted);font-size:.78rem;font-variant-numeric:tabular-nums}
 .resumenact .dur{font:800 .95rem var(--display);white-space:nowrap;font-variant-numeric:tabular-nums}
-#secAct h2{flex-wrap:nowrap}#secAct h2 span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#secAct h2{flex-wrap:nowrap}#secAct h2 span{min-width:0;line-height:1.2} /* el título puede ocupar dos líneas con nombres largos */
 /* Carrusel de actividades: al menos 3 fichas a la vista y el resto se desplaza */
 .carrusel{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 8px;margin:0 -2px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
 .chipact{flex:0 0 calc((100% - 16px)/3.2);scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 2px 5px;border:2px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);font:700 .7rem/1.15 var(--display);text-align:center;cursor:pointer}
@@ -1601,7 +1601,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     // Actividad que se muestra: la que está en curso o, si no hay, la última de la jornada de hoy
     const desdeIni=hoy.slice(hoy.map(x=>x.actividad).lastIndexOf(INICIO)+1);
     const ver=act||desdeIni.slice().reverse().find(x=>!MARCAS.includes(x.actividad))||null;
-    $('actTitulo').textContent=act?act.actividad:'Selecciona una nueva actividad';
+    $('actTitulo').textContent=act?`Actividad ${act.actividad} en curso`:'Selecciona una nueva actividad';
     ti.hidden=!act;if(act)ti.src=iconoAct(act.actividad);
     // Botones: con la jornada iniciada se puede iniciar la elegida; en curso pasa a «Pausar» o «Fin pausa» (como en la jornada)
     a.classList.remove('pausar');
