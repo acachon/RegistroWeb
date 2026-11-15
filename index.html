@@ -1644,7 +1644,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       }
       if(cur&&!cur.fin)cur.fin=x.iso;cur=null;pausadaDe=null;
     });
-    const ver=(nombre?tandas.slice().reverse().find(x=>!x.fin):null)||tandas.slice().reverse().find(x=>x.fin)||null;
+    const ver=nombre?tandas.slice().reverse().find(x=>!x.fin)||null:null; // solo la actividad en curso; sin ella, los indicadores van a cero
     $('actTitulo').textContent=act?`${nombre} en curso`:enP?`${nombre} en pausa`:'Selecciona una nueva actividad';
     ti.hidden=!nombre;if(nombre)ti.src=iconoAct(nombre);
     // Botones: con la jornada iniciada se puede iniciar la elegida; en curso pasa a «Pausar actividad»; en pausa, «Fin pausa» con la cuenta atrás
@@ -1668,10 +1668,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     });
     lis.hidden=!lis.children.length;
     // Datos de la actividad: hora de inicio, de fin (-- si sigue en curso) y duración transcurrida
-    t.className=ver?'jdatos':'jtxt';t.textContent='';
-    if(!ver){t.textContent=curso?'Elige una actividad y pulsa «Inicio Actividad».':'Inicia la jornada para poder elegir actividad.';return}
-    const min=Math.max(0,Math.floor(((ver.fin?new Date(ver.fin).getTime():Date.now())-new Date(ver.ini).getTime())/60000));
-    [[hhmm(new Date(ver.ini)),'Hora inicio'],[ver.fin?hhmm(new Date(ver.fin)):'--','Hora fin'],[`${Math.floor(min/60)}h ${pad(min%60)}m`,'Duración']].forEach(([v,l])=>{
+    t.className='jdatos';t.textContent='';
+    const min=ver?Math.max(0,Math.floor((Date.now()-new Date(ver.ini).getTime())/60000)):0;
+    [[ver?hhmm(new Date(ver.ini)):'--','Hora inicio'],['--','Hora fin'],[`${Math.floor(min/60)}h ${pad(min%60)}m`,'Duración']].forEach(([v,l])=>{
       const d=el('div');d.appendChild(el('strong',null,v));d.appendChild(el('small',null,l));t.appendChild(d)});
   }
   $('btnActA').addEventListener('click',()=>{
