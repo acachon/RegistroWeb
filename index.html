@@ -1556,7 +1556,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     if(r.actividad===FIN)sugerirEnvioDia(r);
     if(pos.error){
       status(sinGps?'Registrado sin posición: este navegador no da GPS.':'Registrado sin posición: '+r.error+'.','err');ayudaUbicacion(pos.codigo);
-      aviso(`Actividad registrada sin posición: ${r.actividad}`,sinGps?'Este navegador no da GPS':`GPS: ${r.error}. Mira la ayuda para activarlo.`,{err:true,ms:5000});
+      if(actividad===INICIO||actividad===FIN)aviso(`Actividad registrada sin posición: ${r.actividad}`,sinGps?'Este navegador no da GPS':`GPS: ${r.error}. Mira la ayuda para activarlo.`,{err:true,ms:5000});
     }else{
       status(`Registrado ${r.fechaHora.slice(11,19)} · precisión ±${Math.round(r.precision)} m`,'ok');if(navigator.vibrate)navigator.vibrate(120);
       // El aviso de registro solo sale con la jornada (inicio o fin); las actividades y sus pausas no lo muestran
