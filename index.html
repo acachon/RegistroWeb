@@ -404,6 +404,16 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .resumenact li>.adjs{padding:6px 4px 2px}
 .resumenact li>.detinc{display:flex;flex-direction:column;gap:6px;padding:6px 4px 2px}
 .resumenact .textoinc{margin:0;font-style:italic;white-space:pre-wrap;overflow-wrap:anywhere}
+details.desp>summary .diasel{margin-left:auto;font:800 .9rem var(--display);color:var(--fg)}
+.usu{position:relative}
+.usubtn{display:inline-flex;align-items:center;gap:6px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.usubtn::after{content:'';flex:none;width:7px;height:7px;border-right:2.5px solid var(--olive);border-bottom:2.5px solid var(--olive);transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+.usubtn[aria-expanded="true"]::after{transform:rotate(-135deg)}
+.usupanel{position:absolute;z-index:1100;top:calc(100% + 6px);left:0;min-width:210px;max-width:min(300px,86vw);padding:6px;background:var(--card);border:2px solid var(--line);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.2)}
+.usupanel label{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:8px;font:700 .95rem var(--display);cursor:pointer}
+.usupanel label:hover{background:var(--olive-soft)}
+.usupanel input{width:20px;height:20px;margin:0;accent-color:var(--olive);flex:none}
+.usupanel .sep{height:1px;margin:4px 6px;background:var(--line)}
 .lfil{flex-wrap:wrap;row-gap:6px} /* en pantallas muy estrechas las herramientas bajan a otra línea en vez de cortarse */
 details.desp.fija>summary{cursor:default}
 details.desp.fija>summary::after{display:none}
@@ -753,7 +763,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 21:30';
+  const VERSION='v1 · 2026-11-15 22:00';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -771,12 +781,12 @@ details.desp.fija>summary::after{display:none}
     const s=d.dataset.listado, chk=(id,txt,small)=>`<label class="chk"><input type="checkbox" id="${id}${s}" checked>${txt} <small${small?'':` class="dest${txt==='WhatsApp'?'Tel':'Mail'}"`}>${small||''}</small></label>`;
     const fija=d.hasAttribute('data-compacta'); // listado fijo (no desplegable) y sin botón (i); su nota del mapa y su estado van a la vista
     d.outerHTML=`<details class="desp${fija?' fija':''}" id="detList${s}" open>
-      <summary>${d.dataset.titulo} <span id="contador${s}">0</span>${fija?'':` <button type="button" class="infobtn" data-info="infoList${s}">i</button>`}</summary>
+      <summary>${d.dataset.titulo} <span id="contador${s}">0</span>${fija?`<span class="diasel" id="tituloDia${s}">Hoy</span>`:` <button type="button" class="infobtn" data-info="infoList${s}">i</button>`}</summary>
       <div class="cuerpo">
         ${fija?`<p class="hint" id="mapaNota${s}" hidden></p><p class="status" id="statusList${s}" role="status" aria-live="polite"></p>`
         :`<div class="infobox" id="infoList${s}" hidden><p class="hint" id="mapaNota${s}" hidden></p><p class="status" id="statusList${s}" role="status" aria-live="polite"></p><p class="hint infovacio">Sin novedades por ahora.</p></div>`}
         <div class="sub">
-          <div class="sechead"><h3 id="tituloDia${s}">Hoy</h3>
+          <div class="sechead">${fija?`<div class="usu"><button type="button" class="mini usubtn" id="btnUsu${s}" aria-haspopup="true" aria-expanded="false" aria-controls="usuPanel${s}">Todos</button><div class="usupanel" id="usuPanel${s}" role="group" aria-label="Empleados" hidden></div></div>`:`<h3 id="tituloDia${s}">Hoy</h3>`}
             <div class="calbtns"><button type="button" class="mini calbtn" id="btnCal${s}" aria-expanded="false" aria-controls="calBox${s}">${ico('cal',16)}Calendario</button></div></div>
           <div class="calbox" id="calBox${s}" hidden>
             <div class="calhead"><button type="button" class="calnav" id="mesAnt${s}" aria-label="Mes anterior">‹</button><h2 id="mesLbl${s}" aria-live="polite"></h2><button type="button" class="calnav" id="mesSig${s}" aria-label="Mes siguiente">›</button></div>
@@ -1217,7 +1227,8 @@ details.desp.fija>summary::after{display:none}
     if(r.fijo&&!puntosDe(r).length)return Object.assign({vivo:false},r.fijo); // sus puntos ya están solo en el fichero central
     const trazo=[r,...puntosDe(r)].filter(conPosicion).sort(porHora);
     let m=0;for(let i=1;i<trazo.length;i++)m+=metrosEntre(trazo[i-1],trazo[i]);
-    const sig=registros[registros.indexOf(r)+1], dia=diaDe(r), esHoy=dia===hoyKey(), mismoDia=sig&&diaDe(sig)===dia;
+    // sig: el siguiente registro del mismo empleado
+    const sig=registros.slice(registros.indexOf(r)+1).find(x=>x.nombre===r.nombre), dia=diaDe(r), esHoy=dia===hoyKey(), mismoDia=sig&&diaDe(sig)===dia;
     const fin=mismoDia?new Date(sig.iso).getTime()
       :esHoy?Date.now():trazo.length>1?new Date(trazo[trazo.length-1].iso).getTime():null;
     const ms=fin==null?0:fin-new Date(r.iso).getTime();
@@ -1536,7 +1547,8 @@ details.desp.fija>summary::after{display:none}
       // Título: «Hoy» por defecto; con otros días se indica cuáles y aparece «Volver a hoy» junto a «Calendario»
       const ds=[...api.diasEf()].sort(), Nombre=o.plural[0].toUpperCase()+o.plural.slice(1);
       E('btnHoy').hidden=!api.dias.size;
-      E('tituloDia').textContent=!api.dias.size?'Hoy':ds.length===1?(([y,m,d])=>`${Nombre} del ${fechaCorta(new Date(y,m-1,d))}`)(ds[0].split('-').map(Number)):`${ds.length} días seleccionados`;
+      // Listado compacto: «Hoy», la fecha o «N días» (a la derecha del título); el resto de listados lo dicen con más palabras
+      E('tituloDia').textContent=!api.dias.size?'Hoy':ds.length===1?(([y,m,d])=>o.compacta?fechaCorta(new Date(y,m-1,d)):`${Nombre} del ${fechaCorta(new Date(y,m-1,d))}`)(ds[0].split('-').map(Number)):o.compacta?`${ds.length} días`:`${ds.length} días seleccionados`;
       const n=api.marcadas().length;
       const todas=n===lista.length&&n>0;
       if(o.compacta){ // botón de iconos: cambia de icono y de texto de ayuda
@@ -1653,6 +1665,7 @@ details.desp.fija>summary::after{display:none}
   // Fila compacta del Supervisor (como en Registro e Incidencia): casilla, pin del mapa, nombre y hora; a la derecha, (i) con los KPIs
   // de la actividad, o clip con adjuntos y texto y enlace a Google Maps en las incidencias. Lo desplegado va debajo de la fila.
   const supAbiertas=new Set(), supFiltro={act:true,inc:true}; // qué tipos se muestran en el listado y el mapa (multiselección)
+  let supEmp=null; // empleados mostrados: null = todos, o un conjunto de nombres (multiselección)
   function filaSup(x,{sel,num,alternar,repintar}){
     const inc=esInc(x), li=el('li'), lab=el('label',sel?'sel':''), cb=el('input'), nombre=inc?x.tipo:(x.actividad||x.nombre);
     cb.type='checkbox';cb.checked=sel;cb.setAttribute('aria-label',`Seleccionar ${nombre}`);
@@ -1681,7 +1694,7 @@ details.desp.fija>summary::after{display:none}
     return li;
   }
   const LA=crearListado({sfx:'H',panel:'panelReg',singular:'registro',unidad:'registro',plural:'registros',masc:true,conVista:true,compacta:true,fila:filaSup,
-    datos:()=>[...(supFiltro.act?registros:[]),...(supFiltro.inc?incidencias:[])].sort(porHora), clave:claveSup,
+    datos:()=>[...(supFiltro.act?registros:[]),...(supFiltro.inc?incidencias:[])].filter(x=>!supEmp||supEmp.has(x.nombre)).sort(porHora), clave:claveSup,
     orden:()=>[...Object.keys(ICONOS),...actividades(),...ordenTiposInc().map(t=>'⚠ '+t)], esteTipo:'este tipo',
     vacioHoy:'Hoy aún no hay actividades ni incidencias.', textoNinguna:'Marca al menos un registro.',
     pin:(x,t)=>esInc(x)?crearPinInc(t,colorInc(x.tipo)):crearPin(iconoDe(x),t),
@@ -1760,6 +1773,35 @@ details.desp.fija>summary::after{display:none}
     },
     trasBorrar(){pintarTodo();actualizarSeguimiento();pintarIncidencias()}
   });
+  // Menú desplegable de empleados (uno, varios o todos). Los nombres salen de los registros e incidencias que hay; al cambiar
+  // la selección quedan marcados los registros que se muestran, como con el filtro de tipos.
+  const empleadosSup=()=>[...new Set([...registros,...incidencias].map(x=>x.nombre).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+  function etiquetaUsu(){
+    const todos=empleadosSup();
+    $('btnUsuH').textContent=!supEmp||todos.every(n=>supEmp.has(n))?'Todos':supEmp.size===1?[...supEmp][0]:`${supEmp.size} empleados`;
+  }
+  function pintarUsuarios(){
+    const todos=empleadosSup(), cur=supEmp||new Set(todos), p=$('usuPanel'+'H');p.textContent='';
+    const fila=(txt,marcado,fn)=>{
+      const l=el('label'), cb=el('input');cb.type='checkbox';cb.checked=marcado;cb.addEventListener('change',fn);
+      l.append(cb,el('span',null,txt));p.appendChild(l);
+    };
+    const cambio=()=>{etiquetaUsu();LA.marcarDias();LA.pintar();pintarUsuarios()};
+    fila('Todos',!supEmp,()=>{supEmp=null;cambio()});
+    p.appendChild(el('div','sep'));
+    todos.forEach(n=>fila(n,cur.has(n),()=>{
+      const s=new Set(cur);s.has(n)?s.delete(n):s.add(n);
+      if(!s.size){pintarUsuarios();return} // siempre queda al menos un empleado
+      supEmp=s.size===todos.length?null:s;cambio();
+    }));
+  }
+  $('btnUsuH').addEventListener('click',e=>{
+    e.stopPropagation();const abre=$('usuPanelH').hidden;
+    $('usuPanelH').hidden=!abre;$('btnUsuH').setAttribute('aria-expanded',abre);
+    if(abre)pintarUsuarios();
+  });
+  document.addEventListener('click',e=>{if(!$('usuPanelH').hidden&&!e.target.closest('.usu')){$('usuPanelH').hidden=true;$('btnUsuH').setAttribute('aria-expanded',false)}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('usuPanelH').hidden){$('usuPanelH').hidden=true;$('btnUsuH').setAttribute('aria-expanded',false)}});
   // El listado del Supervisor no se pliega: el título no responde al toque ni al teclado
   $('detListH').querySelector('summary').addEventListener('click',e=>e.preventDefault());
   // Filtro de tipos: Actividades, Incidencias o ambos (siempre queda al menos uno activo)
@@ -2310,6 +2352,14 @@ details.desp.fija>summary::after{display:none}
     const dFin=new Date(ahora-60000);
     nuevos.push({id:nuevoId(),nombre:cfg.nombre,actividad:FIN,fechaHora:fechaHora(dFin),iso:dFin.toISOString(),
       lat:FINCA.lat+ZONAS_PRUEBA[FIN][0]+azar()*0.00012,lon:FINCA.lon+ZONAS_PRUEBA[FIN][1]+azar()*0.00015,precision:5+Math.round(Math.random()*7),prueba:true});
+    // Otro empleado (Jesús; Angel si el de este móvil es Jesús) con su propia jornada, para ver varios empleados en el Supervisor
+    const otro=cfg.nombre==='Jesús'?'Angel':'Jesús', zonasOtro=new Map();
+    [[INICIO,4,0.0004,-0.0004],['Riego',3,-0.0006,0.0011],['Recolección',2,-0.0010,-0.0006],[FIN,1,0.0003,0.0002]].forEach(([actividad,k,zLa,zLo])=>{
+      const d=new Date(ahora-k*dur*60000), r={id:nuevoId(),nombre:otro,actividad,fechaHora:fechaHora(d),iso:d.toISOString(),
+        lat:FINCA.lat+zLa+azar()*0.00012,lon:FINCA.lon+zLo+azar()*0.00015,precision:5+Math.round(Math.random()*7),prueba:true};
+      zonasOtro.set(r.id,[zLa,zLo]);nuevos.push(r);
+    });
+    nuevos.sort(porHora);
     // 1) Fuera todo lo de hoy y los datos de prueba anteriores
     const sobra=x=>diaDe(x)===hoyK||x.prueba;
     incidencias.filter(sobra).forEach(x=>(x.adjuntos||[]).forEach(a=>media.borrar(a.id)));
@@ -2321,8 +2371,8 @@ details.desp.fija>summary::after{display:none}
     // 2) Puntos GPS cada 5 min de cada actividad, en su zona de la finca
     nuevos.forEach((r,i)=>{
       if(r.actividad===FIN)return; // Fin Jornada no genera puntos
-      const hasta=i+1<nuevos.length?new Date(nuevos[i+1].iso).getTime():ahora;
-      const [zLa,zLo]=ZONAS_PRUEBA[r.actividad];
+      const sig=nuevos.slice(i+1).find(x=>x.nombre===r.nombre), hasta=sig?new Date(sig.iso).getTime():ahora; // hasta el siguiente registro del mismo empleado
+      const [zLa,zLo]=zonasOtro.get(r.id)||ZONAS_PRUEBA[r.actividad];
       // Paseo al azar alrededor del centro de la zona (≈ ±33 m en latitud, ±35 m en longitud)
       let dLa=r.lat-FINCA.lat-zLa, dLo=r.lon-FINCA.lon-zLo;
       for(let tp=new Date(r.iso).getTime()+PASO_PRUEBA;tp<hasta;tp+=PASO_PRUEBA){
@@ -2335,19 +2385,20 @@ details.desp.fija>summary::after{display:none}
     });
     guardarPuntos();
     // 3) Incidencias de prueba repartidas a lo largo de la jornada, todas junto a la finca [tipo, texto, dLat, dLon, momento (0-1), adjuntos]
+    // (el último valor indica si es del otro empleado)
     const DEF=[
-      ['Olivo','Olivo caído por el viento junto al camino principal.',0.00045,-0.00050,.18,['foto']],
-      ['Riego','Tubería de goteo rota en la línea 7, sale agua.',-0.00040,0.00060,.32,['video']],
-      ['Vehículo/Herramienta','Se ha roto la tijera de poda, hay que sustituirla.',0.00010,0.00020,.46,['audio']],
-      ['Acceso/Nave','Puerta de la nave sin cerrar bien: foto, vídeo y audio.',-0.00052,0.00018,.60,['foto','video','audio']],
-      ['Producto','',0.00030,-0.00035,.74,[]],
-      ['Otros','Revisar el vallado de la parcela norte.',-0.00028,-0.00058,.84,[]],
-      ['Riego','',0.00055,0.00030,.93,[]]];
+      ['Olivo','Olivo caído por el viento junto al camino principal.',0.00045,-0.00050,.18,['foto'],false],
+      ['Riego','Tubería de goteo rota en la línea 7, sale agua.',-0.00040,0.00060,.32,['video'],true],
+      ['Vehículo/Herramienta','Se ha roto la tijera de poda, hay que sustituirla.',0.00010,0.00020,.46,['audio'],false],
+      ['Acceso/Nave','Puerta de la nave sin cerrar bien: foto, vídeo y audio.',-0.00052,0.00018,.60,['foto','video','audio'],true],
+      ['Producto','',0.00030,-0.00035,.74,[],true],
+      ['Otros','Revisar el vallado de la parcela norte.',-0.00028,-0.00058,.84,[],false],
+      ['Riego','',0.00055,0.00030,.93,[],false]];
     const span=pasos.length*dur*60000, t0=ahora-span, video=await videoEj();
     let n=0;
-    for(const [tipo,comentario,dLa,dLo,f,adjs] of DEF){
+    for(const [tipo,comentario,dLa,dLo,f,adjs,delOtro] of DEF){
       const d=new Date(t0+span*f);
-      const x={id:nuevoId(),nombre:cfg.nombre,tipo,comentario,fechaHora:fechaHora(d),iso:d.toISOString(),
+      const x={id:nuevoId(),nombre:delOtro?otro:cfg.nombre,tipo,comentario,fechaHora:fechaHora(d),iso:d.toISOString(),
         lat:FINCA.lat+dLa,lon:FINCA.lon+dLo,precision:5+Math.round(Math.random()*7),adjuntos:[],prueba:true};
       const pref=`incidencia_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
       for(const t of adjs){
@@ -2362,11 +2413,12 @@ details.desp.fija>summary::after{display:none}
     incidencias.sort(porHora);
     guardarIncidencias();guardarRegistros();
     // 4) Todas las pestañas con los datos nuevos: Registro, Incidencia y Supervisor
+    supEmp=null; // el Supervisor muestra a todos los empleados
     LI.dias=new Set();LI.marcarDias();LA.dias=new Set();LA.marcarDias();LA.cal.irA(new Date());
     sigInc='';incSelFilas=new Set();incAbiertas=new Set();
     pintarTodo();pintarIncidencias();actualizarSeguimiento();pintarJornada();pintarNuevaInc();
     abrir('registro');
-    aviso('Datos de prueba cargados',`${pasos.length} actividades (jornada terminada),${puntos.filter(p=>p.prueba).length} puntos GPS y ${DEF.length} incidencias de ${cfg.nombre}`);
+    aviso('Datos de prueba cargados',`${nuevos.filter(r=>!MARCAS.includes(r.actividad)).length} actividades (jornadas terminadas), ${puntos.filter(p=>p.prueba).length} puntos GPS y ${DEF.length} incidencias de ${cfg.nombre} y ${otro}`);
   }
   // Sin confirm() del navegador: algunos navegadores (y los integrados en otras apps) lo bloquean
   const cerrarPrueba=()=>{$('boxPrueba').hidden=true};
