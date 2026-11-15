@@ -776,7 +776,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-16 01:40';
+  const VERSION='v1 · 2026-11-16 02:00';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1054,7 +1054,9 @@ details.desp.fija>summary::after{display:none}
   const SYNC_CLAVE_SERIE='';
   const sync={url:store.get(KEY_SYNC_URL,'')||SYNC_URL_SERIE,clave:store.get(KEY_SYNC_CLAVE,'')||SYNC_CLAVE_SERIE,claveLec:store.get(KEY_SYNC_CLAVE_LEC,''),hecho:Object.assign({act:{},inc:{},pts:{},adj:{}},store.get(KEY_SYNC,{}))};
   // Enlace de configuración: …/?servicio=URL&clave=CLAVE rellena los dos campos y se quita de la dirección
-  (()=>{try{const q=new URLSearchParams(location.search);if(q.get('servicio')){sync.url=q.get('servicio');store.set(KEY_SYNC_URL,sync.url)}
+  let enlaceConfig=false; // la web se abrió con un enlace de configuración (?nombre=…&clave=…)
+  (()=>{try{const q=new URLSearchParams(location.search);enlaceConfig=['nombre','clave','clavelectura'].some(k=>q.has(k));
+    if(q.get('servicio')){sync.url=q.get('servicio');store.set(KEY_SYNC_URL,sync.url)}
     if(q.get('clave')){sync.clave=q.get('clave');store.set(KEY_SYNC_CLAVE,sync.clave)}
     // Enlace por empleado: ?nombre=…&clave=… y, para el supervisor, también &clavelectura=…
     if(q.get('clavelectura')){sync.claveLec=q.get('clavelectura');store.set(KEY_SYNC_CLAVE_LEC,sync.claveLec)}
@@ -3204,6 +3206,12 @@ details.desp.fija>summary::after{display:none}
   actualizarSeguimiento();
   pintarIncidencias();
   $('panelRegistro').appendChild($('avisosJornada'));construirCarrusel();construirCarruselInc();pintarJornada(); // se abre en la pestaña Registro
+  // Primera vez que se abre un enlace de configuración en este navegador y sin datos reales: se carga con los datos de prueba
+  // (después, desde el icono Actualizar se pueden volver a cargar o pasar a datos reales)
+  if(enlaceConfig&&!store.get('gea_prueba_inicial',false)){
+    store.set('gea_prueba_inicial',true);
+    if(!registros.some(r=>!r.ejemplo&&!r.central)&&!incidencias.some(x=>!x.ejemplo&&!x.central))cargarPrueba().catch(e=>console.error(e));
+  }
   listo=true;
 })();
 </script>
