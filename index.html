@@ -751,7 +751,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 19:25';
+  const VERSION='v1 · 2026-11-15 19:40';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -775,10 +775,11 @@ details.desp.fija>summary::after{display:none}
         :`<div class="infobox" id="infoList${s}" hidden><p class="hint" id="mapaNota${s}" hidden></p><p class="status" id="statusList${s}" role="status" aria-live="polite"></p><p class="hint infovacio">Sin novedades por ahora.</p></div>`}
         <div class="sub">
           <div class="sechead"><h3 id="tituloDia${s}">Hoy</h3>
-            <div class="calbtns"><button type="button" class="mini" id="btnHoy${s}" hidden>Volver a hoy</button><button type="button" class="mini calbtn" id="btnCal${s}" aria-expanded="false" aria-controls="calBox${s}">${ico('cal',16)}Calendario</button></div></div>
+            <div class="calbtns"><button type="button" class="mini calbtn" id="btnCal${s}" aria-expanded="false" aria-controls="calBox${s}">${ico('cal',16)}Calendario</button></div></div>
           <div class="calbox" id="calBox${s}" hidden>
             <div class="calhead"><button type="button" class="calnav" id="mesAnt${s}" aria-label="Mes anterior">‹</button><h2 id="mesLbl${s}" aria-live="polite"></h2><button type="button" class="calnav" id="mesSig${s}" aria-label="Mes siguiente">›</button></div>
             <div class="cal" id="cal${s}"></div>
+            <button type="button" class="mini" id="btnHoy${s}" style="display:block;margin:10px 0 0 auto" hidden>Volver a hoy</button>
           </div>
           ${d.hasAttribute('data-compacta')?
           // Estilo de Registro e Incidencia: herramientas con iconos y, al compartir, botones Cancelar / Email / WhatsApp
