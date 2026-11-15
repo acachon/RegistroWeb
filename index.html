@@ -455,7 +455,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     </section>
     <!-- Actividad dentro de la jornada: solo se puede usar con la jornada iniciada -->
     <section class="jornada" id="secAct">
-      <h2><img id="actIcoTit" alt="" width="30" height="30" hidden><span id="actTitulo">Sin actividad en curso</span></h2>
+      <h2><img id="actIcoTit" alt="" width="30" height="30" hidden><span id="actTitulo">Selecciona una nueva actividad</span></h2>
       <p class="jtxt" id="actTxt"></p>
       <div class="jbotones">
         <button class="cta fin" id="btnActFin" type="button">FIN ACTIVIDAD</button>
@@ -1601,7 +1601,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     // Actividad que se muestra: la que está en curso o, si no hay, la última de la jornada de hoy
     const desdeIni=hoy.slice(hoy.map(x=>x.actividad).lastIndexOf(INICIO)+1);
     const ver=act||desdeIni.slice().reverse().find(x=>!MARCAS.includes(x.actividad))||null;
-    $('actTitulo').textContent=act?act.actividad:'Sin actividad en curso';
+    $('actTitulo').textContent=act?act.actividad:'Selecciona una nueva actividad';
     ti.hidden=!act;if(act)ti.src=iconoAct(act.actividad);
     // Botones: con la jornada iniciada se puede iniciar la elegida; en curso pasa a «Pausar» o «Fin pausa» (como en la jornada)
     a.classList.remove('pausar');
