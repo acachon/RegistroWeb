@@ -1559,7 +1559,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       aviso(`Actividad registrada sin posición: ${r.actividad}`,sinGps?'Este navegador no da GPS':`GPS: ${r.error}. Mira la ayuda para activarlo.`,{err:true,ms:5000});
     }else{
       status(`Registrado ${r.fechaHora.slice(11,19)} · precisión ±${Math.round(r.precision)} m`,'ok');if(navigator.vibrate)navigator.vibrate(120);
-      aviso(actividad===PAUSAACT?`Actividad en pausa: ${r.pausaDe}`:`Actividad registrada: ${r.actividad}`,`${hhmm(ahora)} · GPS ±${Math.round(r.precision)} m`+(r.actividad===FIN?' · seguimiento parado':' · seguimiento activo'));
+      // El aviso de registro solo sale con la jornada (inicio o fin); las actividades y sus pausas no lo muestran
+      if(actividad===INICIO||actividad===FIN)aviso(`Actividad registrada: ${r.actividad}`,`${hhmm(ahora)} · GPS ±${Math.round(r.precision)} m`+(r.actividad===FIN?' · seguimiento parado':' · seguimiento activo'));
     }
   }
 
@@ -1824,6 +1825,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     const r=actividadEnCurso();if(!r)return;
     ponerPausa({regId:r.id,hasta:Date.now()+min*60000,min});
     (r.pausas=r.pausas||[]).push({ini:Date.now(),fin:null});guardarRegistros();actualizarSeguimiento();pintarListado();
+    aviso('Jornada en pausa',`Sin tomar posiciones durante ${min} min`);
   }
   function reanudar(){ponerPausa(null);actualizarSeguimiento();pintarListado()}
   function actualizarSeguimiento(){
