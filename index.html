@@ -75,8 +75,8 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .engranaje[aria-pressed=true]{background:var(--olive);color:var(--olive-ink);border-color:var(--olive)}
 /* Pestañas fijas arriba al desplazarse; la franja de encima (zona del sistema) se pinta con el fondo */
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:1001;background:var(--bg)}
-.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:1000;box-shadow:0 4px 10px rgba(0,0,0,.08);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
-.tabs button{padding:10px 4px;font-size:clamp(.82rem,4vw,.92rem);line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:1000;box-shadow:0 4px 10px rgba(0,0,0,.08);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.tabs button{padding:10px 2px;font-size:clamp(.74rem,3.6vw,.9rem);line-height:1.2;font-weight:700;background:transparent;color:var(--muted);border-radius:9px}
 .tabs button[aria-selected=true]{background:var(--olive);color:var(--olive-ink)}
 .panel{display:flex;flex-direction:column;gap:20px}
 .lbl{display:block;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -380,6 +380,27 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .tema{display:flex;gap:4px;padding:3px;background:var(--bg);border:1px solid var(--line);border-radius:10px}
 .tema button{flex:1;padding:9px 4px;font:700 .88rem var(--display);background:transparent;color:var(--muted);border-radius:8px}
 .tema button[aria-pressed=true]{background:var(--olive);color:var(--olive-ink)}
+/* Pestaña Incidencia: mismo aspecto que Registro (tarjeta, carrusel, botones y listado) */
+.subtit{margin:2px 0 -2px;font-size:clamp(.9rem,4.4vw,1.05rem)}
+.medios.cuatro{grid-template-columns:repeat(4,minmax(0,1fr))}
+.medios.cuatro .medio{padding:10px 2px;font-size:.84rem}
+/* Adjuntos de la pestaña Incidencia: grises hasta elegir el tipo; con tipo, fondo verde claro */
+.medios.cuatro .medio{background:var(--olive-soft);border-color:var(--line)}
+.medios.cuatro .medio[disabled]{background:var(--bg);color:var(--muted);opacity:.55;cursor:not-allowed}
+.medios.cuatro .medio[aria-expanded="true"]{border-color:var(--olive)}
+.medios.cuatro .medio.grabando{border-color:var(--err);color:var(--err);background:var(--card)}
+.jtxt.ok{color:var(--ok)} .jtxt.err{color:var(--err)}
+.jbotones .cta.grisa{background:#6b6f63;color:#fff}
+.jbotones .cta.grisa[disabled]{background:#b9b3a8;color:#f1eee8}
+#incEnvio .jbotones.envbtn .cta{flex:0 0 68px}
+.resumenact.inc small{overflow:hidden;text-overflow:ellipsis}
+.resumenact .acc{display:flex;gap:4px;align-items:center}
+.resumenact .ib2{position:relative;width:34px;height:34px;flex:none;display:flex;align-items:center;justify-content:center;padding:0;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--olive);text-decoration:none}
+.resumenact .ib2:active{transform:translateY(1px)}
+.resumenact .ib2[aria-expanded="true"]{border-color:var(--olive);background:var(--olive-soft)}
+.resumenact .ib2.off{opacity:.3;border-style:dashed}
+.resumenact .ib2 .n{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--olive);color:var(--olive-ink);font:800 .66rem/17px var(--display);text-align:center}
+.resumenact li>.adjs{padding:6px 4px 2px}
 @media (max-width:360px){.send{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -413,6 +434,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   <symbol id="i-todo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
   <symbol id="i-nube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1-.6-9.96A6 6 0 0 1 18 9a4.5 4.5 0 0 1 .5 8.97"/><path d="M12 12v9M8.5 15.5 12 12l3.5 3.5"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></symbol>
+  <symbol id="i-texto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.5l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></symbol>
 </svg>
 <main>
@@ -436,7 +459,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   <nav class="tabs" role="tablist">
     <button type="button" role="tab" id="tabRegistro" aria-selected="true" aria-controls="panelRegistro">Registro</button>
     <button type="button" role="tab" id="tabReg" aria-selected="false" aria-controls="panelReg">Actividad</button>
-    <button type="button" role="tab" id="tabInc" aria-selected="false" aria-controls="panelInc">Incidencias</button>
+    <button type="button" role="tab" id="tabIncid" aria-selected="false" aria-controls="panelIncid">Incidencia</button>
+    <button type="button" role="tab" id="tabInc" aria-selected="false" aria-controls="panelInc">Eventos</button>
   </nav>
 
   <!-- PESTAÑA ACTIVIDAD -->
@@ -581,6 +605,62 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     <div data-listado="Inc" data-titulo="Listado incidencias" data-adjuntos></div>
   </div>
 
+  <!-- PESTAÑA INCIDENCIA: tipo en carrusel, foto/vídeo/audio/texto y listado del día (mismo aspecto que Registro) -->
+  <div class="panel" id="panelIncid" role="tabpanel" hidden>
+    <section class="jornada" id="secInc">
+      <h2><img id="incIcoTit" alt="" width="30" height="30" hidden><span id="incTitulo">Seleccione una incidencia</span></h2>
+      <p class="jtxt" id="incTxt" role="status" aria-live="polite"></p>
+      <div class="carrusel" id="incCarrusel" role="radiogroup" aria-label="Tipo de incidencia"></div>
+      <div class="carbarra" id="incBarra" aria-hidden="true"><i></i></div>
+      <h3 class="subtit" id="incDetalle">Detalle de la incidencia</h3>
+      <div class="medios cuatro" role="group" aria-labelledby="incDetalle">
+        <button type="button" class="medio" id="iFoto" aria-expanded="false"><svg aria-hidden="true"><use href="#i-foto"/></svg>Foto</button>
+        <button type="button" class="medio" id="iVideo" aria-expanded="false"><svg aria-hidden="true"><use href="#i-video"/></svg>Vídeo</button>
+        <button type="button" class="medio" id="iAudio"><svg aria-hidden="true"><use href="#i-audio"/></svg><span id="iAudioTxt">Audio</span></button>
+        <button type="button" class="medio" id="iTexto" aria-expanded="false"><svg aria-hidden="true"><use href="#i-texto"/></svg>Texto</button>
+      </div>
+      <div class="fotoopc" id="iFotoOpc" hidden>
+        <button type="button" class="mini" id="iFotoCamara">Hacer una foto</button>
+        <button type="button" class="mini" id="iFotoGaleria">Elegir de la galería</button>
+      </div>
+      <div class="fotoopc" id="iVideoOpc" hidden>
+        <button type="button" class="mini" id="iVideoCamara">Grabar un vídeo</button>
+        <button type="button" class="mini" id="iVideoGaleria">Elegir de la galería</button>
+      </div>
+      <input type="file" id="iFileFoto" accept="image/*" capture="environment" hidden>
+      <input type="file" id="iFileVideo" accept="video/*" capture="environment" hidden>
+      <input type="file" id="iFileVideoGaleria" accept="video/*" multiple hidden>
+      <input type="file" id="iFileAudio" accept="audio/*" capture hidden>
+      <input type="file" id="iFileGaleria" accept="image/*" multiple hidden>
+      <div class="adjs" id="iAdjNuevos"></div>
+      <textarea id="iComentario" hidden aria-label="Texto de la incidencia"></textarea>
+      <div class="jbotones">
+        <button class="cta grisa" id="btnIncCancelar" type="button"><span>CANCELAR</span></button>
+        <button class="cta" id="btnIncRegistrar" type="button"><span>REGISTRAR</span></button>
+      </div>
+      <div class="listadoact" id="incListado" hidden>
+        <div class="lhead">
+          <h3>Listado incidencias</h3>
+          <div class="lherr" id="incHerr" hidden>
+            <button type="button" class="ib" id="incTodos" aria-label="Seleccionar todo" title="Seleccionar todo"><svg width="20" height="20" aria-hidden="true"><use href="#i-selall"/></svg></button>
+            <button type="button" class="ib" id="incCompartir" aria-label="Compartir las seleccionadas" title="Compartir"><svg width="20" height="20" aria-hidden="true"><use href="#i-share"/></svg></button>
+            <button type="button" class="ib peligro" id="incBorrar" aria-label="Eliminar las seleccionadas" title="Eliminar"><svg width="20" height="20" aria-hidden="true"><use href="#i-trash"/></svg></button>
+          </div>
+        </div>
+        <div class="envio" id="incEnvio" hidden>
+          <h3>Enviar incidencias</h3>
+          <div class="jbotones envbtn">
+            <button class="cta fin cancelar" id="incCancelarEnvio" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-x"/></svg><span>Cancelar</span></button>
+            <button class="cta mail" id="incMail" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-mail"/></svg><span>Email</span></button>
+            <button class="cta wa" id="incWa" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-wa"/></svg><span>WhatsApp</span></button>
+            <button class="cta" id="incArch" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-share"/></svg><span>Archivos</span></button>
+          </div>
+        </div>
+        <ol class="resumenact inc" id="incResumen" aria-label="Incidencias de hoy"></ol>
+      </div>
+    </section>
+  </div>
+
   <div class="visor" id="visor" hidden role="dialog" aria-modal="true" aria-label="Adjunto">
     <div id="visorMedio"></div>
     <p id="visorTxt"></p>
@@ -655,7 +735,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 11:55';
+  const VERSION='v1 · 2026-11-15 14:35';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -925,7 +1005,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   let menuPausa=false; // se está eligiendo cuánto pausar
 
   /* ---------- Pestañas ---------- */
-  const PESTANAS={registro:['tabRegistro','panelRegistro'],reg:['tabReg','panelReg'],inc:['tabInc','panelInc'],cfg:['tabCfg','panelCfg']};
+  const PESTANAS={registro:['tabRegistro','panelRegistro'],reg:['tabReg','panelReg'],incid:['tabIncid','panelIncid'],inc:['tabInc','panelInc'],cfg:['tabCfg','panelCfg']};
   // pestanaAntes: la última pestaña que no era Configuración, para volver a ella al pulsar otra vez el engranaje
   let pestana='registro', pestanaAntes='registro';
   function abrir(tab){
@@ -941,6 +1021,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     // Los mapas se vuelven a pintar al mostrarse, cuando ya tienen su tamaño real
     if(tab==='reg')pintarListado();
     if(tab==='inc')pintarIncidencias();
+    // Pestaña Incidencia: el aviso de ubicación se muestra bajo su tarjeta y la barra del carrusel se mide ya visible
+    if(tab==='incid'){$('secInc').after($('avisosJornada'));pintarNuevaInc();barraCarruselInc();pintarListadoInc()}
     window.scrollTo(0,0);
   }
   Object.entries(PESTANAS).forEach(([k,[t]])=>$(t).addEventListener('click',()=>abrir(k==='cfg'&&pestana==='cfg'?pestanaAntes:k)));
@@ -1002,7 +1084,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     if(!mailOk)return mal('Revisa el email: debe tener la forma nombre@dominio.com.');
     if(!tipos.length)return mal('Debe haber al menos un tipo de incidencia.');
     if(!tareas.length)return mal('Debe haber al menos una actividad además de Inicio y Fin Jornada.');
-    tiposInc=tipos;store.set(KEY_TIPOS,tipos);llenarTiposInc();
+    tiposInc=tipos;store.set(KEY_TIPOS,tipos);llenarTiposInc();construirCarruselInc();
     tareasAct=tareas;store.set(KEY_TAREAS,tareas);construirCarrusel();
     editores.forEach(e=>e.pintar());
     const nuevoInt=+$('gpsIntervalo').value;
@@ -1649,10 +1731,10 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     a.disabled=registrando;f.disabled=registrando||!curso;
     // Datos de la jornada de hoy (la última iniciada): hora de inicio, de fin (-- si sigue abierta) y duración transcurrida
     const ini=hoy.slice().reverse().find(x=>x.actividad===INICIO), fin=ini&&hoy.find(x=>x.actividad===FIN&&new Date(x.iso)>new Date(ini.iso));
-    t.className=ini?'jdatos':'jtxt';t.textContent='';
-    if(!ini){t.textContent='Pulsa «Inicio Jornada» al empezar a trabajar.';return}
-    const t0=new Date(ini.iso).getTime(), min=Math.max(0,Math.floor(((fin?new Date(fin.iso).getTime():Date.now())-t0)/60000));
-    [[hhmm(new Date(ini.iso)),'Hora inicio'],[fin?hhmm(new Date(fin.iso)):'--','Hora fin'],[`${Math.floor(min/60)}h ${pad(min%60)}m`,'Duración']].forEach(([v,l])=>{
+    // Sin jornada iniciada, como en la actividad: hora actual, «--» y «-h --m» (sin texto de instrucciones)
+    t.className='jdatos';t.textContent='';
+    const min=ini?Math.max(0,Math.floor(((fin?new Date(fin.iso).getTime():Date.now())-new Date(ini.iso).getTime())/60000)):0;
+    [[hhmm(ini?new Date(ini.iso):new Date()),'Hora inicio'],[fin?hhmm(new Date(fin.iso)):'--','Hora fin'],[ini?`${Math.floor(min/60)}h ${pad(min%60)}m`:'-h --m','Duración']].forEach(([v,l])=>{
       const d=el('div');d.appendChild(el('strong',null,v));d.appendChild(el('small',null,l));t.appendChild(d)});
   }
   /* ---------- Pestaña Registro: actividad dentro de la jornada ---------- */
@@ -2342,7 +2424,236 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     },
     trasBorrar(){pintarIncidencias();pintarListado()}
   });
-  function pintarIncidencias(){LI.pintar();if(typeof actualizarPendientes==='function')actualizarPendientes()}
+  function pintarIncidencias(){LI.pintar();pintarListadoInc();if(typeof actualizarPendientes==='function')actualizarPendientes()}
+  /* ---------- Pestaña Incidencia: tipo en carrusel, foto/vídeo/audio/texto y listado de las incidencias de hoy ---------- */
+  // Iconos de los tipos de incidencia (mismo estilo que los de actividad). Un tipo nuevo de Configuración usa el de «Otros».
+  const svgUrl=s=>'data:image/svg+xml,'+encodeURIComponent(s);
+  const ICONOS_INC={
+    olivo:svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><clipPath id="c"><rect x="8" y="94" width="104" height="18" rx="9"/></clipPath></defs><g clip-path="url(#c)"><rect x="8" y="94" width="104" height="18" fill="#e9e59f"/><path d="M-4 116L26 92h16L12 116zM40 116L70 92h16L56 116zM84 116l30-24h16l-30 24z" fill="#4fae4a"/><path d="M20 116l30-24h6l-30 24zM64 116l30-24h6L70 116z" fill="#1f8a4c"/></g><path d="M53 96C55 82 54 72 49 62l5-8 10 2 5 8c-3 10-2 20 0 32z" fill="#b87333"/><path d="M58 96c1-12 0-22-3-32l5 0c2 10 3 20 4 32z" fill="#d89a52"/><circle cx="36" cy="48" r="17" fill="#1f8a4c"/><circle cx="84" cy="48" r="17" fill="#1f8a4c"/><circle cx="60" cy="34" r="24" fill="#2f9e44"/><circle cx="60" cy="56" r="20" fill="#3cb35a"/><g fill="#b5dc5a"><ellipse cx="46" cy="30" rx="9" ry="3.6" transform="rotate(-35 46 30)"/><ellipse cx="74" cy="26" rx="9" ry="3.6" transform="rotate(30 74 26)"/><ellipse cx="62" cy="48" rx="9" ry="3.6" transform="rotate(-15 62 48)"/><ellipse cx="30" cy="54" rx="8" ry="3.4" transform="rotate(25 30 54)"/><ellipse cx="90" cy="52" rx="8" ry="3.4" transform="rotate(-30 90 52)"/></g><g fill="#2f4b17"><ellipse cx="52" cy="40" rx="3.2" ry="4.6"/><ellipse cx="70" cy="38" rx="3.2" ry="4.6"/><ellipse cx="42" cy="58" rx="3.2" ry="4.6"/><ellipse cx="78" cy="60" rx="3.2" ry="4.6"/><ellipse cx="60" cy="62" rx="3.2" ry="4.6"/></g></svg>`),
+    vehiculo:svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><clipPath id="c"><rect x="8" y="94" width="104" height="18" rx="9"/></clipPath></defs><g clip-path="url(#c)"><rect x="8" y="94" width="104" height="18" fill="#e9e59f"/><path d="M-4 116L26 92h16L12 116zM40 116L70 92h16L56 116zM84 116l30-24h16l-30 24z" fill="#4fae4a"/><path d="M20 116l30-24h6l-30 24zM64 116l30-24h6L70 116z" fill="#1f8a4c"/></g><rect x="12" y="52" width="42" height="26" rx="3" fill="#0f6b3a"/><rect x="12" y="52" width="42" height="6" rx="3" fill="#1f8a4c"/><path d="M54 80V46q0-4 4-4h20l17 17h10q5 0 5 5v16z" fill="#2f9e44"/><path d="M60 48h16l11 11H60z" fill="#bfe8f7"/><path d="M60 48h6l-8 11h-4z" fill="#e6f6fc" opacity=".7"/><rect x="104" y="64" width="6" height="6" rx="2" fill="#ffe082"/><rect x="54" y="72" width="56" height="8" fill="#1f8a4c"/><circle cx="32" cy="82" r="11" fill="#27352a"/><circle cx="32" cy="82" r="5" fill="#cfd8cf"/><circle cx="90" cy="82" r="11" fill="#27352a"/><circle cx="90" cy="82" r="5" fill="#cfd8cf"/></svg>`),
+    nave:svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><clipPath id="c"><rect x="8" y="94" width="104" height="18" rx="9"/></clipPath></defs><g clip-path="url(#c)"><rect x="8" y="94" width="104" height="18" fill="#e9e59f"/><path d="M-4 116L26 92h16L12 116zM40 116L70 92h16L56 116zM84 116l30-24h16l-30 24z" fill="#4fae4a"/><path d="M20 116l30-24h6l-30 24zM64 116l30-24h6L70 116z" fill="#1f8a4c"/></g><rect x="22" y="48" width="76" height="46" fill="#efe6b0"/><rect x="22" y="48" width="76" height="6" fill="#e3d899"/><path d="M12 52L60 18l48 34z" fill="#1f8a4c"/><path d="M12 52L60 18l48 34-6 4L60 26 18 56z" fill="#0f6b3a"/><circle cx="60" cy="40" r="6" fill="#e9e59f" stroke="#0f6b3a" stroke-width="2.5"/><rect x="42" y="62" width="36" height="32" rx="2" fill="#9a6532"/><path d="M42 62l36 32M78 62L42 94" stroke="#d9a35b" stroke-width="3"/><rect x="42" y="62" width="36" height="32" rx="2" fill="none" stroke="#d9a35b" stroke-width="3"/><path d="M60 62v32" stroke="#6e4620" stroke-width="2"/><circle cx="56" cy="80" r="2.2" fill="#ffe082"/><circle cx="64" cy="80" r="2.2" fill="#ffe082"/></svg>`),
+    riego:svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><clipPath id="c"><rect x="8" y="94" width="104" height="18" rx="9"/></clipPath></defs><g clip-path="url(#c)"><rect x="8" y="94" width="104" height="18" fill="#e9e59f"/><path d="M-4 116L26 92h16L12 116zM40 116L70 92h16L56 116zM84 116l30-24h16l-30 24z" fill="#4fae4a"/><path d="M20 116l30-24h6l-30 24zM64 116l30-24h6L70 116z" fill="#1f8a4c"/></g><path d="M60 14C60 14 42 36 42 50a18 18 0 0 0 36 0C78 36 60 14 60 14z" fill="#3cc1f3"/><path d="M52 40c-4 6-6 11-5 16" stroke="#fff" stroke-width="4" stroke-linecap="round" fill="none" opacity=".75"/><g fill="#3cc1f3"><path d="M26 44c0 0-5 7-5 11a5 5 0 0 0 10 0c0-4-5-11-5-11z"/><path d="M96 38c0 0-5 7-5 11a5 5 0 0 0 10 0c0-4-5-11-5-11z"/><circle cx="34" cy="30" r="3.4"/><circle cx="88" cy="24" r="3.4"/></g><rect x="10" y="68" width="100" height="14" rx="7" fill="#0f6b3a"/><rect x="48" y="63" width="14" height="24" rx="3" fill="#1f8a4c"/><rect x="82" y="63" width="14" height="24" rx="3" fill="#1f8a4c"/><path d="M52 68h6v14h-6z" fill="#2f9e44"/><path d="M22 92c-8-2-12-8-12-14 8 0 13 5 12 14zM100 92c8-2 12-8 12-14-8 0-13 5-12 14z" fill="#8bc34a"/></svg>`),
+    producto:svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><clipPath id="c"><rect x="8" y="94" width="104" height="18" rx="9"/></clipPath></defs><g clip-path="url(#c)"><rect x="8" y="94" width="104" height="18" fill="#e9e59f"/><path d="M-4 116L26 92h16L12 116zM40 116L70 92h16L56 116zM84 116l30-24h16l-30 24z" fill="#4fae4a"/><path d="M20 116l30-24h6l-30 24zM64 116l30-24h6L70 116z" fill="#1f8a4c"/></g><path d="M24 38Q46 28 68 38L75 90Q46 98 17 90z" fill="#efe6b0"/><path d="M24 38Q46 28 68 38L66 50Q46 42 26 50z" fill="#e3d899"/><path d="M28 30Q46 38 64 30L68 38Q46 46 24 38z" fill="#c98a3f"/><circle cx="46" cy="68" r="16" fill="#1f8a4c"/><path d="M46 78c0-8 2-14 9-18-1 9-4 15-9 18zM46 78c0-5-2-9-7-12 0 6 2 10 7 12z" fill="#e9f5c8"/><rect x="82" y="54" width="26" height="36" rx="7" fill="#3cc1f3"/><rect x="90" y="44" width="10" height="12" fill="#3cc1f3"/><rect x="88" y="37" width="14" height="9" rx="2.5" fill="#0f6b3a"/><rect x="86" y="68" width="18" height="14" rx="2" fill="#fff" opacity=".9"/><path d="M95 80c0-4 1-7 5-9-1 5-2 7-5 9z" fill="#1f8a4c"/><path d="M86 58v26" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".5"/></svg>`),
+    otros:svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><clipPath id="c"><rect x="8" y="94" width="104" height="18" rx="9"/></clipPath></defs><g clip-path="url(#c)"><rect x="8" y="94" width="104" height="18" fill="#e9e59f"/><path d="M-4 116L26 92h16L12 116zM40 116L70 92h16L56 116zM84 116l30-24h16l-30 24z" fill="#4fae4a"/><path d="M20 116l30-24h6l-30 24zM64 116l30-24h6L70 116z" fill="#1f8a4c"/></g><rect x="52" y="16" width="16" height="46" rx="8" fill="#0f6b3a"/><circle cx="60" cy="76" r="9" fill="#0f6b3a"/><path d="M52 18a8 8 0 0 1 8-3v46a8 8 0 0 1-8-8z" fill="#1f8a4c" opacity=".55"/><g stroke="#8bc34a" stroke-width="6" stroke-linecap="round"><path d="M28 32l12 8M20 50h14M92 32L80 40M100 50H86"/></g></svg>`)
+  };
+  ICONOS_INC['vehiculo/herramienta']=ICONOS_INC.vehiculo;ICONOS_INC['acceso/nave']=ICONOS_INC.nave;
+  const iconoInc=t=>ICONOS_INC[claveAct(t)]||ICONOS_INC.otros;
+  let incSel=null, nuevosI=[], urlsNuevosI=[], incOcupadaI=false;
+  let incSelFilas=new Set(), incAbiertas=new Set(), sigInc='', urlsListaI=[];
+  const statusI=(msg,cls)=>{const p=$('incTxt');p.textContent=msg||'';p.className='jtxt'+(msg&&cls?' '+cls:'');p.hidden=!msg};
+  statusI('');
+
+  function construirCarruselInc(){
+    const c=$('incCarrusel');c.textContent='';
+    if(incSel&&!tiposInc.includes(incSel))incSel=null;
+    tiposInc.forEach(n=>{
+      const b=el('button','chipact');b.type='button';b.setAttribute('role','radio');b.dataset.inc=n;
+      const im=el('img');im.src=iconoInc(n);im.alt='';b.append(im,el('span',null,n));
+      b.addEventListener('click',()=>{incSel=incSel===n?null:n;pintarNuevaInc();b.scrollIntoView({inline:'nearest',block:'nearest'})});
+      c.appendChild(b);
+    });
+    pintarNuevaInc();barraCarruselInc();
+  }
+  // Barra bajo el carrusel (igual que la de actividades)
+  function barraCarruselInc(){
+    const c=$('incCarrusel'), b=$('incBarra'), i=b.firstChild, mas=c.scrollWidth>c.clientWidth+1;
+    b.hidden=!mas;if(!mas)return;
+    const w=Math.max(.12,c.clientWidth/c.scrollWidth), max=c.scrollWidth-c.clientWidth;
+    i.style.width=(w*100)+'%';i.style.left=((max?c.scrollLeft/max:0)*(1-w)*100)+'%';
+  }
+  (()=>{
+    const c=$('incCarrusel'), b=$('incBarra');
+    c.addEventListener('scroll',barraCarruselInc,{passive:true});
+    addEventListener('resize',barraCarruselInc);
+    const ir=e=>{const r=b.getBoundingClientRect(), f=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));c.scrollLeft=f*(c.scrollWidth-c.clientWidth)};
+    b.addEventListener('pointerdown',e=>{b.setPointerCapture(e.pointerId);ir(e)});
+    b.addEventListener('pointermove',e=>{if(b.hasPointerCapture(e.pointerId))ir(e)});
+  })();
+
+  // Título con el tipo elegido y botones: REGISTRAR necesita tipo y algo que registrar (texto, foto, vídeo o audio)
+  function pintarNuevaInc(){
+    document.querySelectorAll('#incCarrusel .chipact').forEach(b=>{b.setAttribute('aria-checked',b.dataset.inc===incSel);b.disabled=incOcupadaI});
+    const ti=$('incIcoTit');ti.hidden=!incSel;if(incSel)ti.src=iconoInc(incSel);
+    $('incTitulo').textContent=incSel||'Seleccione una incidencia';
+    const hay=!!($('iComentario').value.trim()||nuevosI.length);
+    // REGISTRAR solo necesita un tipo elegido; el texto y los adjuntos son opcionales
+    $('btnIncRegistrar').disabled=incOcupadaI||!incSel;
+    // Foto, vídeo, audio y texto solo se activan con un tipo elegido (el audio en grabación sigue activo para poder pararlo)
+    ['iFoto','iVideo','iAudio','iTexto'].forEach(id=>{$(id).disabled=!incSel||incOcupadaI});
+    if(grabI)$('iAudio').disabled=false;
+    if(!incSel){opcFotoI(false);opcVideoI(false)}
+    $('btnIncCancelar').disabled=incOcupadaI||(!incSel&&!hay&&!grabI);
+    $('btnIncRegistrar').classList.toggle('ocupado',incOcupadaI);
+  }
+
+  async function anadirArchivoI(file,durSeg){
+    const tipo=tipoDeMime(file.type||'');
+    if(!tipo){statusI('Ese archivo no es una foto, un vídeo ni un audio.','err');return}
+    const blob=tipo==='foto'?await reducirFoto(file):file;
+    nuevosI.push({tipo,blob,mime:blob.type||file.type,nombre:file.name,dur:durSeg});
+    if(tipo==='video'&&blob.size>50*1048576)statusI(`El vídeo ocupa ${tamano(blob.size)}: puede tardar en enviarse. Mejor vídeos cortos.`,'err');
+    else statusI('');
+    pintarNuevosI();
+  }
+  function pintarNuevosI(){
+    urlsNuevosI.forEach(u=>URL.revokeObjectURL(u));urlsNuevosI=[];
+    const c=$('iAdjNuevos');c.textContent='';
+    nuevosI.forEach((a,i)=>{
+      const m=miniatura(a.tipo,{blob:a.blob,dur:a.dur,texto:()=>`${NOMBRE_ADJ[a.tipo]} · ${tamano(a.blob.size)}`},urlsNuevosI);
+      const q=boton('quitar','✕');q.setAttribute('aria-label','Quitar adjunto');
+      q.addEventListener('click',e=>{e.stopPropagation();nuevosI.splice(i,1);pintarNuevosI()});
+      m.appendChild(q);c.appendChild(m);
+    });
+    pintarNuevaInc();
+  }
+  // Foto y vídeo: hacerlo con la cámara o elegirlo de la galería (solo uno de los dos menús abierto a la vez)
+  const opcFotoI=v=>{$('iFotoOpc').hidden=!v;$('iFoto').setAttribute('aria-expanded',v);if(v)opcVideoI(false)};
+  const opcVideoI=v=>{$('iVideoOpc').hidden=!v;$('iVideo').setAttribute('aria-expanded',v);if(v)opcFotoI(false)};
+  opcFotoI(false);opcVideoI(false);
+  $('iFoto').addEventListener('click',()=>opcFotoI($('iFotoOpc').hidden));
+  $('iVideo').addEventListener('click',()=>opcVideoI($('iVideoOpc').hidden));
+  [['iFotoCamara','iFileFoto'],['iFotoGaleria','iFileGaleria'],['iVideoCamara','iFileVideo'],['iVideoGaleria','iFileVideoGaleria']]
+    .forEach(([b,f])=>$(b).addEventListener('click',()=>{opcFotoI(false);opcVideoI(false);$(f).click()}));
+  ['iFileFoto','iFileVideo','iFileVideoGaleria','iFileAudio','iFileGaleria'].forEach(id=>$(id).addEventListener('change',async e=>{
+    for(const f of [...e.target.files])await anadirArchivoI(f);
+    e.target.value='';
+  }));
+  // Texto: se muestra u oculta el cuadro de escritura
+  $('iTexto').addEventListener('click',()=>{const t=$('iComentario');t.hidden=!t.hidden;$('iTexto').setAttribute('aria-expanded',!t.hidden);if(!t.hidden)t.focus()});
+  $('iComentario').addEventListener('input',pintarNuevaInc);
+  // Audio: se graba en la página (máximo 3 minutos); si el navegador no puede, se abre la grabadora del móvil
+  let grabI=null, grabIIni=0, grabITim=null, grabIDescarta=false;
+  $('iAudio').addEventListener('click',async()=>{
+    if(grabI){grabI.stop();return}
+    if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder)){$('iFileAudio').click();return}
+    let stream;
+    try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}
+    catch(e){
+      statusI(e.name==='NotAllowedError'?'Permite el micrófono para grabar audio (icono a la izquierda de la dirección, o Ajustes → Apps → GEA - Registro → Permisos).':'No se puede usar el micrófono. Se abre la grabadora del móvil.','err');
+      if(e.name!=='NotAllowedError')$('iFileAudio').click();
+      return;
+    }
+    const tipo=['audio/webm;codecs=opus','audio/mp4','audio/ogg;codecs=opus','audio/webm'].find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t));
+    const trozos=[];grabIDescarta=false;
+    grabI=new MediaRecorder(stream,tipo?{mimeType:tipo}:undefined);
+    grabI.ondataavailable=e=>{if(e.data&&e.data.size)trozos.push(e.data)};
+    grabI.onstop=()=>{
+      stream.getTracks().forEach(t=>t.stop());clearInterval(grabITim);
+      const dur=(Date.now()-grabIIni)/1000, mime=(grabI.mimeType||tipo||'audio/webm').split(';')[0];
+      grabI=null;$('iAudio').classList.remove('grabando');$('iAudioTxt').textContent='Audio';
+      const blob=new Blob(trozos,{type:mime});
+      if(!grabIDescarta&&blob.size)anadirArchivoI(new File([blob],`audio.${extDe(mime)}`,{type:mime}),dur);else pintarNuevaInc();
+    };
+    grabI.start();grabIIni=Date.now();
+    $('iAudio').classList.add('grabando');$('iAudioTxt').textContent='Parar 0:00';
+    grabITim=setInterval(()=>{
+      const s=(Date.now()-grabIIni)/1000;$('iAudioTxt').textContent='Parar '+mmss(s);
+      if(s>=180)grabI&&grabI.stop();
+    },500);
+    statusI('Grabando audio…');pintarNuevaInc();
+  });
+
+  // Cancelar: se descarta todo lo preparado
+  $('btnIncCancelar').addEventListener('click',()=>{
+    if(grabI){grabIDescarta=true;grabI.stop()}
+    incSel=null;nuevosI=[];$('iComentario').value='';$('iComentario').hidden=true;$('iTexto').setAttribute('aria-expanded',false);
+    opcFotoI(false);opcVideoI(false);pintarNuevosI();statusI('');
+  });
+  // Registrar: fecha, hora y posición GPS, más tipo, texto y adjuntos
+  $('btnIncRegistrar').addEventListener('click',async()=>{
+    if(grabI){statusI('Para primero la grabación de audio.','err');return}
+    if($('btnIncRegistrar').disabled)return;
+    statusI('');
+    const ahora=new Date();
+    const x={id:nuevoId(),nombre:cfg.nombre,tipo:incSel,comentario:$('iComentario').value.trim(),
+      fechaHora:fechaHora(ahora),iso:ahora.toISOString(),lat:null,lon:null,precision:null,adjuntos:[]};
+    incOcupadaI=true;pintarNuevaInc();statusI('Obteniendo posición GPS…');
+    const pos=await pedirPosicion();
+    if(pos.error)x.error=pos.error;else Object.assign(x,pos);
+    const pref=`incidencia_${ahora.getFullYear()}${pad(ahora.getMonth()+1)}${pad(ahora.getDate())}_${pad(ahora.getHours())}${pad(ahora.getMinutes())}`;
+    for(const [i,a] of nuevosI.entries()){
+      const id=nuevoId();await media.guardar(id,a.blob);
+      x.adjuntos.push({id,tipo:a.tipo,mime:a.mime,nombre:`${pref}_${i+1}.${extDe(a.mime,a.nombre)}`,size:a.blob.size,dur:a.dur?Math.round(a.dur):undefined});
+    }
+    incidencias.push(x);guardarIncidencias();
+    nuevosI=[];$('iComentario').value='';$('iComentario').hidden=true;$('iTexto').setAttribute('aria-expanded',false);incSel=null;opcFotoI(false);opcVideoI(false);
+    incOcupadaI=false;pintarNuevosI();
+    pintarIncidencias();pintarListado();
+    if(!pos.error){
+      $('ayudaGps').hidden=true;statusI('');if(navigator.vibrate)navigator.vibrate(120);
+      aviso(`Incidencia registrada: ${x.tipo}`,`${hhmm(ahora)} · GPS ±${Math.round(x.precision)} m`);
+    }else{
+      aviso(`Incidencia registrada sin posición: ${x.tipo}`,pos.codigo===0?'Este navegador no da GPS':`GPS: ${x.error}`,{err:true,ms:5000});
+      statusI('');
+      if(pos.codigo!==0)ayudaUbicacion(pos.codigo);
+    }
+  });
+
+  // Listado de las incidencias de hoy (las más recientes arriba): tipo, hora, adjuntos y enlace a Google Maps
+  const incidenciasHoy=()=>incidencias.filter(x=>!x.ejemplo&&x.nombre===cfg.nombre&&diaDe(x)===hoyKey()).sort((a,b)=>new Date(b.iso)-new Date(a.iso));
+  function pintarListadoInc(){
+    const lista=incidenciasHoy();
+    incSelFilas=new Set([...incSelFilas].filter(id=>lista.some(x=>x.id===id)));
+    $('incListado').hidden=!lista.length;
+    $('incHerr').hidden=!incSelFilas.size;
+    if(!incSelFilas.size)$('incEnvio').hidden=true;
+    const todas=lista.length>0&&incSelFilas.size===lista.length;
+    $('incTodos').firstChild.firstChild.setAttribute('href',todas?'#i-selnone':'#i-selall');
+    $('incTodos').title=todas?'Quitar la selección':'Seleccionar todo';$('incTodos').setAttribute('aria-label',$('incTodos').title);
+    const sig=lista.map(x=>`${x.id}|${incSelFilas.has(x.id)}|${incAbiertas.has(x.id)}|${(x.adjuntos||[]).length}|${x.lat!=null}|${x.tipo}|${x.comentario||''}`).join(';');
+    if(sig===sigInc)return;sigInc=sig;
+    urlsListaI.forEach(u=>URL.revokeObjectURL(u));urlsListaI=[];
+    const ol=$('incResumen');ol.textContent='';
+    lista.forEach(x=>{
+      const li=el('li'), lab=el('label',incSelFilas.has(x.id)?'sel':''), cb=el('input'), im=el('img');
+      cb.type='checkbox';cb.checked=incSelFilas.has(x.id);cb.setAttribute('aria-label',`Seleccionar ${x.tipo}`);
+      cb.addEventListener('change',()=>{cb.checked?incSelFilas.add(x.id):incSelFilas.delete(x.id);pintarListadoInc()});
+      im.src=iconoInc(x.tipo);im.alt='';
+      const tx=el('div');tx.appendChild(el('b',null,x.tipo));
+      tx.appendChild(el('small',null,hhmm(new Date(x.iso))+(x.comentario?` · ${x.comentario}`:'')));
+      const acc=el('div','acc'), nAdj=(x.adjuntos||[]).length;
+      if(nAdj){
+        const b=boton('ib2');b.title='Ver archivos adjuntos';b.setAttribute('aria-label',`Ver ${nAdj} ${plural(nAdj,'archivo adjunto','archivos adjuntos')}`);
+        b.setAttribute('aria-expanded',incAbiertas.has(x.id));b.innerHTML=ico('clip',18)+(nAdj>1?`<span class="n">${nAdj}</span>`:'');
+        b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();incAbiertas.has(x.id)?incAbiertas.delete(x.id):incAbiertas.add(x.id);pintarListadoInc()});
+        acc.appendChild(b);
+      }
+      if(x.lat!=null){
+        const a=el('a','ib2');a.href=urlMapa(x);a.target='_blank';a.rel='noopener';a.title='Ver en Google Maps';a.setAttribute('aria-label','Ver la ubicación en Google Maps');
+        a.innerHTML=ico('ubic',18);a.addEventListener('click',e=>e.stopPropagation());acc.appendChild(a);
+      }else{
+        const s=el('span','ib2 off');s.title='Sin posición GPS';s.setAttribute('role','img');s.setAttribute('aria-label','Sin posición GPS');s.innerHTML=ico('ubic',18);acc.appendChild(s);
+      }
+      lab.append(cb,im,tx,acc);li.appendChild(lab);
+      if(nAdj&&incAbiertas.has(x.id))li.appendChild(filaAdjuntos(x,urlsListaI,true));
+      ol.appendChild(li);
+    });
+  }
+  const incMarcadas=()=>incidencias.filter(x=>incSelFilas.has(x.id)).sort(porHora);
+  $('incTodos').addEventListener('click',()=>{const t=incidenciasHoy();incSelFilas=incSelFilas.size===t.length?new Set():new Set(t.map(x=>x.id));pintarListadoInc()});
+  $('incCompartir').addEventListener('click',()=>{if(incSelFilas.size)$('incEnvio').hidden=false});
+  $('incCancelarEnvio').addEventListener('click',()=>{$('incEnvio').hidden=true});
+  $('incWa').addEventListener('click',()=>{const l=incMarcadas();if(l.length)abrirWhatsapp(textoIncidencias(l))});
+  $('incMail').addEventListener('click',()=>{const l=incMarcadas();if(l.length)abrirEmail(['Incidencia',sinRepetir(l.map(x=>x.tipo)),sinRepetir(l.map(x=>x.nombre)),rango(l)].join(' '),textoIncidencias(l))});
+  // Texto y todas las fotos, vídeos y audios de las marcadas, con el menú de compartir del móvil
+  $('incArch').addEventListener('click',async()=>{
+    const l=incMarcadas();if(!l.length)return;
+    const files=[];statusI('Preparando adjuntos…');
+    for(const x of l)for(const a of x.adjuntos||[]){const bl=await media.leer(a.id);if(bl)files.push(new File([bl],a.nombre,{type:a.mime||bl.type}))}
+    const res=await compartirArchivos(files,'Incidencias de la finca',textoIncidencias(l));
+    statusI(res==='ok'?`Compartidas ${l.length} ${plural(l.length,'incidencia')} con ${files.length} ${plural(files.length,'adjunto')}.`:res==='cancelado'?'':res,res==='ok'?'ok':'err');
+  });
+  // Eliminar: se quitan al momento (con sus adjuntos) y el aviso ofrece DESHACER durante 8 s
+  $('incBorrar').addEventListener('click',()=>{
+    const sel=incMarcadas();if(!sel.length)return;
+    const ids=new Set(sel.map(x=>x.id)), n=sel.length;
+    incidencias=incidencias.filter(x=>!ids.has(x.id));guardarIncidencias();incSelFilas=new Set();$('incEnvio').hidden=true;
+    pintarIncidencias();pintarListado();
+    aviso(`${n} ${plural(n,'incidencia')} ${plural(n,'eliminada')}`,'Se borra del todo en 8 s',{err:true,ms:8000,
+      alCerrar:()=>sel.forEach(x=>(x.adjuntos||[]).forEach(a=>media.borrar(a.id))),
+      accion:{texto:'DESHACER',fn:()=>{incidencias=incidencias.concat(sel).sort(porHora);guardarIncidencias();pintarIncidencias();pintarListado()}}});
+  });
+
   // Marcador de una incidencia y su globo (tipo, empleado, fecha, comentario e iconos de los adjuntos)
   function marcadorIncidencia(x,num,capa){
     return L.marker([x.lat,x.lon],{icon:divIcon(crearPinInc(String(num),colorInc(x.tipo)),30,28,15,24),zIndexOffset:500}).bindPopup(()=>{
@@ -2495,7 +2806,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   pintarTodo();
   actualizarSeguimiento();
   pintarIncidencias();
-  $('panelRegistro').appendChild($('avisosJornada'));construirCarrusel();pintarJornada(); // se abre en la pestaña Registro
+  $('panelRegistro').appendChild($('avisosJornada'));construirCarrusel();construirCarruselInc();pintarJornada(); // se abre en la pestaña Registro
   listo=true;
 })();
 </script>
