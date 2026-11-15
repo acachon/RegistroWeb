@@ -776,7 +776,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-16 02:30';
+  const VERSION='v1 · 2026-11-16 02:45';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -3139,9 +3139,12 @@ details.desp.fija>summary::after{display:none}
   $('btnActReales').addEventListener('click',()=>{cerrarElegirDatos();quitarPrueba();centralDias.clear();cargarCentral(true)});
   $('btnActPrueba').addEventListener('click',()=>{cerrarElegirDatos();pedirPrueba()});
   LA.alCambiarDias=()=>cargarCentral(false);
-  // El icono Actualizar solo existe con la clave de lectura. Sin ella, el Supervisor maneja solo los datos locales de este móvil:
-  // si la clave se borra, también se descarta lo que había llegado del fichero central.
-  function mostrarActualizar(){$('btnActualizar').hidden=!sync.claveLec;if(!sync.claveLec)$('boxActualizar').hidden=true}
+  // El botón «Datos reales» del menú Actualizar solo existe con la clave de lectura (sin ella solo se ofrecen datos de prueba).
+  // Si la clave se borra, también se descarta lo que había llegado del fichero central.
+  function mostrarActualizar(){
+    $('btnActReales').hidden=!sync.claveLec;
+    $('boxActualizar').querySelector('h3').textContent=sync.claveLec?'¿Actualizar con datos reales o de prueba?':'¿Cargar datos de prueba?';
+  }
   function quitarCentral(){
     if(!registros.some(r=>r.central)&&!incidencias.some(x=>x.central)&&!puntos.some(p=>p.central)){centralDias.clear();return}
     registros=registros.filter(r=>!r.central);incidencias=incidencias.filter(x=>!x.central);puntos=puntos.filter(p=>!p.central);centralDias.clear();
