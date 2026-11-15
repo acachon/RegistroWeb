@@ -392,7 +392,6 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .jtxt.ok{color:var(--ok)} .jtxt.err{color:var(--err)}
 .jbotones .cta.grisa{background:#6b6f63;color:#fff}
 .jbotones .cta.grisa[disabled]{background:#b9b3a8;color:#f1eee8}
-#incEnvio .jbotones.envbtn .cta{flex:0 0 68px}
 .resumenact.inc small{overflow:hidden;text-overflow:ellipsis}
 .resumenact .acc{display:flex;gap:4px;align-items:center}
 .resumenact .ib2{position:relative;width:34px;height:34px;flex:none;display:flex;align-items:center;justify-content:center;padding:0;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--olive);text-decoration:none}
@@ -652,9 +651,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
           <div class="jbotones envbtn">
             <button class="cta fin cancelar" id="incCancelarEnvio" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-x"/></svg><span>Cancelar</span></button>
             <button class="cta mail" id="incMail" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-mail"/></svg><span>Email</span></button>
-            <button class="cta wa" id="incWa" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-wa"/></svg><span>WhatsApp</span></button>
-            <button class="cta" id="incArch" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-share"/></svg><span>Archivos</span></button>
-          </div>
+            <button class="cta wa" id="incWa" type="button"><svg width="26" height="26" aria-hidden="true"><use href="#i-wa"/></svg><span>WhatsApp</span></button>          </div>
         </div>
         <ol class="resumenact inc" id="incResumen" aria-label="Incidencias de hoy"></ol>
       </div>
@@ -735,7 +732,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 14:35';
+  const VERSION='v1 · 2026-11-15 15:00';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -2633,16 +2630,24 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   $('incTodos').addEventListener('click',()=>{const t=incidenciasHoy();incSelFilas=incSelFilas.size===t.length?new Set():new Set(t.map(x=>x.id));pintarListadoInc()});
   $('incCompartir').addEventListener('click',()=>{if(incSelFilas.size)$('incEnvio').hidden=false});
   $('incCancelarEnvio').addEventListener('click',()=>{$('incEnvio').hidden=true});
-  $('incWa').addEventListener('click',()=>{const l=incMarcadas();if(l.length)abrirWhatsapp(textoIncidencias(l))});
-  $('incMail').addEventListener('click',()=>{const l=incMarcadas();if(l.length)abrirEmail(['Incidencia',sinRepetir(l.map(x=>x.tipo)),sinRepetir(l.map(x=>x.nombre)),rango(l)].join(' '),textoIncidencias(l))});
-  // Texto y todas las fotos, vídeos y audios de las marcadas, con el menú de compartir del móvil
-  $('incArch').addEventListener('click',async()=>{
+  // WhatsApp y Email llevan el texto y los adjuntos de cada incidencia marcada. WhatsApp (wa.me) y el correo (mailto) no admiten
+  // archivos, así que con adjuntos se abre el menú de compartir del móvil con todo ya cargado; sin adjuntos se abre directamente
+  // el WhatsApp o el correo configurados. Si el navegador no puede compartir archivos, se envía solo el texto y se avisa.
+  async function enviarIncMarcadas(via){
     const l=incMarcadas();if(!l.length)return;
-    const files=[];statusI('Preparando adjuntos…');
+    const texto=textoIncidencias(l), asunto=['Incidencia',sinRepetir(l.map(x=>x.tipo)),sinRepetir(l.map(x=>x.nombre)),rango(l)].join(' ');
+    const soloTexto=()=>via==='wa'?abrirWhatsapp(texto):abrirEmail(asunto,texto);
+    if(!l.some(x=>(x.adjuntos||[]).length))return soloTexto();
+    const files=[];
     for(const x of l)for(const a of x.adjuntos||[]){const bl=await media.leer(a.id);if(bl)files.push(new File([bl],a.nombre,{type:a.mime||bl.type}))}
-    const res=await compartirArchivos(files,'Incidencias de la finca',textoIncidencias(l));
-    statusI(res==='ok'?`Compartidas ${l.length} ${plural(l.length,'incidencia')} con ${files.length} ${plural(files.length,'adjunto')}.`:res==='cancelado'?'':res,res==='ok'?'ok':'err');
-  });
+    if(!files.length)return soloTexto();
+    const res=await compartirArchivos(files,asunto,texto);
+    if(res==='ok'||res==='cancelado')return;
+    aviso('No se pueden adjuntar los archivos desde este navegador','Se envía solo el texto',{err:true,ms:5000});
+    soloTexto();
+  }
+  $('incWa').addEventListener('click',()=>enviarIncMarcadas('wa'));
+  $('incMail').addEventListener('click',()=>enviarIncMarcadas('mail'));
   // Eliminar: se quitan al momento (con sus adjuntos) y el aviso ofrece DESHACER durante 8 s
   $('incBorrar').addEventListener('click',()=>{
     const sel=incMarcadas();if(!sel.length)return;
