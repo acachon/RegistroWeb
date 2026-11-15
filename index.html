@@ -752,7 +752,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 20:50';
+  const VERSION='v1 · 2026-11-15 21:15';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -1428,6 +1428,7 @@ details.desp.fija>summary::after{display:none}
       setTimeout(()=>{
         mapa.invalidateSize();
         if(!reencuadrar)return; // al marcar o desmarcar en la leyenda no se mueve el mapa
+        if(r.centro){mapa.setView(r.centro,18);if(r.marcador)r.marcador.openPopup();return} // desde el icono de ubicación de una fila
         if(encuadre.length)encuadrar();else mapa.setView([FINCA.lat,FINCA.lon],16);
       },0);
     }};
@@ -1557,6 +1558,8 @@ details.desp.fija>summary::after{display:none}
     };
 
     const vista=m=>{enMapa=m;E('vistaLista').setAttribute('aria-pressed',!m);E('vistaMapa').setAttribute('aria-pressed',m);api.pintar()};
+    // Prepara la vista de mapa con ese registro marcado y su tipo visible en la leyenda (quien llama repinta al mostrar la pestaña)
+    api.irAlMapa=x=>{ocultas.delete(o.clave(x));api.sel.add(x.id);enMapa=true;E('vistaLista').setAttribute('aria-pressed',false);E('vistaMapa').setAttribute('aria-pressed',true)};
     E('vistaLista').addEventListener('click',()=>vista(false));
     E('vistaMapa').addEventListener('click',()=>vista(true));
     E('detList').addEventListener('toggle',()=>api.pintar()); // al desplegarlo se pinta su mapa, que no podía medirse plegado
@@ -1617,11 +1620,20 @@ details.desp.fija>summary::after{display:none}
     p.title=num?`Nº ${num} en el mapa`:'Márcala para verla en el mapa';
     return p;
   }
-  // Enlace a Google Maps de una incidencia (apagado y sin enlace si no tiene posición)
+  // Icono de ubicación de una actividad o incidencia: lleva al mapa del Supervisor, centrado en ese punto y con su globo abierto
+  // (apagado y sin acción si no tiene posición)
+  let focoSup=null;
+  function verEnMapa(x){
+    if(esInc(x)){supFiltro.inc=true;$('filtroIncH').setAttribute('aria-pressed',true)}else{supFiltro.act=true;$('filtroActH').setAttribute('aria-pressed',true)}
+    const d=diaDe(x);LA.dias=d===hoyKey()?new Set():new Set([d]); // el día del registro (hoy es el que se ve por defecto)
+    LA.irAlMapa(x);focoSup=x;
+    abrir('reg');
+    setTimeout(()=>$('mapaH').scrollIntoView({block:'center',behavior:'smooth'}),200);
+  }
   function ubicBtn(x){
-    if(x.lat!=null){
-      const a=el('a','ib2');a.href=urlMapa(x);a.target='_blank';a.rel='noopener';a.title='Ver en Google Maps';a.setAttribute('aria-label','Ver la ubicación en Google Maps');
-      a.innerHTML=ico('ubic',18);a.addEventListener('click',e=>e.stopPropagation());return a;
+    if(conPosicion(x)){
+      const b=boton('ib2');b.title='Ver en el mapa';b.setAttribute('aria-label','Ver la ubicación en el mapa');
+      b.innerHTML=ico('ubic',18);b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();verEnMapa(x)});return b;
     }
     const s=el('span','ib2 off');s.title='Sin posición GPS';s.setAttribute('role','img');s.setAttribute('aria-label','Sin posición GPS');s.innerHTML=ico('ubic',18);return s;
   }
@@ -1715,13 +1727,17 @@ details.desp.fija>summary::after{display:none}
           .bindTooltip(`${p.actividad} · ${hhmm(new Date(p.iso))} · ±${Math.round(p.precision)} m`).addTo(c.lin);
       });
       if(pts.length)nota=[nota,`${pts.length} ${plural(pts.length,'punto')} GPS (círculos pequeños).`].filter(Boolean).join(' ');
+      // Si se llegó desde el icono de ubicación de una fila, el mapa se centra en ese punto y abre su globo
+      const foco=focoSup;focoSup=null;let marcador=null;
       conPos.forEach((r,i)=>{
-        if(esInc(r)){marcadorIncidencia(r,i+1,c.marc);return} // incidencia: marcador con su globo (tipo, comentario y adjuntos)
+        let m;
+        if(esInc(r))m=marcadorIncidencia(r,i+1,c.marc); // incidencia: marcador con su globo (tipo, comentario y adjuntos)
         // El globo se genera al abrirlo para que una duración «en curso» salga actualizada; mismos datos que la tarjeta
-        L.marker([r.lat,r.lon],{icon:divIcon(crearPin(iconoDe(r),String(i+1)),26,26,13,13)})
+        else m=L.marker([r.lat,r.lon],{icon:divIcon(crearPin(iconoDe(r),String(i+1)),26,26,13,13)})
           .bindPopup(()=>globo(`${i+1}. ${r.actividad||'Registro'}`,[r.nombre,fechaRegistro(r),...lineasInfo(r)])).addTo(c.marc);
+        if(foco&&foco.id===r.id)marcador=m;
       });
-      return {nota,encuadre};
+      return {nota,encuadre,centro:marcador?[foco.lat,foco.lon]:null,marcador};
     },
     // Un solo texto con las actividades y las incidencias marcadas; con «adjuntos» se abre el menú de compartir con sus archivos
     compartir(lista,wa,mail){enviarUnaInc(lista,wa?'wa':'mail')},
