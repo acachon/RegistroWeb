@@ -776,7 +776,7 @@ details.desp.fija>summary::after{display:none}
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-16 01:10';
+  const VERSION='v1 · 2026-11-16 01:40';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -885,7 +885,7 @@ details.desp.fija>summary::after{display:none}
   // Poner MOSTRAR_EJEMPLOS=false cuando la web vaya a usarse de verdad.
   const MOSTRAR_EJEMPLOS=true;
   // Con la clave de lectura (supervisor) los datos vienen del fichero central: no se generan los ejemplos de días anteriores
-  const EJEMPLOS_ACTIVOS=MOSTRAR_EJEMPLOS&&!store.get('gea_sync_clave_lec','');
+  const EJEMPLOS_ACTIVOS=MOSTRAR_EJEMPLOS&&!store.get('gea_sync_clave_lec','')&&!/[?&]clavelectura=/.test(location.search);
   let listo=false; // la página terminó de arrancar
   // Ubicación de referencia de los datos de prueba: la finca
   const FINCA={lat:37.852699,lon:-3.730443};
@@ -1056,7 +1056,10 @@ details.desp.fija>summary::after{display:none}
   // Enlace de configuración: …/?servicio=URL&clave=CLAVE rellena los dos campos y se quita de la dirección
   (()=>{try{const q=new URLSearchParams(location.search);if(q.get('servicio')){sync.url=q.get('servicio');store.set(KEY_SYNC_URL,sync.url)}
     if(q.get('clave')){sync.clave=q.get('clave');store.set(KEY_SYNC_CLAVE,sync.clave)}
-    if(q.has('servicio')||q.has('clave'))history.replaceState(null,'',location.pathname+location.hash)}catch(e){}})();
+    // Enlace por empleado: ?nombre=…&clave=… y, para el supervisor, también &clavelectura=…
+    if(q.get('clavelectura')){sync.claveLec=q.get('clavelectura');store.set(KEY_SYNC_CLAVE_LEC,sync.claveLec)}
+    if(q.get('nombre')){cfg.nombre=q.get('nombre').trim().slice(0,60);store.set(KEY_NOM,cfg.nombre)}
+    if(['servicio','clave','clavelectura','nombre'].some(k=>q.has(k)))history.replaceState(null,'',location.pathname+location.hash)}catch(e){}})();
   // Toma de puntos GPS: cada cuántos segundos (Configuración). El margen evita perder una toma por unos segundos de retraso.
   const KEY_GPS_INT='gea_gps_intervalo', INTERVALOS=[30,60,120,300];
   let intervaloSeg=INTERVALOS.includes(store.get(KEY_GPS_INT,60))?store.get(KEY_GPS_INT,60):60;
