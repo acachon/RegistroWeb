@@ -401,8 +401,14 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .resumenact .ib2 .n{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--olive);color:var(--olive-ink);font:800 .66rem/17px var(--display);text-align:center}
 .resumenact li>.adjs{padding:6px 4px 2px}
 .lfil{flex-wrap:wrap;row-gap:6px} /* en pantallas muy estrechas las herramientas bajan a otra línea en vez de cortarse */
-.filtros{display:flex;gap:4px;flex-wrap:nowrap;min-width:0}
-.ftag{height:34px;padding:0 8px;flex:none;white-space:nowrap;font:700 .76rem var(--display);color:var(--muted);background:var(--card);border:2px solid var(--line);border-radius:999px}
+details.desp.fija>summary{cursor:default}
+details.desp.fija>summary::after{display:none}
+#statusListH:empty{display:none}
+.resumenact b .emp{font-weight:600;color:var(--muted)}
+.lfil .ib{width:34px;height:34px}
+.lfil .lherr{gap:3px}
+.filtros{display:flex;gap:3px;flex-wrap:nowrap;min-width:0}
+.ftag{height:34px;padding:0 7px;flex:none;white-space:nowrap;font:700 .74rem var(--display);color:var(--muted);background:var(--card);border:2px solid var(--line);border-radius:999px}
 .ftag[aria-pressed="true"]{color:var(--fg);background:var(--olive-soft);border-color:var(--olive)}
 .resumenact .pinfila{justify-self:center}
 .resumenact .pin.apagado{opacity:.4;filter:grayscale(.5)}
@@ -499,7 +505,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         <button type="button" class="mini" id="ayudaCerrar">Entendido</button>
       </div>
     </div>
-    <div data-listado="H" data-titulo="Listado actividades e incidencias" data-compacta></div>
+    <div data-listado="H" data-titulo="Listado de registros" data-compacta></div>
   </div>
 
   <!-- PESTAÑA INCIDENCIAS -->
@@ -743,7 +749,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 18:25';
+  const VERSION='v1 · 2026-11-15 18:45';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -759,10 +765,12 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   /* ---------- Plantillas: Actividad e Incidencias comparten el mismo listado; las tres listas de Configuración, el mismo editor ---------- */
   document.querySelectorAll('[data-listado]').forEach(d=>{
     const s=d.dataset.listado, chk=(id,txt,small)=>`<label class="chk"><input type="checkbox" id="${id}${s}" checked>${txt} <small${small?'':` class="dest${txt==='WhatsApp'?'Tel':'Mail'}"`}>${small||''}</small></label>`;
-    d.outerHTML=`<details class="desp" id="detList${s}" open>
-      <summary>${d.dataset.titulo} <span id="contador${s}">0</span> <button type="button" class="infobtn" data-info="infoList${s}">i</button></summary>
+    const fija=d.hasAttribute('data-compacta'); // listado fijo (no desplegable) y sin botón (i); su nota del mapa y su estado van a la vista
+    d.outerHTML=`<details class="desp${fija?' fija':''}" id="detList${s}" open>
+      <summary>${d.dataset.titulo} <span id="contador${s}">0</span>${fija?'':` <button type="button" class="infobtn" data-info="infoList${s}">i</button>`}</summary>
       <div class="cuerpo">
-        <div class="infobox" id="infoList${s}" hidden><p class="hint" id="mapaNota${s}" hidden></p><p class="status" id="statusList${s}" role="status" aria-live="polite"></p><p class="hint infovacio">Sin novedades por ahora.</p></div>
+        ${fija?`<p class="hint" id="mapaNota${s}" hidden></p><p class="status" id="statusList${s}" role="status" aria-live="polite"></p>`
+        :`<div class="infobox" id="infoList${s}" hidden><p class="hint" id="mapaNota${s}" hidden></p><p class="status" id="statusList${s}" role="status" aria-live="polite"></p><p class="hint infovacio">Sin novedades por ahora.</p></div>`}
         <div class="sub">
           <div class="sechead"><h3 id="tituloDia${s}">Hoy</h3>
             <div class="calbtns"><button type="button" class="mini" id="btnHoy${s}" hidden>Volver a hoy</button><button type="button" class="mini calbtn" id="btnCal${s}" aria-expanded="false" aria-controls="calBox${s}">${ico('cal',16)}Calendario</button></div></div>
@@ -1632,7 +1640,9 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     cb.type='checkbox';cb.checked=sel;cb.setAttribute('aria-label',`Seleccionar ${nombre}`);
     cb.addEventListener('change',()=>alternar(cb.checked));
     const curso=!inc&&!!actividadEnCurso()&&actividadEnCurso().id===x.id;
-    const tx=el('div');tx.appendChild(el('b',null,nombre));
+    const tx=el('div'), nb=el('b',null,nombre);
+    if(x.nombre)nb.appendChild(el('span','emp',` - ${x.nombre}`)); // empleado de ese registro, tras un guión
+    tx.appendChild(nb);
     tx.appendChild(el('small',null,hhmm(new Date(x.iso))+(curso?' · en curso':'')+(inc&&x.comentario?` · ${x.comentario}`:'')));
     const acc=el('div','acc'), abierta=supAbiertas.has(x.id), nTot=inc?(x.adjuntos||[]).length+(x.comentario?1:0):0;
     const desplegable=(b,titulo)=>{
@@ -1728,6 +1738,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     },
     trasBorrar(){pintarTodo();actualizarSeguimiento();pintarIncidencias()}
   });
+  // El listado del Supervisor no se pliega: el título no responde al toque ni al teclado
+  $('detListH').querySelector('summary').addEventListener('click',e=>e.preventDefault());
   // Filtro de tipos: Actividades, Incidencias o ambos (siempre queda al menos uno activo)
   [['filtroActH','act'],['filtroIncH','inc']].forEach(([id,k])=>$(id).addEventListener('click',()=>{
     if(supFiltro[k]&&!supFiltro[k==='act'?'inc':'act'])return;
