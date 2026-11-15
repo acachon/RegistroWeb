@@ -400,6 +400,13 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .resumenact .ib2.off{opacity:.3;border-style:dashed}
 .resumenact .ib2 .n{position:absolute;top:-7px;right:-7px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--olive);color:var(--olive-ink);font:800 .66rem/17px var(--display);text-align:center}
 .resumenact li>.adjs{padding:6px 4px 2px}
+.resumenact .pinfila{justify-self:center}
+.resumenact .pin.apagado{opacity:.4;filter:grayscale(.5)}
+.resumenact .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;padding:8px 10px 4px;color:var(--muted)}
+.resumenact .kpis em{display:block;font-style:normal;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.resumenact .kpis strong{color:var(--fg);font-weight:700;font-variant-numeric:tabular-nums}
+.resumenact#listaH small{overflow:hidden;text-overflow:ellipsis}
+.visortxt{max-width:min(92vw,520px);max-height:62vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--card);color:var(--fg);padding:16px;border-radius:10px;font:500 1rem/1.5 var(--display)}
 @media (max-width:360px){.send{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -434,6 +441,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   <symbol id="i-nube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a5 5 0 0 1-.6-9.96A6 6 0 0 1 18 9a4.5 4.5 0 0 1 .5 8.97"/><path d="M12 12v9M8.5 15.5 12 12l3.5 3.5"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></symbol>
   <symbol id="i-texto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r=".6" fill="currentColor"/></symbol>
   <symbol id="i-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.5l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/></symbol>
 </svg>
@@ -487,7 +495,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
         <button type="button" class="mini" id="ayudaCerrar">Entendido</button>
       </div>
     </div>
-    <div data-listado="H" data-titulo="Listado actividades e incidencias" data-adjuntos></div>
+    <div data-listado="H" data-titulo="Listado actividades e incidencias" data-compacta></div>
   </div>
 
   <!-- PESTAÑA INCIDENCIAS -->
@@ -731,7 +739,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 17:00';
+  const VERSION='v1 · 2026-11-15 17:40';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -758,14 +766,25 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
             <div class="calhead"><button type="button" class="calnav" id="mesAnt${s}" aria-label="Mes anterior">‹</button><h2 id="mesLbl${s}" aria-live="polite"></h2><button type="button" class="calnav" id="mesSig${s}" aria-label="Mes siguiente">›</button></div>
             <div class="cal" id="cal${s}"></div>
           </div>
-          <div class="barra">
+          ${d.hasAttribute('data-compacta')?
+          // Estilo de Registro e Incidencia: herramientas con iconos y, al compartir, botones Cancelar / Email / WhatsApp
+          `<div class="lhead" style="justify-content:flex-end"><div class="lherr">
+            <button type="button" class="ib" id="btnTodos${s}" aria-label="Seleccionar todo" title="Seleccionar todo">${ico('selall')}</button>
+            <button type="button" class="ib" id="btnCompartir${s}" aria-label="Compartir los marcados" title="Compartir">${ico('share')}</button>
+            <button type="button" class="ib peligro" id="btnBorrar${s}" aria-label="Eliminar los marcados" title="Eliminar">${ico('trash')}</button></div></div>
+          <div class="envio" id="shareBox${s}" hidden><h3 id="shareTxt${s}">Enviar los marcados</h3>
+            <div class="jbotones envbtn">
+              <button class="cta fin cancelar" id="btnShNo${s}" type="button">${ico('x',26)}<span>Cancelar</span></button>
+              <button class="cta mail" id="btnShMail${s}" type="button">${ico('mail',26)}<span>Email</span></button>
+              <button class="cta wa" id="btnShWa${s}" type="button">${ico('wa',26)}<span>WhatsApp</span></button></div></div>`
+          :`<div class="barra">
             <div class="barraizq"><button type="button" class="mini" id="btnTodos${s}">Selecciona Todo</button><button type="button" class="btn danger ico" id="btnBorrar${s}">${ico('trash')}Eliminar</button></div>
             <button type="button" class="btn ico cta" id="btnCompartir${s}">${ico('share')}Compartir</button>
           </div>
           <div class="confirmbox share" id="shareBox${s}" hidden><span id="shareTxt${s}"></span>${chk('shWa','WhatsApp')}${chk('shMail','Email')}${d.hasAttribute('data-adjuntos')?chk('shAdj','Con fotos, vídeos y audios','(menú de compartir del móvil)'):''}
-            <button type="button" class="btn sec" id="btnShNo${s}">Cancelar</button><button type="button" class="btn" id="btnShOk${s}">Confirmar</button></div>
+            <button type="button" class="btn sec" id="btnShNo${s}">Cancelar</button><button type="button" class="btn" id="btnShOk${s}">Confirmar</button></div>`}
           <div class="vista" role="group" aria-label="Modo de vista"><button type="button" id="vistaLista${s}" aria-pressed="true">Listado</button><button type="button" id="vistaMapa${s}" aria-pressed="false">Mapa</button></div>
-          <ol id="lista${s}"></ol>
+          <ol id="lista${s}"${d.hasAttribute('data-compacta')?' class="resumenact"':''}></ol>
           <div class="mapa" id="mapa${s}" hidden></div>
           <ul class="leyenda" id="leyenda${s}" hidden></ul>
           <p class="empty" id="vacioLista${s}"></p>
@@ -1202,7 +1221,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   const lineasInfo=r=>{const d=datosRecorrido(r);return [`Dist ${d.km} km · Área ${d.area} Ha`,`Dur. ${d.dur} · Vel. ${d.vel} km/h`]};
   // Refresca cada segundo solo las tarjetas cuyos datos cambian con el tiempo
   function actualizarVivo(){
-    document.querySelectorAll('.item .info[data-vivo="1"]').forEach(e=>{const r=registros.find(x=>x.id===e.dataset.id);if(r)pintarInfo(e,r)});
+    document.querySelectorAll('.item .info[data-vivo="1"],.kpis[data-vivo="1"]').forEach(e=>{const r=registros.find(x=>x.id===e.dataset.id);if(r)pintarInfo(e,r)});
     document.querySelectorAll('.crono b').forEach(e=>{e.textContent=cronometro(e.dataset.desde)});
   }
   // Tiempo desde el inicio de la actividad en curso: hh:mm:ss
@@ -1472,6 +1491,10 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
           diaAnt=diaDe(x);const d=new Date(x.iso), n=porDia[diaAnt], h=el('li','diahead',`${DIAS[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}`);
           h.appendChild(el('small',null,`${n} ${plural(n,o.singular,o.plural)}`));ol.appendChild(h);
         }
+        if(o.fila){ // fila compacta (estilo Registro e Incidencia), la construye el propio listado
+          ol.appendChild(o.fila(x,{sel:api.sel.has(x.id),num:num.get(x.id),alternar:on=>{on?api.sel.add(x.id):api.sel.delete(x.id);api.pintar()},repintar:api.pintar}));
+          return;
+        }
         const li=el('li'), lab=el('label','item'+(api.sel.has(x.id)?' sel':'')), cb=el('input');
         cb.type='checkbox';cb.checked=api.sel.has(x.id);
         cb.addEventListener('change',()=>{cb.checked?api.sel.add(x.id):api.sel.delete(x.id);api.pintar()});
@@ -1490,9 +1513,14 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       E('btnHoy').hidden=!api.dias.size;
       E('tituloDia').textContent=!api.dias.size?'Hoy':ds.length===1?(([y,m,d])=>`${Nombre} del ${fechaCorta(new Date(y,m-1,d))}`)(ds[0].split('-').map(Number)):`${Nombre} de ${ds.length} días`;
       const n=api.marcadas().length;
-      E('btnTodos').textContent=(n===lista.length&&n>0)?'Quitar Todo':'Selecciona Todo';
+      const todas=n===lista.length&&n>0;
+      if(o.compacta){ // botón de iconos: cambia de icono y de texto de ayuda
+        E('btnTodos').firstChild.firstChild.setAttribute('href',todas?'#i-selnone':'#i-selall');
+        E('btnTodos').title=todas?'Quitar la selección':'Seleccionar todo';E('btnTodos').setAttribute('aria-label',E('btnTodos').title);
+      }else E('btnTodos').textContent=todas?'Quitar Todo':'Selecciona Todo';
       ['btnCompartir','btnBorrar'].forEach(id=>E(id).disabled=n===0);
       ['btnCompartir','btnBorrar','btnTodos'].forEach(id=>E(id).hidden=enMapa); // en el mapa no tienen uso
+      if(o.compacta)E('btnTodos').closest('.lhead').hidden=enMapa;
       E('shareBox').hidden=true;
       if(!enMapa||$(o.panel).hidden)mapa.salir(); // sin mapa a la vista no puede quedar a pantalla completa
       cal.pintar();
@@ -1522,7 +1550,12 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     });
     // Compartir: se pregunta por dónde enviar las marcadas (WhatsApp, Email y, en incidencias, con los adjuntos)
     const canales=['shWa','shMail','shAdj'].map(E).filter(Boolean);
-    E('btnCompartir').addEventListener('click',()=>{
+    if(o.compacta){ // Cancelar / Email / WhatsApp envían directamente las marcadas (las incidencias, con sus adjuntos)
+      E('btnCompartir').addEventListener('click',()=>{if(hayMarcadas())E('shareBox').hidden=false});
+      E('btnShMail').addEventListener('click',()=>{const l=api.marcadas();if(l.length)o.compartir(l,false,true)});
+      E('btnShWa').addEventListener('click',()=>{const l=api.marcadas();if(l.length)o.compartir(l,true,false)});
+    }
+    else E('btnCompartir').addEventListener('click',()=>{
       if(!hayMarcadas())return;
       const lista=api.marcadas(), n=lista.length;
       E('shareTxt').textContent=`¿Cómo quieres compartir ${n===1?`${o.masc?'el':'la'} ${o.singular} marcad${o.masc?'o':'a'}`:`${o.masc?'los':'las'} ${n} ${o.plural} marcad${o.masc?'os':'as'}`}?`;
@@ -1531,7 +1564,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       E('btnShOk').disabled=false;E('shareBox').hidden=false;
     });
     canales.forEach(c=>c.addEventListener('change',()=>{E('btnShOk').disabled=!canales.some(x=>x.checked)}));
-    E('btnShOk').addEventListener('click',()=>{
+    if(E('btnShOk'))E('btnShOk').addEventListener('click',()=>{
       const lista=api.marcadas();E('shareBox').hidden=true;if(!lista.length)return;
       o.compartir(lista,E('shWa').checked,E('shMail').checked,!!E('shAdj')&&E('shAdj').checked);
     });
@@ -1560,7 +1593,61 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // con actividades del mismo nombre (p. ej. Riego).
   const esInc=x=>x.actividad===undefined&&x.tipo!==undefined;
   const claveSup=x=>esInc(x)?'⚠ '+x.tipo:x.actividad;
-  const LA=crearListado({sfx:'H',panel:'panelReg',singular:'registro',unidad:'registro',plural:'registros',masc:true,conVista:true,
+  // Pin de la fila: el mismo del mapa (número y color); sin número y atenuado si la fila no está marcada
+  function pinSup(x,num){
+    const p=esInc(x)?crearPinInc(num?String(num):'',colorInc(x.tipo)):crearPin(iconoDe(x),num?String(num):'');
+    p.classList.add('pinfila');if(!num)p.classList.add('apagado');
+    p.title=num?`Nº ${num} en el mapa`:'Márcala para verla en el mapa';
+    return p;
+  }
+  // Enlace a Google Maps de una incidencia (apagado y sin enlace si no tiene posición)
+  function ubicBtn(x){
+    if(x.lat!=null){
+      const a=el('a','ib2');a.href=urlMapa(x);a.target='_blank';a.rel='noopener';a.title='Ver en Google Maps';a.setAttribute('aria-label','Ver la ubicación en Google Maps');
+      a.innerHTML=ico('ubic',18);a.addEventListener('click',e=>e.stopPropagation());return a;
+    }
+    const s=el('span','ib2 off');s.title='Sin posición GPS';s.setAttribute('role','img');s.setAttribute('aria-label','Sin posición GPS');s.innerHTML=ico('ubic',18);return s;
+  }
+  // Adjuntos desplegados de una incidencia, más un .txt con el texto completo si lo tiene (en la fila solo cabe una línea)
+  function filaAdjuntosTxt(x,urls,conFoto){
+    const f=filaAdjuntos(x,urls,conFoto);
+    if(x.comentario){
+      const b=boton('adj');b.title='Texto completo';b.setAttribute('aria-label','Ver el texto completo');
+      b.innerHTML=ico('texto',24)+'<span class="dura">.txt</span>';
+      b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();abrirVisor('txt',x.comentario,`${x.tipo} · ${hhmm(new Date(x.iso))}`)});
+      f.appendChild(b);
+    }
+    return f;
+  }
+  // Fila compacta del Supervisor (como en Registro e Incidencia): casilla, pin del mapa, nombre y hora; a la derecha, (i) con los KPIs
+  // de la actividad, o clip con adjuntos y texto y enlace a Google Maps en las incidencias. Lo desplegado va debajo de la fila.
+  const supAbiertas=new Set();
+  function filaSup(x,{sel,num,alternar,repintar}){
+    const inc=esInc(x), li=el('li'), lab=el('label',sel?'sel':''), cb=el('input'), nombre=inc?x.tipo:(x.actividad||x.nombre);
+    cb.type='checkbox';cb.checked=sel;cb.setAttribute('aria-label',`Seleccionar ${nombre}`);
+    cb.addEventListener('change',()=>alternar(cb.checked));
+    const curso=!inc&&!!actividadEnCurso()&&actividadEnCurso().id===x.id;
+    const tx=el('div');tx.appendChild(el('b',null,nombre));
+    tx.appendChild(el('small',null,hhmm(new Date(x.iso))+(curso?' · en curso':'')+(inc&&x.comentario?` · ${x.comentario}`:'')));
+    const acc=el('div','acc'), abierta=supAbiertas.has(x.id), nTot=inc?(x.adjuntos||[]).length+(x.comentario?1:0):0;
+    const desplegable=(b,titulo)=>{
+      b.title=titulo;b.setAttribute('aria-label',titulo);b.setAttribute('aria-expanded',abierta);
+      b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();supAbiertas.has(x.id)?supAbiertas.delete(x.id):supAbiertas.add(x.id);repintar()});
+      acc.appendChild(b);
+    };
+    if(!inc){const b=boton('ib2');b.innerHTML=ico('info',18);desplegable(b,'Ver los datos de la actividad (distancia, área…)')}
+    else{
+      if(nTot){const b=boton('ib2');b.innerHTML=ico('clip',18)+(nTot>1?`<span class="n">${nTot}</span>`:'');desplegable(b,'Ver archivos adjuntos y texto')}
+      acc.appendChild(ubicBtn(x));
+    }
+    lab.append(cb,pinSup(x,num),tx,acc);li.appendChild(lab);
+    if(abierta){
+      if(!inc){const k=el('div','kpis');k.dataset.id=x.id;pintarInfo(k,x);li.appendChild(k)}
+      else if(nTot)li.appendChild(filaAdjuntosTxt(x,urlsLista,true));
+    }
+    return li;
+  }
+  const LA=crearListado({sfx:'H',panel:'panelReg',singular:'registro',unidad:'registro',plural:'registros',masc:true,conVista:true,compacta:true,fila:filaSup,
     datos:()=>[...registros,...incidencias].sort(porHora), clave:claveSup,
     orden:()=>[...Object.keys(ICONOS),...actividades(),...ordenTiposInc().map(t=>'⚠ '+t)], esteTipo:'este tipo',
     vacioHoy:'Hoy aún no hay actividades ni incidencias.', textoNinguna:'Marca al menos un registro.',
@@ -1622,13 +1709,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       return {nota,encuadre};
     },
     // Un solo texto con las actividades y las incidencias marcadas; con «adjuntos» se abre el menú de compartir con sus archivos
-    compartir(lista,wa,mail,adj){
-      const acts=lista.filter(x=>!esInc(x)), incs=lista.filter(esInc);
-      const texto=[acts.length?textoActividades(acts):'',incs.length?textoIncidencias(incs):''].filter(Boolean).join('\n\n');
-      if(adj&&incs.some(x=>(x.adjuntos||[]).length))return compartirIncConAdjuntos(incs,texto);
-      if(wa)abrirWhatsapp(texto);
-      if(mail)abrirEmail(['Registro',sinRepetir(lista.map(x=>x.nombre)),rango(lista)].join(' '),texto);
-    },
+    compartir(lista,wa,mail){enviarUnaInc(lista,wa?'wa':'mail')},
     textoBorrado:n=>`${n} ${plural(n,'registro')} ${plural(n,'eliminado')}`,
     // Quita las actividades (y sus puntos GPS) y las incidencias marcadas, y devuelve cómo recuperarlas
     borrar(lista,ids){
@@ -2383,6 +2464,10 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // Visor a pantalla completa para fotos, vídeos y audios
   let urlVisor=null;
   function abrirVisor(tipo,blob,texto){
+    if(tipo==='txt'){ // texto completo de una incidencia (blob es el propio texto)
+      cerrarVisor();$('visorMedio').appendChild(el('div','visortxt',blob));$('visorTxt').textContent=texto||'';
+      $('visor').hidden=false;$('visorCerrar').focus();return;
+    }
     if(!blob){LA.status('Este adjunto ya no está en el móvil.','err');aviso('Este adjunto ya no está en el móvil',null,{err:true,ms:3500});return}
     cerrarVisor();
     urlVisor=URL.createObjectURL(blob);
@@ -2679,21 +2764,16 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       im.src=iconoInc(x.tipo);im.alt='';
       const tx=el('div');tx.appendChild(el('b',null,x.tipo));
       tx.appendChild(el('small',null,hhmm(new Date(x.iso))+(x.comentario?` · ${x.comentario}`:'')));
-      const acc=el('div','acc'), nAdj=(x.adjuntos||[]).length;
-      if(nAdj){
-        const b=boton('ib2');b.title='Ver archivos adjuntos';b.setAttribute('aria-label',`Ver ${nAdj} ${plural(nAdj,'archivo adjunto','archivos adjuntos')}`);
-        b.setAttribute('aria-expanded',incAbiertas.has(x.id));b.innerHTML=ico('clip',18)+(nAdj>1?`<span class="n">${nAdj}</span>`:'');
+      const acc=el('div','acc'), nTot=(x.adjuntos||[]).length+(x.comentario?1:0); // adjuntos y, si hay texto, su .txt
+      if(nTot){
+        const b=boton('ib2');b.title='Ver archivos adjuntos y texto';b.setAttribute('aria-label',`Ver ${nTot} ${plural(nTot,'archivo adjunto','archivos adjuntos')}`);
+        b.setAttribute('aria-expanded',incAbiertas.has(x.id));b.innerHTML=ico('clip',18)+(nTot>1?`<span class="n">${nTot}</span>`:'');
         b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();incAbiertas.has(x.id)?incAbiertas.delete(x.id):incAbiertas.add(x.id);pintarListadoInc()});
         acc.appendChild(b);
       }
-      if(x.lat!=null){
-        const a=el('a','ib2');a.href=urlMapa(x);a.target='_blank';a.rel='noopener';a.title='Ver en Google Maps';a.setAttribute('aria-label','Ver la ubicación en Google Maps');
-        a.innerHTML=ico('ubic',18);a.addEventListener('click',e=>e.stopPropagation());acc.appendChild(a);
-      }else{
-        const s=el('span','ib2 off');s.title='Sin posición GPS';s.setAttribute('role','img');s.setAttribute('aria-label','Sin posición GPS');s.innerHTML=ico('ubic',18);acc.appendChild(s);
-      }
+      acc.appendChild(ubicBtn(x));
       lab.append(cb,im,tx,acc);li.appendChild(lab);
-      if(nAdj&&incAbiertas.has(x.id))li.appendChild(filaAdjuntos(x,urlsListaI,true));
+      if(nTot&&incAbiertas.has(x.id))li.appendChild(filaAdjuntosTxt(x,urlsListaI,true));
       ol.appendChild(li);
     });
   }
@@ -2705,15 +2785,18 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // archivos, así que con adjuntos se abre el menú de compartir del móvil con todo ya cargado; sin adjuntos se abre directamente
   // el WhatsApp o el correo configurados. Si el navegador no puede compartir archivos, se envía solo el texto y se avisa.
   // Devuelve 'ok', 'cancelado' (se cerró el menú de compartir) o 'texto' (solo se pudo enviar el texto)
+  // l puede mezclar actividades e incidencias (Supervisor): un solo texto con todas y los adjuntos de las incidencias
   async function enviarUnaInc(l,via){
-    const texto=textoIncidencias(l), asunto=['Incidencia',sinRepetir(l.map(x=>x.tipo)),sinRepetir(l.map(x=>x.nombre)),rango(l)].join(' ');
+    const acts=l.filter(x=>!esInc(x)), incs=l.filter(esInc);
+    const texto=[acts.length?textoActividades(acts):'',incs.length?textoIncidencias(incs):''].filter(Boolean).join('\n\n');
+    const asunto=[incs.length&&!acts.length?'Incidencia':'Registro',sinRepetir(l.map(x=>esInc(x)?x.tipo:x.actividad)),sinRepetir(l.map(x=>x.nombre)),rango(l)].join(' ');
     const soloTexto=()=>{via==='wa'?abrirWhatsapp(texto):abrirEmail(asunto,texto);return 'texto'};
-    if(!l.some(x=>(x.adjuntos||[]).length))return soloTexto();
+    if(!incs.some(x=>(x.adjuntos||[]).length))return soloTexto();
     const files=[];
-    for(const x of l)for(const a of x.adjuntos||[]){const bl=await media.leer(a.id);if(bl)files.push(new File([bl],a.nombre,{type:a.mime||bl.type}))}
+    for(const x of incs)for(const a of x.adjuntos||[]){const bl=await media.leer(a.id);if(bl)files.push(new File([bl],a.nombre,{type:a.mime||bl.type}))}
     if(!files.length)return soloTexto();
-    // WhatsApp con varias incidencias en un solo envío puede mostrar solo uno de los textos: se añade el texto completo como archivo
-    if(via==='wa'&&l.length>1)files.unshift(new File([texto],'Incidencias.txt',{type:'text/plain'}));
+    // WhatsApp con varios registros en un solo envío puede mostrar solo uno de los textos: se añade el texto completo como archivo
+    if(via==='wa'&&l.length>1)files.unshift(new File([texto],acts.length?'Registros.txt':'Incidencias.txt',{type:'text/plain'}));
     const res=await compartirArchivos(files,asunto,texto);
     if(res==='ok'||res==='cancelado')return res;
     aviso('No se pueden adjuntar los archivos desde este navegador','Se envía solo el texto',{err:true,ms:5000});
