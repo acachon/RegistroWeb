@@ -732,7 +732,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 (function(){
   const $=id=>document.getElementById(id);
   // Versión (se muestra al final de Configuración para saber qué versión hay instalada)
-  const VERSION='v1 · 2026-11-15 15:00';
+  const VERSION='v1 · 2026-11-15 15:25';
   // Otra versión de la web para cambiar entre la v0 (congelada) y la v1 (la que se sigue mejorando)
   const VERSION_OTRA={href:'v0/',texto:'Abrir la versión 0 (congelada)'};
   // Cualquier error inesperado se muestra en un aviso con su texto, para poder comunicarlo
@@ -2371,7 +2371,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     return lista.map(x=>{
       const d=new Date(x.iso), adj=resumenAdjuntos(x.adjuntos);
       return `INCIDENCIA: ${x.tipo}\nEmpleado: ${x.nombre}\nFecha: ${fechaCorta(d)}\nHora: ${hhmm(d)}\nUbicación: ${x.lat!=null?urlMapa(x):'sin posición'}`+
-        (x.comentario?`\nComentario: ${x.comentario}`:'')+(adj?`\nAdjuntos: ${adj}`:'');
+        (x.comentario?`\nComentario: ${x.comentario}`:'')+(adj?`\nAdjuntos: ${adj}`+(x.adjuntos||[]).map(a=>`\n· ${a.nombre}`).join(''):'');
     }).join('\n\n');
   }
   // Texto + todas las fotos, vídeos y audios de las incidencias marcadas, con el menú de compartir del móvil
@@ -2633,18 +2633,31 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   // WhatsApp y Email llevan el texto y los adjuntos de cada incidencia marcada. WhatsApp (wa.me) y el correo (mailto) no admiten
   // archivos, así que con adjuntos se abre el menú de compartir del móvil con todo ya cargado; sin adjuntos se abre directamente
   // el WhatsApp o el correo configurados. Si el navegador no puede compartir archivos, se envía solo el texto y se avisa.
-  async function enviarIncMarcadas(via){
-    const l=incMarcadas();if(!l.length)return;
+  // Devuelve 'ok', 'cancelado' (se cerró el menú de compartir) o 'texto' (solo se pudo enviar el texto)
+  async function enviarUnaInc(l,via){
     const texto=textoIncidencias(l), asunto=['Incidencia',sinRepetir(l.map(x=>x.tipo)),sinRepetir(l.map(x=>x.nombre)),rango(l)].join(' ');
-    const soloTexto=()=>via==='wa'?abrirWhatsapp(texto):abrirEmail(asunto,texto);
+    const soloTexto=()=>{via==='wa'?abrirWhatsapp(texto):abrirEmail(asunto,texto);return 'texto'};
     if(!l.some(x=>(x.adjuntos||[]).length))return soloTexto();
     const files=[];
     for(const x of l)for(const a of x.adjuntos||[]){const bl=await media.leer(a.id);if(bl)files.push(new File([bl],a.nombre,{type:a.mime||bl.type}))}
     if(!files.length)return soloTexto();
     const res=await compartirArchivos(files,asunto,texto);
-    if(res==='ok'||res==='cancelado')return;
+    if(res==='ok'||res==='cancelado')return res;
     aviso('No se pueden adjuntar los archivos desde este navegador','Se envía solo el texto',{err:true,ms:5000});
-    soloTexto();
+    return soloTexto();
+  }
+  async function enviarIncMarcadas(via){
+    const l=incMarcadas();if(!l.length)return;
+    if(via!=='wa'||l.length===1){await enviarUnaInc(l,via);return}
+    // WhatsApp con varias incidencias: un mensaje por incidencia, cada uno con su texto y sus adjuntos (en un solo envío
+    // WhatsApp se queda con un único texto para todos los archivos). El aviso ofrece pasar a la siguiente.
+    let i=0;
+    const paso=async()=>{
+      const r=await enviarUnaInc([l[i]],'wa');i++;
+      if(r==='cancelado'||i>=l.length)return;
+      aviso(`Incidencia ${i} de ${l.length} enviada`,`Quedan ${l.length-i}`,{ms:120000,accion:{texto:`SIGUIENTE (${i+1}/${l.length})`,fn:paso}});
+    };
+    await paso();
   }
   $('incWa').addEventListener('click',()=>enviarIncMarcadas('wa'));
   $('incMail').addEventListener('click',()=>enviarIncMarcadas('mail'));
