@@ -316,12 +316,23 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
 .jtxt{margin:0;color:var(--muted);font-size:.95rem}
 #actIcoTit{flex:none;object-fit:contain}
 /* Resumen de las actividades ya terminadas en la jornada */
-.resumenact{list-style:none;margin:2px 0 0;padding:10px 0 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
-.resumenact li{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px}
-.resumenact img{width:34px;height:34px;object-fit:contain}
+.listadoact{display:flex;flex-direction:column;gap:8px;margin-top:2px;padding-top:10px;border-top:1px solid var(--line)}
+.lhead{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px}
+.lhead h3{margin:0;font-size:clamp(.9rem,4.4vw,1.05rem);white-space:nowrap}
+.lherr{display:flex;gap:4px}
+.ib{width:36px;height:36px;flex:none;display:flex;align-items:center;justify-content:center;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--olive)}
+.ib.peligro{color:#7a1f1a}
+.ib:active{transform:translateY(1px)}
+.resumenact{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.resumenact label{display:grid;grid-template-columns:20px 30px minmax(0,1fr) auto;align-items:center;gap:8px;padding:6px;border:2px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer}
+.resumenact label.sel{border-color:var(--olive);background:var(--olive-soft)}
+.resumenact input{width:20px;height:20px;accent-color:var(--olive);margin:0}
+.resumenact img{width:30px;height:30px;object-fit:contain}
 .resumenact b{display:block;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.resumenact small{display:block;color:var(--muted);font-size:.78rem;font-variant-numeric:tabular-nums}
+.resumenact small{display:block;white-space:nowrap;color:var(--muted);font-size:.78rem;font-variant-numeric:tabular-nums}
 .resumenact .dur{font:800 .95rem var(--display);white-space:nowrap;font-variant-numeric:tabular-nums}
+.envio{display:flex;flex-direction:column;gap:10px;margin-top:4px;padding-top:10px;border-top:1px solid var(--line)}
+.envio h3{margin:0;font-size:1.05rem}
 #secAct h2{flex-wrap:nowrap}#secAct h2 span{min-width:0;line-height:1.2} /* el título puede ocupar dos líneas con nombres largos */
 /* Carrusel de actividades: al menos 3 fichas a la vista y el resto se desplaza */
 .carrusel{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 2px;margin:0 -2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -374,6 +385,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
   <symbol id="i-flask" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2.2h12.4a1.5 1.5 0 0 0 1.3-2.2L14 9V3M7.5 15h9"/></symbol>
   <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
   <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-selall" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7.5 12.5l3 3 6-7"/></symbol>
+  <symbol id="i-selnone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/></symbol>
   <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></symbol>
   <symbol id="i-foto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 7h3l2-3h6l2 3h3v13H4z"/><circle cx="12" cy="13" r="4"/></symbol>
   <symbol id="i-video" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></symbol>
@@ -455,8 +468,8 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     <section class="jornada" id="sugFin" hidden>
       <h2>Enviar registro de la jornada</h2>
       <div class="jbotones">
-        <button class="cta wa" id="sugWa" type="button">WHATSAPP</button>
         <button class="cta mail" id="sugMail" type="button">EMAIL</button>
+        <button class="cta wa" id="sugWa" type="button">WHATSAPP</button>
         <button class="cta fin cancelar" id="sugCerrar" type="button">CANCELAR</button>
       </div>
     </section>
@@ -470,7 +483,25 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       </div>
       <div class="carrusel" id="actCarrusel" role="radiogroup" aria-label="Actividad a iniciar"></div>
       <div class="carbarra" id="actBarra" aria-hidden="true"><i></i></div>
-      <ol class="resumenact" id="actResumen" aria-label="Actividades de la jornada" hidden></ol>
+      <div class="listadoact" id="actListado" hidden>
+        <div class="lhead">
+          <h3>Listado actividades</h3>
+          <div class="lherr" id="actHerr" hidden>
+            <button type="button" class="ib" id="actTodos" aria-label="Seleccionar todo" title="Seleccionar todo"><svg width="20" height="20" aria-hidden="true"><use href="#i-selall"/></svg></button>
+            <button type="button" class="ib" id="actCompartir" aria-label="Compartir las seleccionadas" title="Compartir"><svg width="20" height="20" aria-hidden="true"><use href="#i-share"/></svg></button>
+            <button type="button" class="ib peligro" id="actBorrar" aria-label="Eliminar las seleccionadas" title="Eliminar"><svg width="20" height="20" aria-hidden="true"><use href="#i-trash"/></svg></button>
+          </div>
+        </div>
+        <ol class="resumenact" id="actResumen" aria-label="Actividades de la jornada"></ol>
+        <div class="envio" id="actEnvio" hidden>
+          <h3>Enviar actividades seleccionadas</h3>
+          <div class="jbotones">
+            <button class="cta mail" id="actMail" type="button">EMAIL</button>
+            <button class="cta wa" id="actWa" type="button">WHATSAPP</button>
+            <button class="cta fin cancelar" id="actCancelar" type="button">CANCELAR</button>
+          </div>
+        </div>
+      </div>
     </section>
   </div>
   <!-- Menú para elegir cuánto pausar la toma de puntos GPS -->
@@ -1628,6 +1659,47 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     b.addEventListener('pointerdown',e=>{b.setPointerCapture(e.pointerId);ir(e)});
     b.addEventListener('pointermove',e=>{if(b.hasPointerCapture(e.pointerId))ir(e)});
   })();
+  // Listado de actividades terminadas en la jornada: filas seleccionables para eliminar o compartir
+  let tandasFin=[], actSelFilas=new Set(), sigListado='';
+  function pintarListadoAct(fin){
+    tandasFin=fin;
+    actSelFilas=new Set([...actSelFilas].filter(k=>fin.some(x=>x.key===k)));
+    $('actListado').hidden=!fin.length;
+    $('actHerr').hidden=!actSelFilas.size;
+    if(!actSelFilas.size)$('actEnvio').hidden=true;
+    const todas=fin.length>0&&actSelFilas.size===fin.length;
+    $('actTodos').firstChild.firstChild.setAttribute('href',todas?'#i-selnone':'#i-selall');
+    $('actTodos').title=todas?'Quitar la selección':'Seleccionar todo';$('actTodos').setAttribute('aria-label',$('actTodos').title);
+    const sig=fin.map(x=>`${x.key}|${x.fin}|${actSelFilas.has(x.key)}`).join(';');
+    if(sig===sigListado)return;sigListado=sig;
+    const lis=$('actResumen');lis.textContent='';
+    fin.forEach(x=>{
+      const m=Math.max(0,Math.floor((new Date(x.fin)-new Date(x.ini))/60000));
+      const li=el('li'), lab=el('label',actSelFilas.has(x.key)?'sel':''), cb=el('input'), im=el('img');
+      cb.type='checkbox';cb.checked=actSelFilas.has(x.key);cb.setAttribute('aria-label',`Seleccionar ${x.nombre}`);
+      cb.addEventListener('change',()=>{cb.checked?actSelFilas.add(x.key):actSelFilas.delete(x.key);pintarActividad()});
+      im.src=iconoAct(x.nombre);im.alt='';
+      const tx=el('div');tx.appendChild(el('b',null,x.nombre));tx.appendChild(el('small',null,`${hhmm(new Date(x.ini))} – ${hhmm(new Date(x.fin))}`));
+      lab.append(cb,im,tx,el('span','dur',`${Math.floor(m/60)}h ${pad(m%60)}m`));li.appendChild(lab);lis.appendChild(li);
+    });
+  }
+  const registrosSel=()=>{const ids=new Set(tandasFin.filter(x=>actSelFilas.has(x.key)).flatMap(x=>x.ids));return registros.filter(r=>ids.has(r.id))};
+  $('actTodos').addEventListener('click',()=>{actSelFilas=actSelFilas.size===tandasFin.length?new Set():new Set(tandasFin.map(x=>x.key));pintarActividad()});
+  $('actCompartir').addEventListener('click',()=>{if(actSelFilas.size)$('actEnvio').hidden=false});
+  $('actCancelar').addEventListener('click',()=>{$('actEnvio').hidden=true});
+  const cabeceraAct=()=>`Actividades de la jornada · ${cfg.nombre} · ${fechaCorta(new Date())}\n\n`;
+  $('actWa').addEventListener('click',()=>{const l=registrosSel();if(l.length)enviarWhatsapp(l,cabeceraAct())});
+  $('actMail').addEventListener('click',()=>{const l=registrosSel();if(l.length)enviarEmail(l,cabeceraAct(),true)});
+  // Eliminar: se quitan las actividades marcadas con sus pausas y puntos GPS; el aviso ofrece DESHACER durante 8 s
+  $('actBorrar').addEventListener('click',()=>{
+    const sel=tandasFin.filter(x=>actSelFilas.has(x.key));if(!sel.length)return;
+    const ids=new Set(sel.flatMap(x=>x.ids)), quitados=registros.filter(r=>ids.has(r.id)), pts=puntos.filter(p=>ids.has(p.registroId)), n=sel.length;
+    registros=registros.filter(r=>!ids.has(r.id));puntos=puntos.filter(p=>!ids.has(p.registroId));guardarRegistros();guardarPuntos();
+    actSelFilas=new Set();$('actEnvio').hidden=true;pintarTodo();actualizarSeguimiento();
+    aviso(`${n} ${plural(n,'actividad')} ${plural(n,'eliminada')}`,'Se borra del todo en 8 s',{err:true,ms:8000,accion:{texto:'DESHACER',fn:()=>{
+      registros=registros.concat(quitados).sort(porHora);puntos=puntos.concat(pts).sort(porHora);guardarRegistros();guardarPuntos();pintarTodo();actualizarSeguimiento();
+    }}});
+  });
   function pintarActividad(){
     const curso=actividadEnCurso(), act=curso&&!MARCAS.includes(curso.actividad)?curso:null;
     const enP=!!curso&&curso.actividad===PAUSAACT&&!!pausaAct&&pausaAct.regId===curso.id; // actividad en pausa
@@ -1638,11 +1710,11 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
     // Tandas de actividad: una actividad pausada y retomada cuenta como una sola tanda (hasta que otro registro la corta)
     const tandas=[];let cur=null,pausadaDe=null;
     desdeIni.forEach(x=>{
-      if(x.actividad===PAUSAACT){pausadaDe=cur&&cur.nombre===x.pausaDe?x.pausaDe:null;return}
+      if(x.actividad===PAUSAACT){pausadaDe=cur&&cur.nombre===x.pausaDe?x.pausaDe:null;if(pausadaDe)cur.ids.push(x.id);return}
       if(!MARCAS.includes(x.actividad)){
-        if(cur&&pausadaDe===x.actividad){pausadaDe=null;return} // retoma la misma tanda
+        if(cur&&pausadaDe===x.actividad){cur.ids.push(x.id);pausadaDe=null;return} // retoma la misma tanda
         if(cur)cur.fin=x.iso;
-        cur={nombre:x.actividad,ini:x.iso,fin:null};tandas.push(cur);pausadaDe=null;return;
+        cur={key:x.id,ids:[x.id],nombre:x.actividad,ini:x.iso,fin:null};tandas.push(cur);pausadaDe=null;return;
       }
       if(cur&&!cur.fin)cur.fin=x.iso;cur=null;pausadaDe=null;
     });
@@ -1659,16 +1731,7 @@ ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px
       const marcada=nombre?b.dataset.act===nombre:b.dataset.act===actSel;
       b.setAttribute('aria-checked',marcada);b.disabled=registrando||!curso||!!nombre;
     });
-    // Actividades ya terminadas en la jornada, en orden cronológico
-    const lis=$('actResumen');lis.textContent='';
-    tandas.forEach(x=>{
-      if(!x.fin)return;
-      const m=Math.max(0,Math.floor((new Date(x.fin)-new Date(x.ini))/60000));
-      const li=el('li'), im=el('img');im.src=iconoAct(x.nombre);im.alt='';
-      const tx=el('div');tx.appendChild(el('b',null,x.nombre));tx.appendChild(el('small',null,`${hhmm(new Date(x.ini))} – ${hhmm(new Date(x.fin))}`));
-      li.append(im,tx,el('span','dur',`${Math.floor(m/60)}h ${pad(m%60)}m`));lis.appendChild(li);
-    });
-    lis.hidden=!lis.children.length;
+    pintarListadoAct(tandas.filter(x=>x.fin));
     // Datos de la actividad: hora de inicio, de fin (-- si sigue en curso) y duración transcurrida
     t.className='jdatos';t.textContent='';
     const min=ver?Math.max(0,Math.floor((Date.now()-new Date(ver.ini).getTime())/60000)):0;
